@@ -1,13 +1,13 @@
 import { Field } from '../interfaces/field'
-import { ORM } from '../types'
+import { ORM } from '../types/orm'
 import { ObjectField } from './object'
 import { UnionField } from './union'
 
 export class TypeField<IsOptional extends boolean = false> {
-  constructor(private readonly orm: ORM) { }
+  constructor(private readonly defaultOrm?: ORM) { }
 
   union<Fields extends Field[]>(fields: Fields): UnionField<Fields, false> {
-    return new UnionField(this.orm, fields)
+    return new UnionField(fields, this.defaultOrm)
   }
 
   pick<
@@ -21,6 +21,6 @@ export class TypeField<IsOptional extends boolean = false> {
     const pickedObj = Object.fromEntries(
       keys.map((key) => [key, sourceObj[key]])
     ) as Pick<T, K[number]>
-    return new ObjectField(this.orm, pickedObj)
+    return new ObjectField(pickedObj, this.defaultOrm)
   }
 }

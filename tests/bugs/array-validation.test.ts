@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { Ruby } from '../../src/lib/ruby'
+import { Sapphire } from '../../src/lib/sapphire'
 import { ORM } from '../../src/types'
 
 describe('Bug: ArrayField itera sobre schema em vez dos dados', () => {
-  const a = new Ruby(ORM.MONGO)
+  const a = new Sapphire({ defaultOrm: ORM.MONGO })
 
   it('detecta item inválido no meio do array', () => {
     const field = a.array([a.string()])

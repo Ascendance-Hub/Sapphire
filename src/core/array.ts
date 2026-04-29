@@ -1,21 +1,26 @@
+import { resolveSchema } from '../adapters/registry'
 import { Field, ValidationResult } from '../interfaces/field'
-import { InferSchema, ORM } from '../types'
+import { SapphireSchemaNode } from '../schema/types'
+import { InferSchema } from '../types/infer-type'
+import { ORM } from '../types/orm'
 
 export class ArrayField<
   T extends Array<Field>,
   IsOptional extends boolean = false
 > implements Field {
   constructor(
-    private readonly orm: ORM,
-    private readonly arr: T
+    private readonly arr: T,
+    private readonly defaultOrm?: ORM,
   ) { }
   private required: boolean = true
 
-  getSchema() {
-    const properties = this.arr.map((item) =>
-      typeof item.getSchema === 'function' ? item.getSchema() : item
-    )
-    return { type: 'array', required: this.required, properties }
+  toSchema(): SapphireSchemaNode {
+    const items = this.arr.map((item) => item.toSchema())
+    return { kind: 'array', required: this.required, items }
+  }
+
+  getSchema(orm?: ORM) {
+    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
   }
 
   getType(): InferSchema<T> {

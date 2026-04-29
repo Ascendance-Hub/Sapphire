@@ -1,5 +1,5 @@
 {
-  "name": "ruby-lib",
+  "name": "sapphire-lib",
   "version": "0.3.0",
   "description": "TypeScript library for dynamic schema and type generation across multiple ORMs",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ruby-lib/Ruby.git"
+    "url": "git+https://github.com/Sapphire-lib/Sapphire.git"
   },
   "keywords": [
     "typescript",
@@ -31,11 +31,12 @@
   },
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/Ruby-lib/Ruby/issues"
+    "url": "https://github.com/Sapphire-lib/Sapphire/issues"
   },
-  "homepage": "https://github.com/Ruby-lib/Ruby",
+  "homepage": "https://github.com/Sapphire-lib/Sapphire",
   "devDependencies": {
     "@types/node": "^22.15.30",
+    "mongoose": "^9.6.1",
     "typescript": "^5.8.3",
     "vitest": "^2.1.9"
   }

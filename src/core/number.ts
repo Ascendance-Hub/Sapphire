@@ -1,15 +1,18 @@
+import { resolveSchema } from '../adapters/registry'
 import { Field, ValidationResult } from '../interfaces/field'
-import { ORM } from '../types'
+import { SapphireSchemaNode } from '../schema/types'
+import { ORM } from '../types/orm'
 
 export class NumberField<IsOptional extends boolean = false> implements Field {
-  constructor(private readonly orm: ORM) {}
+  constructor(private readonly defaultOrm?: ORM) {}
   private required: boolean = true
 
-  getSchema() {
-    if (this.orm === ORM.MONGO) {
-      return { type: Number, required: this.required }
-    }
-    throw new Error('not supported ORM')
+  toSchema(): SapphireSchemaNode {
+    return { kind: 'number', required: this.required }
+  }
+
+  getSchema(orm?: ORM) {
+    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
   }
 
   optional(): NumberField<true> {
