@@ -1,6 +1,6 @@
-# Ruby
+# Sapphire
 
-Ruby é uma biblioteca TypeScript para criação dinâmica de **schemas** e **tipos** para bancos de dados, com foco inicial em MongoDB, mas com arquitetura preparada para outros ORMs no futuro.  
+Sapphire é uma biblioteca TypeScript para criação dinâmica de **schemas** e **tipos** para bancos de dados, com foco inicial em MongoDB, mas com arquitetura preparada para outros ORMs no futuro.  
 Ela permite que você defina modelos de dados de forma fluente, **gerando automaticamente os tipos TypeScript** correspondentes e os schemas para validação e integração com ORMs.
 
 ---
@@ -18,7 +18,7 @@ Ela permite que você defina modelos de dados de forma fluente, **gerando automa
 
 ## Instalação
 
-> **Nota:** Ruby ainda não está publicada no npm.  
+> **Nota:** Sapphire ainda não está publicada no npm.  
 > Para usar localmente, basta importar os arquivos no seu projeto.
 
 ---
@@ -26,9 +26,9 @@ Ela permite que você defina modelos de dados de forma fluente, **gerando automa
 ## Exemplo Rápido
 
 ```typescript
-import { Ruby, ORM } from 'ruby-lib'
+import { Sapphire, ORM } from 'sapphire-lib'
 
-const a = new Ruby(ORM.MONGO)
+const a = new Sapphire(ORM.MONGO)
 const userOrm = a.object({
   name: a.string(),
   age: a.number().optional(),
@@ -81,10 +81,10 @@ const user: UserType = {
 
 1. Criação do Schema
 
-Você instancia a classe `Ruby` passando o ORM desejado (por enquanto, apenas `ORM.MONGO`):
+Você instancia a classe `Sapphire` passando o ORM desejado (por enquanto, apenas `ORM.MONGO`):
 
 ```typescript
-const a = new Ruby(ORM.MONGO)
+const a = new Sapphire(ORM.MONGO)
 ```
 
 Depois, utilize os métodos para criar campos:
@@ -126,7 +126,7 @@ O resultado será um objeto com a estrutura do schema, incluindo tipos, obrigato
 
 ## LIB
 
-### Métodos de Ruby
+### Métodos de Sapphire
 
 | Método         | Descrição                                 |
 | -------------- | ----------------------------------------- |

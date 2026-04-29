@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { Ruby } from '../../src/lib/ruby'
+import { Sapphire } from '../../src/lib/sapphire'
 import { ORM } from '../../src/types'
 
 describe('TypeField.pick', () => {
-  const a = new Ruby(ORM.MONGO)
+  const a = new Sapphire({ defaultOrm: ORM.MONGO })
 
   it('retorna ObjectField com subset das chaves', () => {
     const original = a.object({

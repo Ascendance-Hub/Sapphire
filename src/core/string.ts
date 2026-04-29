@@ -1,18 +1,23 @@
+import { resolveSchema } from '../adapters/registry'
 import { Field, ValidationResult } from '../interfaces/field'
-import { ORM } from '../types'
+import { SapphireSchemaNode } from '../schema/types'
+import { ORM } from '../types/orm'
 
 export class StringField<IsOptional extends boolean = false> implements Field {
-  constructor(private readonly orm: ORM) {}
+  constructor(private readonly defaultOrm?: ORM) {}
   private required: boolean = true
   private minLength?: number
 
-  getSchema() {
-    if (this.orm === ORM.MONGO) {
-      const schema: Record<string, any> = { type: String, required: this.required }
-      if (this.minLength !== undefined) schema.minLength = this.minLength
-      return schema
+  toSchema(): SapphireSchemaNode {
+    return {
+      kind: 'string',
+      required: this.required,
+      ...(this.minLength !== undefined ? { minLength: this.minLength } : {}),
     }
-    throw new Error('not supported ORM')
+  }
+
+  getSchema(orm?: ORM) {
+    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
   }
 
   optional(): StringField<true> {

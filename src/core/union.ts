@@ -1,22 +1,25 @@
+import { resolveSchema } from '../adapters/registry'
 import { Field, ValidationResult } from '../interfaces/field'
-import { ORM } from '../types'
+import { SapphireSchemaNode } from '../schema/types'
+import { ORM } from '../types/orm'
 
 export class UnionField<Fields extends Field[], IsOptional extends boolean = false> implements Field {
   constructor(
-    private readonly orm: ORM,
-    private readonly fields: Fields
+    private readonly fields: Fields,
+    private readonly defaultOrm?: ORM,
   ) { }
   private required: boolean = true
 
-  getSchema() {
-    if (this.orm === ORM.MONGO) {
-      return {
-        type: 'mixed',
-        required: this.required,
-        properties: this.fields.map((f) => (typeof f.getSchema === 'function' ? f.getSchema() : f)),
-      }
+  toSchema(): SapphireSchemaNode {
+    return {
+      kind: 'union',
+      required: this.required,
+      options: this.fields.map((f) => f.toSchema()),
     }
-    throw new Error('not supported ORM')
+  }
+
+  getSchema(orm?: ORM) {
+    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
   }
 
   optional(): UnionField<Fields, true> {

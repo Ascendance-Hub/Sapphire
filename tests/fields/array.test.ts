@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { Ruby } from '../../src/lib/ruby'
+import { Sapphire } from '../../src/lib/sapphire'
 import { ORM } from '../../src/types'
 
 describe('ArrayField', () => {
-  const a = new Ruby(ORM.MONGO)
+  const a = new Sapphire({ defaultOrm: ORM.MONGO })
 
   it('valida array de strings', () => {
     const field = a.array([a.string()])

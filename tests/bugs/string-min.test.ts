@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { Ruby } from '../../src/lib/ruby'
+import { Sapphire } from '../../src/lib/sapphire'
 import { ORM } from '../../src/types'
 
 describe('Bug: StringField.min() não valida tamanho', () => {
-  const a = new Ruby(ORM.MONGO)
+  const a = new Sapphire({ defaultOrm: ORM.MONGO })
 
   it('falha quando length < min', () => {
     const field = a.string().min(3)

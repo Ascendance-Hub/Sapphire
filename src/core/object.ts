@@ -1,10 +1,13 @@
+import { resolveSchema } from '../adapters/registry'
 import { Field, ValidationResult } from '../interfaces/field'
-import { InferSchema, ORM } from '../types'
+import { SapphireSchemaNode } from '../schema/types'
+import { InferSchema } from '../types/infer-type'
+import { ORM } from '../types/orm'
 
 export class ObjectField<T extends Record<string, Field>, IsOptional extends boolean = false> implements Field {
   constructor(
-    private readonly orm: ORM,
-    private readonly obj: T
+    private readonly obj: T,
+    private readonly defaultOrm?: ORM,
   ) {}
   private required: boolean = true
 
@@ -12,12 +15,16 @@ export class ObjectField<T extends Record<string, Field>, IsOptional extends boo
     return this.obj
   }
 
-  getSchema() {
-    const properties: Record<string, any> = {}
+  toSchema(): SapphireSchemaNode {
+    const properties: Record<string, SapphireSchemaNode> = {}
     for (const [key, value] of Object.entries(this.obj)) {
-      properties[key] = typeof value.getSchema === 'function' ? value.getSchema() : value
+      properties[key] = value.toSchema()
     }
-    return { type: 'object', required: this.required, properties }
+    return { kind: 'object', required: this.required, properties }
+  }
+
+  getSchema(orm?: ORM) {
+    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
   }
 
   getType(): InferSchema<T> {

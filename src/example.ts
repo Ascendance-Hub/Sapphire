@@ -1,7 +1,7 @@
-import { Ruby } from './lib/ruby'
+import { Sapphire } from './lib/sapphire'
 import { ORM } from './types'
 
-const a = new Ruby(ORM.MONGO)
+const a = new Sapphire({ defaultOrm: ORM.MONGO })
 const userOrm = a.object({
   name: a.string(),
   age: a.number().optional(),
@@ -78,13 +78,13 @@ try {
   console.error('Erro de validação (inválido):', e)
 }
 
-const b = new Ruby(ORM.MONGO)
+const b = new Sapphire({ defaultOrm: ORM.MONGO })
 const test = b.object({
   name: b.string(),
   age: b.number(),
 })
 
-const c = new Ruby(ORM.MONGO)
+const c = new Sapphire({ defaultOrm: ORM.MONGO })
 const test2 = c.type().pick(test, ['name', 'age'])
 
 export type Picked = ReturnType<typeof test2.getType>
