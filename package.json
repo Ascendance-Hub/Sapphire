@@ -1,0 +1,42 @@
+{
+  "name": "ruby-lib",
+  "version": "0.3.0",
+  "description": "TypeScript library for dynamic schema and type generation across multiple ORMs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "example": "ts-node src/example.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ruby-lib/Ruby.git"
+  },
+  "keywords": [
+    "typescript",
+    "schema",
+    "validation",
+    "orm",
+    "mongodb",
+    "mongoose"
+  ],
+  "author": {
+    "name": "Alexandre Damas Murata",
+    "email": "alexandre_murata@hotmail.com"
+  },
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/Ruby-lib/Ruby/issues"
+  },
+  "homepage": "https://github.com/Ruby-lib/Ruby",
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "typescript": "^5.8.3",
+    "vitest": "^2.1.9"
+  }
+}
