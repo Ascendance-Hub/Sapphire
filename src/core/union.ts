@@ -3,17 +3,21 @@ import { Field, ValidationResult } from '../interfaces/field'
 import { SapphireSchemaNode } from '../schema/types'
 import { ORM } from '../types/orm'
 
+type UnionConfig = {
+  required: boolean
+}
+
 export class UnionField<Fields extends Field[], IsOptional extends boolean = false> implements Field {
   constructor(
     private readonly fields: Fields,
     private readonly defaultOrm?: ORM,
+    private readonly config: UnionConfig = { required: true },
   ) { }
-  private required: boolean = true
 
   toSchema(): SapphireSchemaNode {
     return {
       kind: 'union',
-      required: this.required,
+      required: this.config.required,
       options: this.fields.map((f) => f.toSchema()),
     }
   }
@@ -23,13 +27,12 @@ export class UnionField<Fields extends Field[], IsOptional extends boolean = fal
   }
 
   optional(): UnionField<Fields, true> {
-    this.required = false
-    return this as unknown as UnionField<Fields, true>
+    return new UnionField<Fields, true>(this.fields, this.defaultOrm, { ...this.config, required: false })
   }
 
   validate(value: any): ValidationResult {
     if (value === undefined || value === null) {
-      if (this.required) return { value, error: 'Field is required' }
+      if (this.config.required) return { value, error: 'Field is required' }
       return { value }
     }
     for (const field of this.fields) {

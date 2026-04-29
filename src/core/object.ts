@@ -4,12 +4,16 @@ import { SapphireSchemaNode } from '../schema/types'
 import { InferSchema } from '../types/infer-type'
 import { ORM } from '../types/orm'
 
+type ObjectConfig = {
+  required: boolean
+}
+
 export class ObjectField<T extends Record<string, Field>, IsOptional extends boolean = false> implements Field {
   constructor(
     private readonly obj: T,
     private readonly defaultOrm?: ORM,
+    private readonly config: ObjectConfig = { required: true },
   ) {}
-  private required: boolean = true
 
   getObj(): T {
     return this.obj
@@ -20,7 +24,7 @@ export class ObjectField<T extends Record<string, Field>, IsOptional extends boo
     for (const [key, value] of Object.entries(this.obj)) {
       properties[key] = value.toSchema()
     }
-    return { kind: 'object', required: this.required, properties }
+    return { kind: 'object', required: this.config.required, properties }
   }
 
   getSchema(orm?: ORM) {
@@ -32,13 +36,12 @@ export class ObjectField<T extends Record<string, Field>, IsOptional extends boo
   }
 
   optional(): ObjectField<T, true> {
-    this.required = false
-    return this as unknown as ObjectField<T, true>
+    return new ObjectField<T, true>(this.obj, this.defaultOrm, { ...this.config, required: false })
   }
 
   validate(value: any): ValidationResult {
     if (value === undefined || value === null) {
-      if (this.required) return { value, error: 'Field is required' }
+      if (this.config.required) return { value, error: 'Field is required' }
       return { value }
     }
     if (typeof value !== 'object' || Array.isArray(value)) {
