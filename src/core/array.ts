@@ -4,6 +4,10 @@ import { SapphireSchemaNode } from '../schema/types'
 import { InferSchema } from '../types/infer-type'
 import { ORM } from '../types/orm'
 
+type ArrayConfig = {
+  required: boolean
+}
+
 export class ArrayField<
   T extends Array<Field>,
   IsOptional extends boolean = false
@@ -11,12 +15,12 @@ export class ArrayField<
   constructor(
     private readonly arr: T,
     private readonly defaultOrm?: ORM,
+    private readonly config: ArrayConfig = { required: true },
   ) { }
-  private required: boolean = true
 
   toSchema(): SapphireSchemaNode {
     const items = this.arr.map((item) => item.toSchema())
-    return { kind: 'array', required: this.required, items }
+    return { kind: 'array', required: this.config.required, items }
   }
 
   getSchema(orm?: ORM) {
@@ -28,13 +32,12 @@ export class ArrayField<
   }
 
   optional(): ArrayField<T, true> {
-    this.required = false
-    return this as unknown as ArrayField<T, true>
+    return new ArrayField<T, true>(this.arr, this.defaultOrm, { ...this.config, required: false })
   }
 
   validate(value: any): ValidationResult {
     if (value === undefined || value === null) {
-      if (this.required) return { value, error: 'Field is required' }
+      if (this.config.required) return { value, error: 'Field is required' }
       return { value }
     }
     if (!Array.isArray(value)) {

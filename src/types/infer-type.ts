@@ -1,5 +1,4 @@
 import { ArrayField, BooleanField, DateField, NumberField, ObjectField, StringField, UnionField } from "../core"
-import { TypeField } from "../core/type"
 import { Field } from "../interfaces/field"
 
 type InferArraySchema<T extends Array<any>> =
@@ -28,10 +27,6 @@ type InferFieldType<F> =
       ? IsOpt extends true
         ? Date | undefined
         : Date
-    : F extends TypeField<infer IsOpt extends boolean>
-      ? IsOpt extends true
-        ? any | undefined
-        : any
     : F extends ArrayField<infer Arr, infer IsOpt extends boolean>
       ? IsOpt extends true
         ? InferArraySchema<Arr> | undefined
@@ -60,10 +55,6 @@ type IsOptionalField<F> =
         ? true
         : false
     : F extends DateField<infer O>
-      ? O extends true
-        ? true
-        : false
-    : F extends TypeField<infer O>
       ? O extends true
         ? true
         : false

@@ -3,12 +3,18 @@ import { Field, ValidationResult } from '../interfaces/field'
 import { SapphireSchemaNode } from '../schema/types'
 import { ORM } from '../types/orm'
 
+type NumberConfig = {
+  required: boolean
+}
+
 export class NumberField<IsOptional extends boolean = false> implements Field {
-  constructor(private readonly defaultOrm?: ORM) {}
-  private required: boolean = true
+  constructor(
+    private readonly defaultOrm?: ORM,
+    private readonly config: NumberConfig = { required: true },
+  ) {}
 
   toSchema(): SapphireSchemaNode {
-    return { kind: 'number', required: this.required }
+    return { kind: 'number', required: this.config.required }
   }
 
   getSchema(orm?: ORM) {
@@ -16,13 +22,12 @@ export class NumberField<IsOptional extends boolean = false> implements Field {
   }
 
   optional(): NumberField<true> {
-    this.required = false
-    return this as unknown as NumberField<true>
+    return new NumberField<true>(this.defaultOrm, { ...this.config, required: false })
   }
 
   validate(value: any): ValidationResult {
     if (value === undefined || value === null) {
-      if (this.required) return { value, error: 'Field is required' }
+      if (this.config.required) return { value, error: 'Field is required' }
       return { value }
     }
     if (typeof value !== 'number') {

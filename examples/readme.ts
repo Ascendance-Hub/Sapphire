@@ -1,0 +1,61 @@
+// Exemplos do README — devem compilar e refletir a API atual.
+import { Sapphire, ORM } from '../src'
+
+// ---------- Quickstart ----------
+const a = new Sapphire({ defaultOrm: ORM.MONGO })
+
+const userOrm = a.object({
+  name: a.string(),
+  age: a.number().optional(),
+  birthDate: a.date().optional(),
+})
+
+export type User = ReturnType<typeof userOrm.getType>
+
+const _mongoSchema = userOrm.getSchema()
+void _mongoSchema
+
+// ---------- Multi-ORM ----------
+const b = new Sapphire()
+const productOrm = b.object({
+  title: b.string(),
+  price: b.number(),
+})
+const _multi = productOrm.getSchema(ORM.MONGO)
+void _multi
+
+// Override explícito mesmo com default
+const c = new Sapphire({ defaultOrm: ORM.MONGO })
+const cOrm = c.object({ title: c.string() })
+cOrm.getSchema()
+cOrm.getSchema(ORM.MONGO)
+
+// ---------- Unions ----------
+const event = a.object({
+  occurredAt: a.type().union([a.date(), a.string()]),
+})
+type Event = ReturnType<typeof event.getType>
+const _evt: Event = { occurredAt: '2026-01-01' }
+void _evt
+
+// ---------- Pick ----------
+const fullUser = a.object({
+  name: a.string(),
+  age: a.number(),
+  email: a.string(),
+})
+const summary = a.type().pick(fullUser, ['name', 'age'])
+type Summary = ReturnType<typeof summary.getType>
+const _s: Summary = { name: 'ale', age: 30 }
+void _s
+
+// ---------- Imutabilidade ----------
+const baseName = a.string()
+const userSchema = a.object({ name: baseName })
+const adminSchema = a.object({ name: baseName.optional() })
+void userSchema
+void adminSchema
+
+// baseName segue obrigatório
+const _baseRequired: true = baseName.toSchema().required as true
+void _baseRequired

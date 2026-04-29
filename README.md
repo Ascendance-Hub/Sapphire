@@ -1,171 +1,156 @@
 # Sapphire
 
-Sapphire é uma biblioteca TypeScript para criação dinâmica de **schemas** e **tipos** para bancos de dados, com foco inicial em MongoDB, mas com arquitetura preparada para outros ORMs no futuro.  
-Ela permite que você defina modelos de dados de forma fluente, **gerando automaticamente os tipos TypeScript** correspondentes e os schemas para validação e integração com ORMs.
+Sapphire é uma biblioteca TypeScript para definição de **schemas** com geração automática de **tipos TypeScript** e adaptação para múltiplos ORMs. Hoje suporta MongoDB (via Mongoose), com arquitetura de adapters preparada para outros ORMs.
 
 ---
 
 ## Recursos
 
-- **Definição fluente de schemas** (string, number, boolean, date, object, array)
-- **Geração automática de tipos TypeScript** a partir do schema
-- **Compatível com MongoDB** (outros ORMs em breve)
-- **Campos opcionais**
-- **Schemas aninhados e arrays tipados**
-- **Zero dependências externas**
+- Definição fluente de schemas (`string`, `number`, `boolean`, `date`, `object`, `array`)
+- Geração automática de tipos TypeScript a partir do schema
+- Campos opcionais (`optional()`) e validação de tamanho mínimo (`min()`)
+- Schemas aninhados, arrays tipados e **unions polimórficos** (`type().union()`)
+- **Pick** para derivar schemas (`type().pick()`)
+- **Multi-ORM**: uma mesma instância pode gerar schemas para diferentes alvos
+- Builder **imutável**: `optional()`/`min()` retornam nova instância — fields-base podem ser reusados sem vazar estado
+- Zero dependências de runtime
 
 ---
 
 ## Instalação
 
-> **Nota:** Sapphire ainda não está publicada no npm.  
-> Para usar localmente, basta importar os arquivos no seu projeto.
+> **Nota:** Sapphire ainda não está publicada no npm.
+> Para usar localmente, importe os arquivos a partir do código-fonte.
 
 ---
 
-## Exemplo Rápido
+## Quickstart
 
 ```typescript
 import { Sapphire, ORM } from 'sapphire-lib'
 
-const a = new Sapphire(ORM.MONGO)
+const a = new Sapphire({ defaultOrm: ORM.MONGO })
+
 const userOrm = a.object({
   name: a.string(),
   age: a.number().optional(),
-  job: a.object({
-    name: a.string(),
-    salary: a.number(),
-    company: a.object({
-      name: a.string(),
-    }).optional()
-  }),
   birthDate: a.date().optional(),
-  isIncomeTaxed: a.boolean().optional(),
-  employmentHistory: a.array([
-    a.object({
-      name: a.string(),
-      salary: a.number(),
-      company: a.string(),
-    }),
-  ])
 })
 
-// Gerando o tipo TypeScript a partir do schema:
-export type UserType = ReturnType<typeof userOrm.getType>
+// Tipo TypeScript inferido a partir do schema
+export type User = ReturnType<typeof userOrm.getType>
 
-// Exemplo de uso do tipo gerado:
-const user: UserType = {
-  name: 'name',
-  job: {
-    name: 'dev',
-    salary: 5000,
-    company: {
-      name: 'company',
-    },
-  },
-  birthDate: new Date(),
-  isIncomeTaxed: true,
-  employmentHistory: [
-    {
-      name: 'dev',
-      salary: 5000,
-      company: 'company',
-    },
-  ],
-}
+// Schema pronto para o ORM (Mongoose, no caso de ORM.MONGO)
+const mongoSchema = userOrm.getSchema()
 ```
 
 ---
 
-## Como funciona?
+## API
 
-1. Criação do Schema
-
-Você instancia a classe `Sapphire` passando o ORM desejado (por enquanto, apenas `ORM.MONGO`):
+### Construtor
 
 ```typescript
-const a = new Sapphire(ORM.MONGO)
+new Sapphire(opts?: { defaultOrm?: ORM })
 ```
 
-Depois, utilize os métodos para criar campos:
+`defaultOrm` é opcional. Quando ausente, `getSchema()` exige que o ORM seja passado por chamada.
 
-- `a.string()`
-- `a.number()`
-- `a.boolean()`
-- `a.date()`
-- `a.object({...})`
-- `a.array([...])`
+### Métodos da `Sapphire`
 
-Campos podem ser aninhados e marcados como opcionais com `.optional()`.
+| Método         | Descrição                                                              |
+| -------------- | ---------------------------------------------------------------------- |
+| `string()`     | Campo string (`.optional()`, `.min(n)`)                                |
+| `number()`     | Campo number (`.optional()`)                                           |
+| `boolean()`    | Campo boolean (`.optional()`)                                          |
+| `date()`       | Campo date (`.optional()`)                                             |
+| `object(obj)`  | Campo objeto aninhado (`.optional()`, `.getType()`, `.getSchema(orm?)`) |
+| `array(arr)`   | Campo array com items tipados (`.optional()`)                          |
+| `type()`       | Factory para construções avançadas: `.union([...])` e `.pick(obj, [...])` |
+
+Todos os fields expõem `toSchema()` (schema neutro), `getSchema(orm?)` (adaptado ao ORM) e `validate(value)`.
 
 ---
 
-2. Gerando o Tipo TypeScript
+## Recursos avançados
 
-Para obter o tipo TypeScript do seu schema, use:
+### Multi-ORM
+
+Você pode criar uma `Sapphire` sem `defaultOrm` e escolher o adapter por chamada:
 
 ```typescript
-export type UserType = ReturnType<typeof userOrm.getType>
-```
+const a = new Sapphire()
 
-Assim, você garante que qualquer objeto do tipo `UserType` estará sempre sincronizado com o schema definido.
-
----
-
-3. Obtendo o Schema para o ORM
-
-Para obter o schema pronto para uso no ORM (ex: passar para o Mongoose):
-
-```typescript
-userOrm.getSchema()
-```
-
-O resultado será um objeto com a estrutura do schema, incluindo tipos, obrigatoriedade e propriedades aninhadas.
-
----
-
-## LIB
-
-### Métodos de Sapphire
-
-| Método         | Descrição                                 |
-| -------------- | ----------------------------------------- |
-| `string()`     | Campo string                              |
-| `number()`     | Campo number                              |
-| `boolean()`    | Campo boolean                             |
-| `date()`       | Campo date                                |
-| `object(obj)`  | Campo objeto aninhado                     |
-| `array(arr)`   | Campo array de objetos ou tipos primitivos|
-
-Todos os campos possuem o método `.optional()` para torná-los opcionais no tipo e no schema.
-
----
-
-Exemplo Avançado
-
-```typescript
 const productOrm = a.object({
   title: a.string(),
   price: a.number(),
-  tags: a.array([a.string()]).optional(),
-  metadata: a.object({
-    createdAt: a.date(),
-    updatedAt: a.date().optional(),
-  })
 })
 
-type ProductType = ReturnType<typeof productOrm.getType>
+const mongoSchema = productOrm.getSchema(ORM.MONGO)
+// futuramente: productOrm.getSchema(ORM.PRISMA), etc.
 ```
+
+Ou definir um default e ainda assim sobrescrever pontualmente:
+
+```typescript
+const a = new Sapphire({ defaultOrm: ORM.MONGO })
+productOrm.getSchema()           // usa MONGO
+productOrm.getSchema(ORM.MONGO)  // override explícito
+```
+
+### Unions
+
+Para campos que aceitam mais de um tipo:
+
+```typescript
+const event = a.object({
+  occurredAt: a.type().union([a.date(), a.string()]),
+})
+```
+
+A inferência de `event.getType` resolve o campo como `Date | string`.
+
+### Pick
+
+Para derivar um novo objeto a partir de um subset das chaves de outro:
+
+```typescript
+const userOrm = a.object({
+  name: a.string(),
+  age: a.number(),
+  email: a.string(),
+})
+
+const summary = a.type().pick(userOrm, ['name', 'age'])
+// summary tem apenas 'name' e 'age', com tipos preservados
+```
+
+---
+
+## Imutabilidade do builder
+
+Modificadores como `optional()` e `min()` **não mutam** a instância — eles retornam uma **nova** instância com a configuração atualizada. Isso significa que você pode definir um field-base e reusar com segurança:
+
+```typescript
+const baseName = a.string()
+
+const userSchema  = a.object({ name: baseName })             // name obrigatório
+const adminSchema = a.object({ name: baseName.optional() })  // name opcional
+
+// baseName segue obrigatório — nada vazou.
+```
+
+`a.string().min(3).min(5)` também é seguro: cada chamada retorna uma nova instância (a final tem `minLength: 5`), sem afetar as anteriores.
 
 ---
 
 ## Roadmap
 
-- Suporte a outros ORMs além do MongoDB
-- Validações customizadas
-- Erros customizaveis
+- Suporte a outros ORMs além do MongoDB (Prisma, Drizzle…)
+- Validações customizadas e mensagens de erro configuráveis
 - Hooks e middlewares
-- Criação de Mocks dinâmicos
+- Geração de mocks dinâmicos
+- Publish no npm (Fase 5: CI no GitHub Actions, lint/format, exports map)
 
 ---
 

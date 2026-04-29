@@ -3,7 +3,7 @@ import { ORM } from '../types/orm'
 import { ObjectField } from './object'
 import { UnionField } from './union'
 
-export class TypeField<IsOptional extends boolean = false> {
+export class TypeField {
   constructor(private readonly defaultOrm?: ORM) { }
 
   union<Fields extends Field[]>(fields: Fields): UnionField<Fields, false> {

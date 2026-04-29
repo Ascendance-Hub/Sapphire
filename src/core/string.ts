@@ -3,16 +3,22 @@ import { Field, ValidationResult } from '../interfaces/field'
 import { SapphireSchemaNode } from '../schema/types'
 import { ORM } from '../types/orm'
 
+type StringConfig = {
+  required: boolean
+  minLength?: number
+}
+
 export class StringField<IsOptional extends boolean = false> implements Field {
-  constructor(private readonly defaultOrm?: ORM) {}
-  private required: boolean = true
-  private minLength?: number
+  constructor(
+    private readonly defaultOrm?: ORM,
+    private readonly config: StringConfig = { required: true },
+  ) {}
 
   toSchema(): SapphireSchemaNode {
     return {
       kind: 'string',
-      required: this.required,
-      ...(this.minLength !== undefined ? { minLength: this.minLength } : {}),
+      required: this.config.required,
+      ...(this.config.minLength !== undefined ? { minLength: this.config.minLength } : {}),
     }
   }
 
@@ -21,28 +27,26 @@ export class StringField<IsOptional extends boolean = false> implements Field {
   }
 
   optional(): StringField<true> {
-    this.required = false
-    return this as unknown as StringField<true>
+    return new StringField<true>(this.defaultOrm, { ...this.config, required: false })
   }
 
   min(value: number): StringField<IsOptional> {
     if (typeof value !== 'number' || value < 0) {
       throw new Error('min must be a non-negative number')
     }
-    this.minLength = value
-    return this
+    return new StringField<IsOptional>(this.defaultOrm, { ...this.config, minLength: value })
   }
 
   validate(value: any): ValidationResult {
     if (value === undefined || value === null) {
-      if (this.required) return { value, error: 'Field is required' }
+      if (this.config.required) return { value, error: 'Field is required' }
       return { value }
     }
     if (typeof value !== 'string') {
       return { value, error: 'Expected string' }
     }
-    if (this.minLength !== undefined && value.length < this.minLength) {
-      return { value, error: `String must have at least ${this.minLength} characters` }
+    if (this.config.minLength !== undefined && value.length < this.config.minLength) {
+      return { value, error: `String must have at least ${this.config.minLength} characters` }
     }
     return { value }
   }
