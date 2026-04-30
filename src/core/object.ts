@@ -8,7 +8,10 @@ type ObjectConfig = {
   required: boolean
 }
 
-export class ObjectField<T extends Record<string, Field>, IsOptional extends boolean = false> implements Field {
+export class ObjectField<
+  T extends Record<string, Field>,
+  IsOptional extends boolean = false,
+> implements Field {
   constructor(
     private readonly obj: T,
     private readonly defaultOrm?: ORM,

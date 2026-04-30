@@ -1,4 +1,12 @@
-import { ArrayField, BooleanField, DateField, NumberField, ObjectField, StringField, TypeField } from '../core'
+import {
+  ArrayField,
+  BooleanField,
+  DateField,
+  NumberField,
+  ObjectField,
+  StringField,
+  TypeField,
+} from '../core'
 import { Field } from '../interfaces/field'
 import { ORM } from '../types/orm'
 

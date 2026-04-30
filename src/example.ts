@@ -8,9 +8,11 @@ const userOrm = a.object({
   job: a.object({
     name: a.string(),
     salary: a.number(),
-    company: a.object({
-      name: a.string(),
-    }).optional(),
+    company: a
+      .object({
+        name: a.string(),
+      })
+      .optional(),
   }),
   birthDate: a.date().optional(),
   deathDate: a.type().union([a.date(), a.string()]),

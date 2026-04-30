@@ -15,7 +15,9 @@ export function resolveSchema(
 ): any {
   const target = orm ?? defaultOrm
   if (!target) {
-    throw new Error('No ORM specified. Pass an ORM to getSchema(orm) or set defaultOrm on the Sapphire instance.')
+    throw new Error(
+      'No ORM specified. Pass an ORM to getSchema(orm) or set defaultOrm on the Sapphire instance.',
+    )
   }
   const adapter = adapterRegistry[target]
   if (!adapter) {
