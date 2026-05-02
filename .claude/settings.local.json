@@ -4,7 +4,30 @@
       "Bash(npm install *)",
       "Bash(npx tsc *)",
       "Bash(npx vitest *)",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(npm i *)",
+      "Bash(xargs sed *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(gh pr *)",
+      "Bash(command -v gh)",
+      "Bash(winget install *)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" --version)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" auth status)",
+      "Bash(/c/Program Files/GitHub CLI/gh.exe pr *)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" auth login --hostname github.com --git-protocol https --web)",
+      "Bash(tee /tmp/gh-auth.log)",
+      "Read(//tmp/**)",
+      "Bash(git pull *)",
+      "Bash(npx eslint *)",
+      "Bash(npx prettier *)",
+      "Bash(npm run *)",
+      "Bash(npm pack *)",
+      "Bash(git restore *)",
+      "Bash(git check-ignore *)",
+      "Bash(npm test *)"
     ]
   }
 }
