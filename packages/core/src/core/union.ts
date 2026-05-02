@@ -1,6 +1,7 @@
 import { resolveSchema } from '../adapters/registry'
-import { Field, ValidationResult } from '../interfaces/field'
+import { Field, SafeParseResult, ValidationResult } from '../interfaces/field'
 import { SapphireSchemaNode } from '../schema/types'
+import { InferElementInputs, InferElementOutputs } from '../types/infer'
 import { ORM } from '../types/orm'
 
 type UnionConfig = {
@@ -9,8 +10,12 @@ type UnionConfig = {
 
 export class UnionField<
   Fields extends Field[],
-  IsOptional extends boolean = false,
-> implements Field {
+  TOut = InferElementOutputs<Fields>[number],
+  TIn = InferElementInputs<Fields>[number],
+> implements Field<TOut, TIn> {
+  declare readonly _output: TOut
+  declare readonly _input: TIn
+
   constructor(
     private readonly fields: Fields,
     private readonly defaultOrm?: ORM,
@@ -29,14 +34,14 @@ export class UnionField<
     return resolveSchema(this.toSchema(), orm, this.defaultOrm)
   }
 
-  optional(): UnionField<Fields, true> {
-    return new UnionField<Fields, true>(this.fields, this.defaultOrm, {
+  optional(): UnionField<Fields, TOut | undefined, TIn | undefined> {
+    return new UnionField<Fields, TOut | undefined, TIn | undefined>(this.fields, this.defaultOrm, {
       ...this.config,
       required: false,
     })
   }
 
-  validate(value: any): ValidationResult {
+  validate(value: unknown): ValidationResult {
     if (value === undefined || value === null) {
       if (this.config.required) return { value, error: 'Field is required' }
       return { value }
@@ -46,5 +51,13 @@ export class UnionField<
       if (!result.error) return { value: result.value }
     }
     return { value, error: 'Value does not match any allowed type' }
+  }
+
+  parse(_value: unknown): TOut {
+    throw new Error('parse: implemented in PHASE_8')
+  }
+
+  safeParse(_value: unknown): SafeParseResult<TOut> {
+    throw new Error('safeParse: implemented in PHASE_8')
   }
 }
