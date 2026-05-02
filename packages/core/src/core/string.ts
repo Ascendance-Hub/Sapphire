@@ -11,7 +11,6 @@ import type {
   ParseOptions,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
-import { ORM } from '../types/orm'
 
 type StringConfig = {
   required: boolean
@@ -25,7 +24,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
   declare readonly _input: TIn
 
   constructor(
-    private readonly defaultOrm?: ORM,
+    private readonly defaultAdapter?: string,
     private readonly instanceOpts?: InstanceOptions,
     private readonly config: StringConfig = { required: true },
   ) {}
@@ -38,12 +37,12 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
     }
   }
 
-  getSchema(orm?: ORM) {
-    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
+  getSchema(name?: string) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
   }
 
   optional(): StringField<TOut | undefined, TIn | undefined> {
-    return new StringField<TOut | undefined, TIn | undefined>(this.defaultOrm, this.instanceOpts, {
+    return new StringField<TOut | undefined, TIn | undefined>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       required: false,
     })
@@ -53,7 +52,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
     if (typeof value !== 'number' || value < 0) {
       throw new Error('min must be a non-negative number')
     }
-    return new StringField<TOut, TIn>(this.defaultOrm, this.instanceOpts, {
+    return new StringField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       minLength: value,
       ruleMessages: {
@@ -64,7 +63,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
   }
 
   message(msg: string | FieldMessages): StringField<TOut, TIn> {
-    return new StringField<TOut, TIn>(this.defaultOrm, this.instanceOpts, {
+    return new StringField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       fieldMessage: msg,
     })

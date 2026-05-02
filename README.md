@@ -27,10 +27,10 @@ Sapphire é uma biblioteca TypeScript para definição de **schemas** com geraç
 ## Quickstart
 
 ```typescript
-import { Sapphire, ORM, type Infer } from '@ascendance-hub/sapphire-core'
-import '@ascendance-hub/sapphire-mongo' // registra o adapter mongo
+import { Sapphire, type Infer } from '@ascendance-hub/sapphire-core'
+import '@ascendance-hub/sapphire-mongo' // registra o adapter 'mongo'
 
-const a = new Sapphire({ defaultOrm: ORM.MONGO })
+const a = new Sapphire({ defaultAdapter: 'mongo' })
 
 const userOrm = a.object({
   name: a.string(),
@@ -41,7 +41,7 @@ const userOrm = a.object({
 // Tipo TypeScript inferido a partir do schema
 export type User = Infer<typeof userOrm>
 
-// Schema pronto para o ORM (Mongoose, no caso de ORM.MONGO)
+// Schema pronto para o ORM (Mongoose, no caso do adapter 'mongo')
 const mongoSchema = userOrm.getSchema()
 ```
 
@@ -52,10 +52,10 @@ const mongoSchema = userOrm.getSchema()
 ### Construtor
 
 ```typescript
-new Sapphire(opts?: { defaultOrm?: ORM })
+new Sapphire(opts?: { defaultAdapter?: string })
 ```
 
-`defaultOrm` é opcional. Quando ausente, `getSchema()` exige que o ORM seja passado por chamada.
+`defaultAdapter` é opcional. Quando ausente, `getSchema()` exige que o nome do adapter seja passado por chamada.
 
 ### Métodos da `Sapphire`
 
@@ -65,11 +65,11 @@ new Sapphire(opts?: { defaultOrm?: ORM })
 | `number()`    | Campo number (`.optional()`)                                                                   |
 | `boolean()`   | Campo boolean (`.optional()`)                                                                  |
 | `date()`      | Campo date (`.optional()`)                                                                     |
-| `object(obj)` | Campo objeto aninhado (`.optional()`, `.getSchema(orm?)`); use `Infer<typeof obj>` para o tipo |
+| `object(obj)` | Campo objeto aninhado (`.optional()`, `.getSchema(name?)`); use `Infer<typeof obj>` para o tipo |
 | `array(arr)`  | Campo array com items tipados (`.optional()`)                                                  |
 | `type()`      | Factory para construções avançadas: `.union([...])` e `.pick(obj, [...])`                      |
 
-Todos os fields expõem `toSchema()` (schema neutro), `getSchema(orm?)` (adaptado ao ORM) e `validate(value)`.
+Todos os fields expõem `toSchema()` (schema neutro), `getSchema(name?)` (adaptado ao adapter alvo) e `validate(value)`.
 
 ---
 
@@ -77,7 +77,7 @@ Todos os fields expõem `toSchema()` (schema neutro), `getSchema(orm?)` (adaptad
 
 ### Multi-ORM
 
-Você pode criar uma `Sapphire` sem `defaultOrm` e escolher o adapter por chamada:
+Você pode criar uma `Sapphire` sem `defaultAdapter` e escolher o adapter por chamada:
 
 ```typescript
 const a = new Sapphire()
@@ -87,16 +87,16 @@ const productOrm = a.object({
   price: a.number(),
 })
 
-const mongoSchema = productOrm.getSchema(ORM.MONGO)
-// futuramente: productOrm.getSchema(ORM.PRISMA), etc.
+const mongoSchema = productOrm.getSchema('mongo')
+// futuramente: productOrm.getSchema('prisma'), etc.
 ```
 
 Ou definir um default e ainda assim sobrescrever pontualmente:
 
 ```typescript
-const a = new Sapphire({ defaultOrm: ORM.MONGO })
-productOrm.getSchema() // usa MONGO
-productOrm.getSchema(ORM.MONGO) // override explícito
+const a = new Sapphire({ defaultAdapter: 'mongo' })
+productOrm.getSchema() // usa 'mongo'
+productOrm.getSchema('mongo') // override explícito
 ```
 
 ### Unions

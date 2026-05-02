@@ -11,7 +11,6 @@ import type {
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { InferElementInputs, InferElementOutputs } from '../types/infer'
-import { ORM } from '../types/orm'
 
 type UnionConfig = {
   required: boolean
@@ -30,7 +29,7 @@ export class UnionField<
 
   constructor(
     private readonly fields: Fields,
-    private readonly defaultOrm?: ORM,
+    private readonly defaultAdapter?: string,
     private readonly instanceOpts?: InstanceOptions,
     private readonly config: UnionConfig = { required: true },
   ) {}
@@ -43,21 +42,21 @@ export class UnionField<
     }
   }
 
-  getSchema(orm?: ORM) {
-    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
+  getSchema(name?: string) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
   }
 
   optional(): UnionField<Fields, TOut | undefined, TIn | undefined> {
     return new UnionField<Fields, TOut | undefined, TIn | undefined>(
       this.fields,
-      this.defaultOrm,
+      this.defaultAdapter,
       this.instanceOpts,
       { ...this.config, required: false },
     )
   }
 
   message(msg: string | FieldMessages): UnionField<Fields, TOut, TIn> {
-    return new UnionField<Fields, TOut, TIn>(this.fields, this.defaultOrm, this.instanceOpts, {
+    return new UnionField<Fields, TOut, TIn>(this.fields, this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       fieldMessage: msg,
     })

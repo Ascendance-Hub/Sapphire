@@ -1,8 +1,8 @@
 // Exemplos do README — devem compilar e refletir a API atual.
-import { Sapphire, ORM, type Infer } from '@ascendance-hub/sapphire-core'
+import { Sapphire, type Infer } from '@ascendance-hub/sapphire-core'
 
 // ---------- Quickstart ----------
-const a = new Sapphire({ defaultOrm: ORM.MONGO })
+const a = new Sapphire({ defaultAdapter: 'mongo' })
 
 const userOrm = a.object({
   name: a.string(),
@@ -21,14 +21,14 @@ const productOrm = b.object({
   title: b.string(),
   price: b.number(),
 })
-const _multi = productOrm.getSchema(ORM.MONGO)
+const _multi = productOrm.getSchema('mongo')
 void _multi
 
 // Override explícito mesmo com default
-const c = new Sapphire({ defaultOrm: ORM.MONGO })
+const c = new Sapphire({ defaultAdapter: 'mongo' })
 const cOrm = c.object({ title: c.string() })
 cOrm.getSchema()
-cOrm.getSchema(ORM.MONGO)
+cOrm.getSchema('mongo')
 
 // ---------- Unions ----------
 const event = a.object({

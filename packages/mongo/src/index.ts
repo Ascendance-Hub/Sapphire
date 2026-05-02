@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { ORM, registerAdapter, type SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
+import { registerAdapter, type SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 
 export function toMongoSchema(node: SapphireSchemaNode): any {
   switch (node.kind) {
@@ -22,8 +22,9 @@ export function toMongoSchema(node: SapphireSchemaNode): any {
       return { type: properties, required: node.required }
     }
     case 'array': {
-      if (node.items.length === 1) {
-        return { type: [toMongoSchema(node.items[0])], required: node.required }
+      const items = Array.isArray(node.items) ? node.items : [node.items]
+      if (items.length === 1) {
+        return { type: [toMongoSchema(items[0])], required: node.required }
       }
       return { type: [mongoose.Schema.Types.Mixed], required: node.required }
     }
@@ -32,4 +33,4 @@ export function toMongoSchema(node: SapphireSchemaNode): any {
   }
 }
 
-registerAdapter(ORM.MONGO, toMongoSchema)
+registerAdapter('mongo', toMongoSchema)

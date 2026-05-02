@@ -10,7 +10,6 @@ import type {
   ParseOptions,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
-import { ORM } from '../types/orm'
 
 type DateConfig = {
   required: boolean
@@ -22,7 +21,7 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
   declare readonly _input: TIn
 
   constructor(
-    private readonly defaultOrm?: ORM,
+    private readonly defaultAdapter?: string,
     private readonly instanceOpts?: InstanceOptions,
     private readonly config: DateConfig = { required: true },
   ) {}
@@ -31,19 +30,19 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
     return { kind: 'date', required: this.config.required }
   }
 
-  getSchema(orm?: ORM) {
-    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
+  getSchema(name?: string) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
   }
 
   optional(): DateField<TOut | undefined, TIn | undefined> {
-    return new DateField<TOut | undefined, TIn | undefined>(this.defaultOrm, this.instanceOpts, {
+    return new DateField<TOut | undefined, TIn | undefined>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       required: false,
     })
   }
 
   message(msg: string | FieldMessages): DateField<TOut, TIn> {
-    return new DateField<TOut, TIn>(this.defaultOrm, this.instanceOpts, {
+    return new DateField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       fieldMessage: msg,
     })

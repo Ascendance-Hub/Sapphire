@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { Sapphire } from '../../src/lib/sapphire'
-import { ORM } from '../../src/types'
 
 describe('ArrayField', () => {
-  const a = new Sapphire({ defaultOrm: ORM.MONGO })
+  const a = new Sapphire({ defaultAdapter: 'mongo' })
 
   it('valida array de strings', () => {
     const field = a.array([a.string()])

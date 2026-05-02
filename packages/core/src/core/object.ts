@@ -11,7 +11,6 @@ import type {
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { ObjectInput, ObjectOutput } from '../types/infer'
-import { ORM } from '../types/orm'
 
 type ObjectConfig = {
   required: boolean
@@ -30,7 +29,7 @@ export class ObjectField<
 
   constructor(
     private readonly obj: T,
-    private readonly defaultOrm?: ORM,
+    private readonly defaultAdapter?: string,
     private readonly instanceOpts?: InstanceOptions,
     private readonly config: ObjectConfig = { required: true },
   ) {}
@@ -47,21 +46,21 @@ export class ObjectField<
     return { kind: 'object', required: this.config.required, properties }
   }
 
-  getSchema(orm?: ORM) {
-    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
+  getSchema(name?: string) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
   }
 
   optional(): ObjectField<T, TOut | undefined, TIn | undefined> {
     return new ObjectField<T, TOut | undefined, TIn | undefined>(
       this.obj,
-      this.defaultOrm,
+      this.defaultAdapter,
       this.instanceOpts,
       { ...this.config, required: false },
     )
   }
 
   message(msg: string | FieldMessages): ObjectField<T, TOut, TIn> {
-    return new ObjectField<T, TOut, TIn>(this.obj, this.defaultOrm, this.instanceOpts, {
+    return new ObjectField<T, TOut, TIn>(this.obj, this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       fieldMessage: msg,
     })

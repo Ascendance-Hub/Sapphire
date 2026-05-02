@@ -11,7 +11,6 @@ import type {
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { InferElementInputs, InferElementOutputs } from '../types/infer'
-import { ORM } from '../types/orm'
 
 type ArrayConfig = {
   required: boolean
@@ -30,7 +29,7 @@ export class ArrayField<
 
   constructor(
     private readonly arr: T,
-    private readonly defaultOrm?: ORM,
+    private readonly defaultAdapter?: string,
     private readonly instanceOpts?: InstanceOptions,
     private readonly config: ArrayConfig = { required: true },
   ) {}
@@ -40,21 +39,21 @@ export class ArrayField<
     return { kind: 'array', required: this.config.required, items }
   }
 
-  getSchema(orm?: ORM) {
-    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
+  getSchema(name?: string) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
   }
 
   optional(): ArrayField<T, TOut | undefined, TIn | undefined> {
     return new ArrayField<T, TOut | undefined, TIn | undefined>(
       this.arr,
-      this.defaultOrm,
+      this.defaultAdapter,
       this.instanceOpts,
       { ...this.config, required: false },
     )
   }
 
   message(msg: string | FieldMessages): ArrayField<T, TOut, TIn> {
-    return new ArrayField<T, TOut, TIn>(this.arr, this.defaultOrm, this.instanceOpts, {
+    return new ArrayField<T, TOut, TIn>(this.arr, this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       fieldMessage: msg,
     })

@@ -10,7 +10,6 @@ import type {
   ParseOptions,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
-import { ORM } from '../types/orm'
 
 type NumberConfig = {
   required: boolean
@@ -22,7 +21,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   declare readonly _input: TIn
 
   constructor(
-    private readonly defaultOrm?: ORM,
+    private readonly defaultAdapter?: string,
     private readonly instanceOpts?: InstanceOptions,
     private readonly config: NumberConfig = { required: true },
   ) {}
@@ -31,19 +30,19 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
     return { kind: 'number', required: this.config.required }
   }
 
-  getSchema(orm?: ORM) {
-    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
+  getSchema(name?: string) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
   }
 
   optional(): NumberField<TOut | undefined, TIn | undefined> {
-    return new NumberField<TOut | undefined, TIn | undefined>(this.defaultOrm, this.instanceOpts, {
+    return new NumberField<TOut | undefined, TIn | undefined>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       required: false,
     })
   }
 
   message(msg: string | FieldMessages): NumberField<TOut, TIn> {
-    return new NumberField<TOut, TIn>(this.defaultOrm, this.instanceOpts, {
+    return new NumberField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       fieldMessage: msg,
     })

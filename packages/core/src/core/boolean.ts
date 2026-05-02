@@ -10,7 +10,6 @@ import type {
   ParseOptions,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
-import { ORM } from '../types/orm'
 
 type BooleanConfig = {
   required: boolean
@@ -24,7 +23,7 @@ export class BooleanField<TOut = boolean, TIn = boolean>
   declare readonly _input: TIn
 
   constructor(
-    private readonly defaultOrm?: ORM,
+    private readonly defaultAdapter?: string,
     private readonly instanceOpts?: InstanceOptions,
     private readonly config: BooleanConfig = { required: true },
   ) {}
@@ -33,19 +32,19 @@ export class BooleanField<TOut = boolean, TIn = boolean>
     return { kind: 'boolean', required: this.config.required }
   }
 
-  getSchema(orm?: ORM) {
-    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
+  getSchema(name?: string) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
   }
 
   optional(): BooleanField<TOut | undefined, TIn | undefined> {
-    return new BooleanField<TOut | undefined, TIn | undefined>(this.defaultOrm, this.instanceOpts, {
+    return new BooleanField<TOut | undefined, TIn | undefined>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       required: false,
     })
   }
 
   message(msg: string | FieldMessages): BooleanField<TOut, TIn> {
-    return new BooleanField<TOut, TIn>(this.defaultOrm, this.instanceOpts, {
+    return new BooleanField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       fieldMessage: msg,
     })

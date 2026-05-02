@@ -1,7 +1,7 @@
-import { Sapphire, ORM, type Infer } from '@ascendance-hub/sapphire-core'
+import { Sapphire, type Infer } from '@ascendance-hub/sapphire-core'
 import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
 
-const a = new Sapphire({ defaultOrm: ORM.MONGO })
+const a = new Sapphire({ defaultAdapter: 'mongo' })
 
 const userOrm = a.object({
   name: a.string().min(1),
