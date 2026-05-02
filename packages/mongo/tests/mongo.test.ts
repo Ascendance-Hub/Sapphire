@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
-import { toMongoSchema } from '../../src/adapters/mongo'
-import { SapphireSchemaNode } from '../../src/schema/types'
+import { toMongoSchema } from '../src'
+import { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 
 describe('toMongoSchema', () => {
   it('string → { type: String, required }', () => {
