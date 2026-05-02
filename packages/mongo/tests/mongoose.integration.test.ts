@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
-import { Sapphire } from '../../src/lib/sapphire'
-import { ORM } from '../../src/types'
-import { toMongoSchema } from '../../src/adapters/mongo'
+import { Sapphire, ORM } from '@ascendance-hub/sapphire-core'
+import { toMongoSchema } from '../src'
 
 describe('Integração com Mongoose', () => {
   const a = new Sapphire({ defaultOrm: ORM.MONGO })

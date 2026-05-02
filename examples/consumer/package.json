@@ -1,0 +1,14 @@
+{
+  "name": "sapphire-consumer-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ascendance-hub/sapphire-core": "*",
+    "@ascendance-hub/sapphire-mongo": "*",
+    "mongoose": "^9.6.1"
+  }
+}

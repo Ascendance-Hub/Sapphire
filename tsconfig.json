@@ -1,16 +1,5 @@
 {
-  "compilerOptions": {
-    "outDir": "dist",
-    "declaration": true,
-    "declarationDir": "dist",
-    "emitDeclarationOnly": false,
-    "module": "commonjs",
-    "target": "es2019",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "rootDir": "src"
-  },
-  "include": ["src"],
-  "exclude": ["src/example.ts", "node_modules", "dist", "tests"]
+  "extends": "./tsconfig.base.json",
+  "include": ["packages/*/src", "packages/*/tests", "examples"],
+  "exclude": ["**/dist", "**/node_modules"]
 }

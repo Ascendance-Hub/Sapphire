@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { SapphireSchemaNode } from '../schema/types'
+import { ORM, registerAdapter, type SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 
 export function toMongoSchema(node: SapphireSchemaNode): any {
   switch (node.kind) {
@@ -31,3 +31,5 @@ export function toMongoSchema(node: SapphireSchemaNode): any {
       return { type: mongoose.Schema.Types.Mixed, required: node.required }
   }
 }
+
+registerAdapter(ORM.MONGO, toMongoSchema)
