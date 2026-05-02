@@ -21,7 +21,7 @@ describe('Bug: ArrayField itera sobre schema em vez dos dados', () => {
       field.validate([
         { name: 'dev', salary: 5000 },
         { name: 'po', salary: 'não é número' },
-      ]).error
+      ]).error,
     ).toBeTruthy()
   })
 

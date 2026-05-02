@@ -7,12 +7,15 @@ type UnionConfig = {
   required: boolean
 }
 
-export class UnionField<Fields extends Field[], IsOptional extends boolean = false> implements Field {
+export class UnionField<
+  Fields extends Field[],
+  IsOptional extends boolean = false,
+> implements Field {
   constructor(
     private readonly fields: Fields,
     private readonly defaultOrm?: ORM,
     private readonly config: UnionConfig = { required: true },
-  ) { }
+  ) {}
 
   toSchema(): SapphireSchemaNode {
     return {
@@ -27,7 +30,10 @@ export class UnionField<Fields extends Field[], IsOptional extends boolean = fal
   }
 
   optional(): UnionField<Fields, true> {
-    return new UnionField<Fields, true>(this.fields, this.defaultOrm, { ...this.config, required: false })
+    return new UnionField<Fields, true>(this.fields, this.defaultOrm, {
+      ...this.config,
+      required: false,
+    })
   }
 
   validate(value: any): ValidationResult {

@@ -58,15 +58,15 @@ new Sapphire(opts?: { defaultOrm?: ORM })
 
 ### Métodos da `Sapphire`
 
-| Método         | Descrição                                                              |
-| -------------- | ---------------------------------------------------------------------- |
-| `string()`     | Campo string (`.optional()`, `.min(n)`)                                |
-| `number()`     | Campo number (`.optional()`)                                           |
-| `boolean()`    | Campo boolean (`.optional()`)                                          |
-| `date()`       | Campo date (`.optional()`)                                             |
-| `object(obj)`  | Campo objeto aninhado (`.optional()`, `.getType()`, `.getSchema(orm?)`) |
-| `array(arr)`   | Campo array com items tipados (`.optional()`)                          |
-| `type()`       | Factory para construções avançadas: `.union([...])` e `.pick(obj, [...])` |
+| Método        | Descrição                                                                 |
+| ------------- | ------------------------------------------------------------------------- |
+| `string()`    | Campo string (`.optional()`, `.min(n)`)                                   |
+| `number()`    | Campo number (`.optional()`)                                              |
+| `boolean()`   | Campo boolean (`.optional()`)                                             |
+| `date()`      | Campo date (`.optional()`)                                                |
+| `object(obj)` | Campo objeto aninhado (`.optional()`, `.getType()`, `.getSchema(orm?)`)   |
+| `array(arr)`  | Campo array com items tipados (`.optional()`)                             |
+| `type()`      | Factory para construções avançadas: `.union([...])` e `.pick(obj, [...])` |
 
 Todos os fields expõem `toSchema()` (schema neutro), `getSchema(orm?)` (adaptado ao ORM) e `validate(value)`.
 
@@ -94,8 +94,8 @@ Ou definir um default e ainda assim sobrescrever pontualmente:
 
 ```typescript
 const a = new Sapphire({ defaultOrm: ORM.MONGO })
-productOrm.getSchema()           // usa MONGO
-productOrm.getSchema(ORM.MONGO)  // override explícito
+productOrm.getSchema() // usa MONGO
+productOrm.getSchema(ORM.MONGO) // override explícito
 ```
 
 ### Unions
@@ -134,8 +134,8 @@ Modificadores como `optional()` e `min()` **não mutam** a instância — eles r
 ```typescript
 const baseName = a.string()
 
-const userSchema  = a.object({ name: baseName })             // name obrigatório
-const adminSchema = a.object({ name: baseName.optional() })  // name opcional
+const userSchema = a.object({ name: baseName }) // name obrigatório
+const adminSchema = a.object({ name: baseName.optional() }) // name opcional
 
 // baseName segue obrigatório — nada vazou.
 ```

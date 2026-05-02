@@ -1,9 +1,20 @@
 {
   "name": "sapphire-lib",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "TypeScript library for dynamic schema and type generation across multiple ORMs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./adapters/mongo": {
+      "types": "./dist/adapters/mongo.d.ts",
+      "default": "./dist/adapters/mongo.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist"
   ],
@@ -11,11 +22,16 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "example": "ts-node src/example.ts"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "example": "ts-node src/example.ts",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Sapphire-lib/Sapphire.git"
+    "url": "git+https://github.com/Ascendance-Hub/Sapphire.git"
   },
   "keywords": [
     "typescript",
@@ -31,13 +47,18 @@
   },
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/Sapphire-lib/Sapphire/issues"
+    "url": "https://github.com/Ascendance-Hub/Sapphire/issues"
   },
-  "homepage": "https://github.com/Sapphire-lib/Sapphire",
+  "homepage": "https://github.com/Ascendance-Hub/Sapphire",
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@types/node": "^22.15.30",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^9.1.2",
     "mongoose": "^9.6.1",
+    "prettier": "^3.8.3",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.59.1",
     "vitest": "^2.1.9"
   }
 }

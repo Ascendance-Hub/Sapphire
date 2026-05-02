@@ -10,13 +10,13 @@ type ArrayConfig = {
 
 export class ArrayField<
   T extends Array<Field>,
-  IsOptional extends boolean = false
+  IsOptional extends boolean = false,
 > implements Field {
   constructor(
     private readonly arr: T,
     private readonly defaultOrm?: ORM,
     private readonly config: ArrayConfig = { required: true },
-  ) { }
+  ) {}
 
   toSchema(): SapphireSchemaNode {
     const items = this.arr.map((item) => item.toSchema())

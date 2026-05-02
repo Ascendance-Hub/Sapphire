@@ -16,7 +16,7 @@ describe('ArrayField', () => {
       field.validate([
         { name: 'dev', salary: 5000 },
         { name: 'po', salary: 6000 },
-      ]).error
+      ]).error,
     ).toBeUndefined()
   })
 
