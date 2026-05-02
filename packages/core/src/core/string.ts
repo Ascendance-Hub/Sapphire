@@ -1,19 +1,32 @@
 import { resolveSchema } from '../adapters/registry'
-import { Field, SafeParseResult, ValidationResult } from '../interfaces/field'
+import { Field, InternalField, SafeParseResult } from '../interfaces/field'
+import { buildIssue } from '../lib/issue-builder'
+import { runParse, runSafeParse } from '../lib/parse-runner'
+import type {
+  FieldMessages,
+  InstanceOptions,
+  InternalParseResult,
+  MessageValue,
+  ParseContext,
+  ParseOptions,
+} from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { ORM } from '../types/orm'
 
 type StringConfig = {
   required: boolean
   minLength?: number
+  fieldMessage?: FieldMessages | string
+  ruleMessages?: { min_length?: MessageValue }
 }
 
-export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn> {
+export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn>, InternalField {
   declare readonly _output: TOut
   declare readonly _input: TIn
 
   constructor(
     private readonly defaultOrm?: ORM,
+    private readonly instanceOpts?: InstanceOptions,
     private readonly config: StringConfig = { required: true },
   ) {}
 
@@ -30,38 +43,75 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
   }
 
   optional(): StringField<TOut | undefined, TIn | undefined> {
-    return new StringField<TOut | undefined, TIn | undefined>(this.defaultOrm, {
+    return new StringField<TOut | undefined, TIn | undefined>(this.defaultOrm, this.instanceOpts, {
       ...this.config,
       required: false,
     })
   }
 
-  min(value: number): StringField<TOut, TIn> {
+  min(value: number, opts?: { message?: MessageValue }): StringField<TOut, TIn> {
     if (typeof value !== 'number' || value < 0) {
       throw new Error('min must be a non-negative number')
     }
-    return new StringField<TOut, TIn>(this.defaultOrm, { ...this.config, minLength: value })
+    return new StringField<TOut, TIn>(this.defaultOrm, this.instanceOpts, {
+      ...this.config,
+      minLength: value,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { min_length: opts.message } : {}),
+      },
+    })
   }
 
-  validate(value: unknown): ValidationResult {
+  message(msg: string | FieldMessages): StringField<TOut, TIn> {
+    return new StringField<TOut, TIn>(this.defaultOrm, this.instanceOpts, {
+      ...this.config,
+      fieldMessage: msg,
+    })
+  }
+
+  _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined || value === null) {
-      if (this.config.required) return { value, error: 'Field is required' }
-      return { value }
+      if (this.config.required) {
+        return { value, issues: [buildIssue('required', ctx, {}, this.config.fieldMessage)] }
+      }
+      return { value, issues: [] }
     }
     if (typeof value !== 'string') {
-      return { value, error: 'Expected string' }
+      return {
+        value,
+        issues: [
+          buildIssue(
+            'invalid_type',
+            ctx,
+            { expected: 'string', got: Array.isArray(value) ? 'array' : typeof value },
+            this.config.fieldMessage,
+          ),
+        ],
+      }
     }
     if (this.config.minLength !== undefined && value.length < this.config.minLength) {
-      return { value, error: `String must have at least ${this.config.minLength} characters` }
+      return {
+        value,
+        issues: [
+          buildIssue(
+            'min_length',
+            ctx,
+            { min: this.config.minLength, got: value.length },
+            this.config.fieldMessage,
+            this.config.ruleMessages?.min_length,
+          ),
+        ],
+      }
     }
-    return { value }
+    return { value, issues: [] }
   }
 
-  parse(_value: unknown): TOut {
-    throw new Error('parse: implemented in PHASE_8')
+  parse(value: unknown, opts?: ParseOptions): TOut {
+    return runParse<TOut>(this, value, opts, this.instanceOpts)
   }
 
-  safeParse(_value: unknown): SafeParseResult<TOut> {
-    throw new Error('safeParse: implemented in PHASE_8')
+  safeParse(value: unknown, opts?: ParseOptions): SafeParseResult<TOut> {
+    return runSafeParse<TOut>(this, value, opts, this.instanceOpts)
   }
 }

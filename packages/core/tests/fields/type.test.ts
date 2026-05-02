@@ -12,6 +12,6 @@ describe('TypeField.pick', () => {
       extra: a.boolean(),
     })
     const picked = a.type().pick(original, ['name', 'age'])
-    expect(picked.validate({ name: 'ale', age: 30 }).error).toBeUndefined()
+    expect(picked.safeParse({ name: 'ale', age: 30 }).success).toBe(true)
   })
 })

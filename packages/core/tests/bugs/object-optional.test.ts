@@ -7,27 +7,27 @@ describe('Bug: ObjectField.optional() não funciona', () => {
 
   it('objeto opcional aceita undefined', () => {
     const field = a.object({ name: a.string() }).optional()
-    expect(field.validate(undefined).error).toBeUndefined()
+    expect(field.safeParse(undefined).success).toBe(true)
   })
 
   it('objeto opcional aceita null', () => {
     const field = a.object({ name: a.string() }).optional()
-    expect(field.validate(null).error).toBeUndefined()
+    expect(field.safeParse(null).success).toBe(true)
   })
 
   it('objeto obrigatório falha em undefined', () => {
     const field = a.object({ name: a.string() })
-    expect(field.validate(undefined).error).toBeTruthy()
+    expect(field.safeParse(undefined).success).toBe(false)
   })
 
   it('objeto opcional ainda valida quando presente', () => {
     const field = a.object({ name: a.string() }).optional()
-    expect(field.validate({ name: 'ale' }).error).toBeUndefined()
-    expect(field.validate({ name: 123 }).error).toBeTruthy()
+    expect(field.safeParse({ name: 'ale' }).success).toBe(true)
+    expect(field.safeParse({ name: 123 }).success).toBe(false)
   })
 
   it('schema reflete required:false após optional()', () => {
     const field = a.object({ name: a.string() }).optional()
-    expect(field.getSchema().required).toBe(false)
+    expect((field.getSchema() as { required: boolean }).required).toBe(false)
   })
 })

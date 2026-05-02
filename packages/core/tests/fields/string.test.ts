@@ -7,23 +7,28 @@ describe('StringField', () => {
 
   it('valida string válida', () => {
     const field = a.string()
-    expect(field.validate('ale').error).toBeUndefined()
+    expect(field.safeParse('ale').success).toBe(true)
   })
 
   it('falha para tipo incorreto', () => {
     const field = a.string()
-    expect(field.validate(123).error).toBeTruthy()
+    const r = field.safeParse(123)
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('invalid_type')
   })
 
   it('campo obrigatório falha quando ausente', () => {
     const field = a.string()
-    expect(field.validate(undefined).error).toBeTruthy()
-    expect(field.validate(null).error).toBeTruthy()
+    const a1 = field.safeParse(undefined)
+    const a2 = field.safeParse(null)
+    expect(a1.success).toBe(false)
+    expect(a2.success).toBe(false)
+    if (!a1.success) expect(a1.error.issues[0].code).toBe('required')
   })
 
   it('campo opcional aceita undefined/null', () => {
     const field = a.string().optional()
-    expect(field.validate(undefined).error).toBeUndefined()
-    expect(field.validate(null).error).toBeUndefined()
+    expect(field.safeParse(undefined).success).toBe(true)
+    expect(field.safeParse(null).success).toBe(true)
   })
 })

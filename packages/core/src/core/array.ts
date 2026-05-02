@@ -1,24 +1,37 @@
 import { resolveSchema } from '../adapters/registry'
-import { Field, SafeParseResult, ValidationResult } from '../interfaces/field'
+import { Field, InternalField, SafeParseResult } from '../interfaces/field'
+import { buildIssue } from '../lib/issue-builder'
+import { runParse, runSafeParse } from '../lib/parse-runner'
+import type {
+  FieldMessages,
+  InstanceOptions,
+  InternalParseResult,
+  ParseContext,
+  ParseOptions,
+} from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { InferElementInputs, InferElementOutputs } from '../types/infer'
 import { ORM } from '../types/orm'
 
 type ArrayConfig = {
   required: boolean
+  fieldMessage?: FieldMessages | string
 }
 
 export class ArrayField<
   T extends Array<Field>,
   TOut = InferElementOutputs<T>[number][],
   TIn = InferElementInputs<T>[number][],
-> implements Field<TOut, TIn> {
+>
+  implements Field<TOut, TIn>, InternalField
+{
   declare readonly _output: TOut
   declare readonly _input: TIn
 
   constructor(
     private readonly arr: T,
     private readonly defaultOrm?: ORM,
+    private readonly instanceOpts?: InstanceOptions,
     private readonly config: ArrayConfig = { required: true },
   ) {}
 
@@ -32,53 +45,71 @@ export class ArrayField<
   }
 
   optional(): ArrayField<T, TOut | undefined, TIn | undefined> {
-    return new ArrayField<T, TOut | undefined, TIn | undefined>(this.arr, this.defaultOrm, {
+    return new ArrayField<T, TOut | undefined, TIn | undefined>(
+      this.arr,
+      this.defaultOrm,
+      this.instanceOpts,
+      { ...this.config, required: false },
+    )
+  }
+
+  message(msg: string | FieldMessages): ArrayField<T, TOut, TIn> {
+    return new ArrayField<T, TOut, TIn>(this.arr, this.defaultOrm, this.instanceOpts, {
       ...this.config,
-      required: false,
+      fieldMessage: msg,
     })
   }
 
-  validate(value: unknown): ValidationResult {
+  _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined || value === null) {
-      if (this.config.required) return { value, error: 'Field is required' }
-      return { value }
+      if (this.config.required) {
+        return { value, issues: [buildIssue('required', ctx, {}, this.config.fieldMessage)] }
+      }
+      return { value, issues: [] }
     }
     if (!Array.isArray(value)) {
-      return { value, error: 'Expected array' }
-    }
-
-    const errors: Record<number, string> = {}
-    const validated: unknown[] = []
-
-    for (let i = 0; i < value.length; i++) {
-      const item = value[i]
-      const matched = this.arr.some((field) => {
-        if (typeof field.validate !== 'function') return false
-        const result = field.validate(item)
-        if (!result.error) {
-          validated[i] = result.value
-          return true
-        }
-        return false
-      })
-
-      if (!matched) {
-        validated[i] = item
-        errors[i] = 'No schema matches the value'
+      return {
+        value,
+        issues: [
+          buildIssue(
+            'invalid_type',
+            ctx,
+            { expected: 'array', got: typeof value },
+            this.config.fieldMessage,
+          ),
+        ],
       }
     }
 
-    if (Object.keys(errors).length > 0) {
-      return { value: validated, error: JSON.stringify(errors) }
+    const out: unknown[] = []
+    const issues = []
+
+    for (let i = 0; i < value.length; i++) {
+      const itemCtx: ParseContext = { ...ctx, path: [...ctx.path, i] }
+      let matched = false
+      for (const f of this.arr) {
+        const sub = (f as unknown as InternalField)._parse(value[i], itemCtx)
+        if (sub.issues.length === 0) {
+          out[i] = sub.value
+          matched = true
+          break
+        }
+      }
+      if (!matched) {
+        out[i] = value[i]
+        issues.push(buildIssue('union_no_match', itemCtx, {}, this.config.fieldMessage))
+        if (ctx.abortEarly) break
+      }
     }
-    return { value: validated }
+
+    return { value: out, issues }
   }
 
-  parse(_value: unknown): TOut {
-    throw new Error('parse: implemented in PHASE_8')
+  parse(value: unknown, opts?: ParseOptions): TOut {
+    return runParse<TOut>(this, value, opts, this.instanceOpts)
   }
 
-  safeParse(_value: unknown): SafeParseResult<TOut> {
-    throw new Error('safeParse: implemented in PHASE_8')
+  safeParse(value: unknown, opts?: ParseOptions): SafeParseResult<TOut> {
+    return runSafeParse<TOut>(this, value, opts, this.instanceOpts)
   }
 }

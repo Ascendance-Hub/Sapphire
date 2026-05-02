@@ -3,7 +3,15 @@ export type { SapphireOptions } from './lib/sapphire'
 export { SapphireValidationError } from './lib/validation-error'
 export { ORM } from './types'
 export type { Infer, InferInput, ObjectOutput, ObjectInput } from './types/infer'
-export type { Field, ValidationResult, SafeParseResult } from './interfaces/field'
+export type { Field, SafeParseResult } from './interfaces/field'
+export type { IssueCode } from './lib/issue-codes'
+export type {
+  ValidationIssue,
+  ParseOptions,
+  MessageValue,
+  MessageContext,
+  FieldMessages,
+} from './lib/types'
 export type { SapphireSchemaNode } from './schema/types'
 export {
   adapterRegistry,

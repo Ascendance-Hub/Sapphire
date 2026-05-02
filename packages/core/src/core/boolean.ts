@@ -1,18 +1,31 @@
 import { resolveSchema } from '../adapters/registry'
-import { Field, SafeParseResult, ValidationResult } from '../interfaces/field'
+import { Field, InternalField, SafeParseResult } from '../interfaces/field'
+import { buildIssue } from '../lib/issue-builder'
+import { runParse, runSafeParse } from '../lib/parse-runner'
+import type {
+  FieldMessages,
+  InstanceOptions,
+  InternalParseResult,
+  ParseContext,
+  ParseOptions,
+} from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { ORM } from '../types/orm'
 
 type BooleanConfig = {
   required: boolean
+  fieldMessage?: FieldMessages | string
 }
 
-export class BooleanField<TOut = boolean, TIn = boolean> implements Field<TOut, TIn> {
+export class BooleanField<TOut = boolean, TIn = boolean>
+  implements Field<TOut, TIn>, InternalField
+{
   declare readonly _output: TOut
   declare readonly _input: TIn
 
   constructor(
     private readonly defaultOrm?: ORM,
+    private readonly instanceOpts?: InstanceOptions,
     private readonly config: BooleanConfig = { required: true },
   ) {}
 
@@ -25,28 +38,47 @@ export class BooleanField<TOut = boolean, TIn = boolean> implements Field<TOut, 
   }
 
   optional(): BooleanField<TOut | undefined, TIn | undefined> {
-    return new BooleanField<TOut | undefined, TIn | undefined>(this.defaultOrm, {
+    return new BooleanField<TOut | undefined, TIn | undefined>(this.defaultOrm, this.instanceOpts, {
       ...this.config,
       required: false,
     })
   }
 
-  validate(value: unknown): ValidationResult {
+  message(msg: string | FieldMessages): BooleanField<TOut, TIn> {
+    return new BooleanField<TOut, TIn>(this.defaultOrm, this.instanceOpts, {
+      ...this.config,
+      fieldMessage: msg,
+    })
+  }
+
+  _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined || value === null) {
-      if (this.config.required) return { value, error: 'Field is required' }
-      return { value }
+      if (this.config.required) {
+        return { value, issues: [buildIssue('required', ctx, {}, this.config.fieldMessage)] }
+      }
+      return { value, issues: [] }
     }
     if (typeof value !== 'boolean') {
-      return { value, error: 'Expected boolean' }
+      return {
+        value,
+        issues: [
+          buildIssue(
+            'invalid_type',
+            ctx,
+            { expected: 'boolean', got: Array.isArray(value) ? 'array' : typeof value },
+            this.config.fieldMessage,
+          ),
+        ],
+      }
     }
-    return { value }
+    return { value, issues: [] }
   }
 
-  parse(_value: unknown): TOut {
-    throw new Error('parse: implemented in PHASE_8')
+  parse(value: unknown, opts?: ParseOptions): TOut {
+    return runParse<TOut>(this, value, opts, this.instanceOpts)
   }
 
-  safeParse(_value: unknown): SafeParseResult<TOut> {
-    throw new Error('safeParse: implemented in PHASE_8')
+  safeParse(value: unknown, opts?: ParseOptions): SafeParseResult<TOut> {
+    return runSafeParse<TOut>(this, value, opts, this.instanceOpts)
   }
 }

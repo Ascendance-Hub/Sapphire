@@ -7,26 +7,30 @@ describe('ArrayField', () => {
 
   it('valida array de strings', () => {
     const field = a.array([a.string()])
-    expect(field.validate(['a', 'b', 'c']).error).toBeUndefined()
+    expect(field.safeParse(['a', 'b', 'c']).success).toBe(true)
   })
 
   it('valida array de objetos', () => {
     const field = a.array([a.object({ name: a.string(), salary: a.number() })])
     expect(
-      field.validate([
+      field.safeParse([
         { name: 'dev', salary: 5000 },
         { name: 'po', salary: 6000 },
-      ]).error,
-    ).toBeUndefined()
+      ]).success,
+    ).toBe(true)
   })
 
   it('falha para não-array', () => {
     const field = a.array([a.string()])
-    expect(field.validate('a').error).toBeTruthy()
+    const r = field.safeParse('a')
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('invalid_type')
   })
 
   it('falha para undefined obrigatório', () => {
     const field = a.array([a.string()])
-    expect(field.validate(undefined).error).toBeTruthy()
+    const r = field.safeParse(undefined)
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('required')
   })
 })
