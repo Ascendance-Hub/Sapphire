@@ -42,6 +42,11 @@ export type SapphireSchemaNode =
   | (NodeBase & { kind: 'object'; properties: Record<string, SapphireSchemaNode> })
   | (NodeBase & {
       kind: 'array'
+      /**
+       * Single node = homogeneous array (every item validates against `items`).
+       * Array of nodes = legacy multi-item form, kept compatible until F10
+       * collapses ArrayField to single-item only.
+       */
       items: SapphireSchemaNode | SapphireSchemaNode[]
       minItems?: number
       maxItems?: number
