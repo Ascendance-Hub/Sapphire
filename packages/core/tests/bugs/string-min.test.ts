@@ -5,19 +5,21 @@ import { ORM } from '../../src/types'
 describe('Bug: StringField.min() não valida tamanho', () => {
   const a = new Sapphire({ defaultOrm: ORM.MONGO })
 
-  it('falha quando length < min', () => {
+  it('falha quando length < min — issue min_length', () => {
     const field = a.string().min(3)
-    expect(field.validate('ab').error).toBeTruthy()
+    const r = field.safeParse('ab')
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('min_length')
   })
 
   it('aceita quando length === min', () => {
     const field = a.string().min(3)
-    expect(field.validate('abc').error).toBeUndefined()
+    expect(field.safeParse('abc').success).toBe(true)
   })
 
   it('aceita quando length > min', () => {
     const field = a.string().min(3)
-    expect(field.validate('abcd').error).toBeUndefined()
+    expect(field.safeParse('abcd').success).toBe(true)
   })
 
   it('rejeita min negativo na construção', () => {

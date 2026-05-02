@@ -1,24 +1,37 @@
 import { resolveSchema } from '../adapters/registry'
-import { Field, SafeParseResult, ValidationResult } from '../interfaces/field'
+import { Field, InternalField, SafeParseResult } from '../interfaces/field'
+import { buildIssue } from '../lib/issue-builder'
+import { runParse, runSafeParse } from '../lib/parse-runner'
+import type {
+  FieldMessages,
+  InstanceOptions,
+  InternalParseResult,
+  ParseContext,
+  ParseOptions,
+} from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { InferElementInputs, InferElementOutputs } from '../types/infer'
 import { ORM } from '../types/orm'
 
 type UnionConfig = {
   required: boolean
+  fieldMessage?: FieldMessages | string
 }
 
 export class UnionField<
   Fields extends Field[],
   TOut = InferElementOutputs<Fields>[number],
   TIn = InferElementInputs<Fields>[number],
-> implements Field<TOut, TIn> {
+>
+  implements Field<TOut, TIn>, InternalField
+{
   declare readonly _output: TOut
   declare readonly _input: TIn
 
   constructor(
     private readonly fields: Fields,
     private readonly defaultOrm?: ORM,
+    private readonly instanceOpts?: InstanceOptions,
     private readonly config: UnionConfig = { required: true },
   ) {}
 
@@ -35,29 +48,40 @@ export class UnionField<
   }
 
   optional(): UnionField<Fields, TOut | undefined, TIn | undefined> {
-    return new UnionField<Fields, TOut | undefined, TIn | undefined>(this.fields, this.defaultOrm, {
+    return new UnionField<Fields, TOut | undefined, TIn | undefined>(
+      this.fields,
+      this.defaultOrm,
+      this.instanceOpts,
+      { ...this.config, required: false },
+    )
+  }
+
+  message(msg: string | FieldMessages): UnionField<Fields, TOut, TIn> {
+    return new UnionField<Fields, TOut, TIn>(this.fields, this.defaultOrm, this.instanceOpts, {
       ...this.config,
-      required: false,
+      fieldMessage: msg,
     })
   }
 
-  validate(value: unknown): ValidationResult {
+  _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined || value === null) {
-      if (this.config.required) return { value, error: 'Field is required' }
-      return { value }
+      if (this.config.required) {
+        return { value, issues: [buildIssue('required', ctx, {}, this.config.fieldMessage)] }
+      }
+      return { value, issues: [] }
     }
-    for (const field of this.fields) {
-      const result = field.validate(value)
-      if (!result.error) return { value: result.value }
+    for (const f of this.fields) {
+      const sub = (f as unknown as InternalField)._parse(value, ctx)
+      if (sub.issues.length === 0) return { value: sub.value, issues: [] }
     }
-    return { value, error: 'Value does not match any allowed type' }
+    return { value, issues: [buildIssue('union_no_match', ctx, {}, this.config.fieldMessage)] }
   }
 
-  parse(_value: unknown): TOut {
-    throw new Error('parse: implemented in PHASE_8')
+  parse(value: unknown, opts?: ParseOptions): TOut {
+    return runParse<TOut>(this, value, opts, this.instanceOpts)
   }
 
-  safeParse(_value: unknown): SafeParseResult<TOut> {
-    throw new Error('safeParse: implemented in PHASE_8')
+  safeParse(value: unknown, opts?: ParseOptions): SafeParseResult<TOut> {
+    return runSafeParse<TOut>(this, value, opts, this.instanceOpts)
   }
 }

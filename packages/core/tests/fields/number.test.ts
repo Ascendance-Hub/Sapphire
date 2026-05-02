@@ -5,24 +5,28 @@ import { ORM } from '../../src/types'
 describe('NumberField', () => {
   const a = new Sapphire({ defaultOrm: ORM.MONGO })
 
-  it('valida number válido', () => {
+  it('valida números válidos', () => {
     const field = a.number()
-    expect(field.validate(30).error).toBeUndefined()
-    expect(field.validate(0).error).toBeUndefined()
+    expect(field.safeParse(30).success).toBe(true)
+    expect(field.safeParse(0).success).toBe(true)
   })
 
   it('falha para tipo incorreto', () => {
     const field = a.number()
-    expect(field.validate('30').error).toBeTruthy()
+    const r = field.safeParse('30')
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('invalid_type')
   })
 
-  it('campo obrigatório falha quando ausente', () => {
+  it('obrigatório falha quando undefined', () => {
     const field = a.number()
-    expect(field.validate(undefined).error).toBeTruthy()
+    const r = field.safeParse(undefined)
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('required')
   })
 
-  it('campo opcional aceita undefined', () => {
+  it('opcional aceita undefined', () => {
     const field = a.number().optional()
-    expect(field.validate(undefined).error).toBeUndefined()
+    expect(field.safeParse(undefined).success).toBe(true)
   })
 })

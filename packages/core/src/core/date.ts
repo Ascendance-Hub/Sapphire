@@ -1,18 +1,29 @@
 import { resolveSchema } from '../adapters/registry'
-import { Field, SafeParseResult, ValidationResult } from '../interfaces/field'
+import { Field, InternalField, SafeParseResult } from '../interfaces/field'
+import { buildIssue } from '../lib/issue-builder'
+import { runParse, runSafeParse } from '../lib/parse-runner'
+import type {
+  FieldMessages,
+  InstanceOptions,
+  InternalParseResult,
+  ParseContext,
+  ParseOptions,
+} from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { ORM } from '../types/orm'
 
 type DateConfig = {
   required: boolean
+  fieldMessage?: FieldMessages | string
 }
 
-export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn> {
+export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, InternalField {
   declare readonly _output: TOut
   declare readonly _input: TIn
 
   constructor(
     private readonly defaultOrm?: ORM,
+    private readonly instanceOpts?: InstanceOptions,
     private readonly config: DateConfig = { required: true },
   ) {}
 
@@ -25,33 +36,64 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn> {
   }
 
   optional(): DateField<TOut | undefined, TIn | undefined> {
-    return new DateField<TOut | undefined, TIn | undefined>(this.defaultOrm, {
+    return new DateField<TOut | undefined, TIn | undefined>(this.defaultOrm, this.instanceOpts, {
       ...this.config,
       required: false,
     })
   }
 
-  validate(value: unknown): ValidationResult {
+  message(msg: string | FieldMessages): DateField<TOut, TIn> {
+    return new DateField<TOut, TIn>(this.defaultOrm, this.instanceOpts, {
+      ...this.config,
+      fieldMessage: msg,
+    })
+  }
+
+  _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined || value === null) {
-      if (this.config.required) return { value, error: 'Field is required' }
-      return { value }
+      if (this.config.required) {
+        return { value, issues: [buildIssue('required', ctx, {}, this.config.fieldMessage)] }
+      }
+      return { value, issues: [] }
     }
-    if (!(value instanceof Date) && typeof value !== 'string') {
-      return { value, error: 'Expected date or date string' }
+    if (value instanceof Date) {
+      return { value, issues: [] }
     }
     if (typeof value === 'string') {
       const d = new Date(value)
-      if (isNaN(d.getTime())) return { value, error: 'Invalid date string' }
-      return { value: d }
+      if (isNaN(d.getTime())) {
+        return {
+          value,
+          issues: [
+            buildIssue(
+              'invalid_type',
+              ctx,
+              { expected: 'date', got: 'invalid date string' },
+              this.config.fieldMessage,
+            ),
+          ],
+        }
+      }
+      return { value: d, issues: [] }
     }
-    return { value }
+    return {
+      value,
+      issues: [
+        buildIssue(
+          'invalid_type',
+          ctx,
+          { expected: 'date', got: Array.isArray(value) ? 'array' : typeof value },
+          this.config.fieldMessage,
+        ),
+      ],
+    }
   }
 
-  parse(_value: unknown): TOut {
-    throw new Error('parse: implemented in PHASE_8')
+  parse(value: unknown, opts?: ParseOptions): TOut {
+    return runParse<TOut>(this, value, opts, this.instanceOpts)
   }
 
-  safeParse(_value: unknown): SafeParseResult<TOut> {
-    throw new Error('safeParse: implemented in PHASE_8')
+  safeParse(value: unknown, opts?: ParseOptions): SafeParseResult<TOut> {
+    return runSafeParse<TOut>(this, value, opts, this.instanceOpts)
   }
 }

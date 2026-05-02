@@ -7,21 +7,25 @@ describe('DateField', () => {
 
   it('aceita Date instance', () => {
     const field = a.date()
-    expect(field.validate(new Date()).error).toBeUndefined()
+    expect(field.safeParse(new Date()).success).toBe(true)
   })
 
-  it('aceita string ISO válida', () => {
+  it('aceita string ISO válida e converte para Date', () => {
     const field = a.date()
-    expect(field.validate('2024-01-01').error).toBeUndefined()
+    const r = field.safeParse('2024-01-01')
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data).toBeInstanceOf(Date)
   })
 
   it('falha para string inválida', () => {
     const field = a.date()
-    expect(field.validate('not a date').error).toBeTruthy()
+    const r = field.safeParse('not a date')
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('invalid_type')
   })
 
-  it('campo opcional aceita undefined', () => {
+  it('opcional aceita undefined', () => {
     const field = a.date().optional()
-    expect(field.validate(undefined).error).toBeUndefined()
+    expect(field.safeParse(undefined).success).toBe(true)
   })
 })

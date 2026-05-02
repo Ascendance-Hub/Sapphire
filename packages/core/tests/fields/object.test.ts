@@ -10,29 +10,43 @@ describe('ObjectField', () => {
       name: a.string(),
       age: a.number(),
     })
-    expect(field.validate({ name: 'ale', age: 30 }).error).toBeUndefined()
+    expect(field.safeParse({ name: 'ale', age: 30 }).success).toBe(true)
   })
 
-  it('falha quando subcampo é inválido', () => {
+  it('falha quando subcampo é inválido — path correto', () => {
     const field = a.object({
       name: a.string(),
       age: a.number(),
     })
-    expect(field.validate({ name: 'ale', age: 'trinta' }).error).toBeTruthy()
+    const r = field.safeParse({ name: 'ale', age: 'trinta' })
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      expect(r.error.issues[0].path).toEqual(['age'])
+      expect(r.error.issues[0].code).toBe('invalid_type')
+    }
   })
 
-  it('falha quando subcampo obrigatório está ausente', () => {
+  it('falha quando subcampo obrigatório está ausente — emite required no path da chave', () => {
     const field = a.object({ name: a.string() })
-    expect(field.validate({}).error).toBeTruthy()
+    const r = field.safeParse({})
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      expect(r.error.issues[0].path).toEqual(['name'])
+      expect(r.error.issues[0].code).toBe('required')
+    }
   })
 
   it('falha para não-objeto', () => {
     const field = a.object({ name: a.string() })
-    expect(field.validate('string').error).toBeTruthy()
+    const r = field.safeParse('string')
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('invalid_type')
   })
 
-  it('falha para array (não-objeto)', () => {
+  it('falha para array', () => {
     const field = a.object({ name: a.string() })
-    expect(field.validate([]).error).toBeTruthy()
+    const r = field.safeParse([])
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('invalid_type')
   })
 })

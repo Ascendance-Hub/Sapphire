@@ -57,11 +57,11 @@ const user: UserType = {
 
 console.log(userOrm.getSchema())
 
-try {
-  const result = userOrm.validate(user)
-  console.log('Validação bem-sucedida:', result)
-} catch (e) {
-  console.error('Erro de validação (válido):', e)
+const valid = userOrm.safeParse(user)
+if (valid.success) {
+  console.log('Validação bem-sucedida:', valid.data)
+} else {
+  console.error('Erro de validação (válido):', valid.error.issues)
 }
 
 const userInvalido = {
@@ -74,11 +74,11 @@ const userInvalido = {
   ],
 }
 
-try {
-  const result = userOrm.validate(userInvalido)
-  console.log('Validação inesperadamente bem-sucedida:', result)
-} catch (e) {
-  console.error('Erro de validação (inválido):', e)
+const invalid = userOrm.safeParse(userInvalido)
+if (invalid.success) {
+  console.log('Validação inesperadamente bem-sucedida:', invalid.data)
+} else {
+  console.error('Erro de validação (inválido):', invalid.error.issues)
 }
 
 const b = new Sapphire({ defaultOrm: ORM.MONGO })

@@ -7,26 +7,29 @@ describe('Bug: ArrayField itera sobre schema em vez dos dados', () => {
 
   it('detecta item inválido no meio do array', () => {
     const field = a.array([a.string()])
-    expect(field.validate(['ok', 123, 'ok']).error).toBeTruthy()
+    const r = field.safeParse(['ok', 123, 'ok'])
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].path).toEqual([1])
   })
 
   it('detecta item inválido no final do array', () => {
     const field = a.array([a.string()])
-    expect(field.validate(['ok', 'ok', 123]).error).toBeTruthy()
+    const r = field.safeParse(['ok', 'ok', 123])
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].path).toEqual([2])
   })
 
   it('detecta objeto inválido em array de objetos', () => {
     const field = a.array([a.object({ name: a.string(), salary: a.number() })])
-    expect(
-      field.validate([
-        { name: 'dev', salary: 5000 },
-        { name: 'po', salary: 'não é número' },
-      ]).error,
-    ).toBeTruthy()
+    const r = field.safeParse([
+      { name: 'dev', salary: 5000 },
+      { name: 'po', salary: 'não é número' },
+    ])
+    expect(r.success).toBe(false)
   })
 
-  it('valida array vazio para schema obrigatório (sem itens, mas é um array)', () => {
+  it('valida array vazio para schema obrigatório', () => {
     const field = a.array([a.string()])
-    expect(field.validate([]).error).toBeUndefined()
+    expect(field.safeParse([]).success).toBe(true)
   })
 })
