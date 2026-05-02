@@ -1,4 +1,4 @@
-import { Sapphire, ORM, type Infer } from '@ascendance-hub/sapphire-core'
+import { Sapphire, ORM } from '@ascendance-hub/sapphire-core'
 import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
 
 const a = new Sapphire({ defaultOrm: ORM.MONGO })
@@ -8,7 +8,7 @@ const userOrm = a.object({
   age: a.number().optional(),
 })
 
-export type User = Infer<typeof userOrm>
+export type User = ReturnType<typeof userOrm.getType>
 
 // via default adapter (mongo registra a si mesmo no import acima)
 const _viaDefault = userOrm.getSchema()

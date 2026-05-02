@@ -1,7 +1,7 @@
 import { resolveSchema } from '../adapters/registry'
-import { Field, SafeParseResult, ValidationResult } from '../interfaces/field'
+import { Field, ValidationResult } from '../interfaces/field'
 import { SapphireSchemaNode } from '../schema/types'
-import { InferElementInputs, InferElementOutputs } from '../types/infer'
+import { InferSchema } from '../types/infer-type'
 import { ORM } from '../types/orm'
 
 type ArrayConfig = {
@@ -10,12 +10,8 @@ type ArrayConfig = {
 
 export class ArrayField<
   T extends Array<Field>,
-  TOut = InferElementOutputs<T>[number][],
-  TIn = InferElementInputs<T>[number][],
-> implements Field<TOut, TIn> {
-  declare readonly _output: TOut
-  declare readonly _input: TIn
-
+  IsOptional extends boolean = false,
+> implements Field {
   constructor(
     private readonly arr: T,
     private readonly defaultOrm?: ORM,
@@ -31,14 +27,15 @@ export class ArrayField<
     return resolveSchema(this.toSchema(), orm, this.defaultOrm)
   }
 
-  optional(): ArrayField<T, TOut | undefined, TIn | undefined> {
-    return new ArrayField<T, TOut | undefined, TIn | undefined>(this.arr, this.defaultOrm, {
-      ...this.config,
-      required: false,
-    })
+  getType(): InferSchema<T> {
+    return null as any
   }
 
-  validate(value: unknown): ValidationResult {
+  optional(): ArrayField<T, true> {
+    return new ArrayField<T, true>(this.arr, this.defaultOrm, { ...this.config, required: false })
+  }
+
+  validate(value: any): ValidationResult {
     if (value === undefined || value === null) {
       if (this.config.required) return { value, error: 'Field is required' }
       return { value }
@@ -48,7 +45,7 @@ export class ArrayField<
     }
 
     const errors: Record<number, string> = {}
-    const validated: unknown[] = []
+    const validated: any[] = []
 
     for (let i = 0; i < value.length; i++) {
       const item = value[i]
@@ -72,13 +69,5 @@ export class ArrayField<
       return { value: validated, error: JSON.stringify(errors) }
     }
     return { value: validated }
-  }
-
-  parse(_value: unknown): TOut {
-    throw new Error('parse: implemented in PHASE_8')
-  }
-
-  safeParse(_value: unknown): SafeParseResult<TOut> {
-    throw new Error('safeParse: implemented in PHASE_8')
   }
 }

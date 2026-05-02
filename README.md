@@ -27,8 +27,7 @@ Sapphire é uma biblioteca TypeScript para definição de **schemas** com geraç
 ## Quickstart
 
 ```typescript
-import { Sapphire, ORM, type Infer } from '@ascendance-hub/sapphire-core'
-import '@ascendance-hub/sapphire-mongo' // registra o adapter mongo
+import { Sapphire, ORM } from 'sapphire-lib'
 
 const a = new Sapphire({ defaultOrm: ORM.MONGO })
 
@@ -39,7 +38,7 @@ const userOrm = a.object({
 })
 
 // Tipo TypeScript inferido a partir do schema
-export type User = Infer<typeof userOrm>
+export type User = ReturnType<typeof userOrm.getType>
 
 // Schema pronto para o ORM (Mongoose, no caso de ORM.MONGO)
 const mongoSchema = userOrm.getSchema()
@@ -59,15 +58,15 @@ new Sapphire(opts?: { defaultOrm?: ORM })
 
 ### Métodos da `Sapphire`
 
-| Método        | Descrição                                                                                      |
-| ------------- | ---------------------------------------------------------------------------------------------- |
-| `string()`    | Campo string (`.optional()`, `.min(n)`)                                                        |
-| `number()`    | Campo number (`.optional()`)                                                                   |
-| `boolean()`   | Campo boolean (`.optional()`)                                                                  |
-| `date()`      | Campo date (`.optional()`)                                                                     |
-| `object(obj)` | Campo objeto aninhado (`.optional()`, `.getSchema(orm?)`); use `Infer<typeof obj>` para o tipo |
-| `array(arr)`  | Campo array com items tipados (`.optional()`)                                                  |
-| `type()`      | Factory para construções avançadas: `.union([...])` e `.pick(obj, [...])`                      |
+| Método        | Descrição                                                                 |
+| ------------- | ------------------------------------------------------------------------- |
+| `string()`    | Campo string (`.optional()`, `.min(n)`)                                   |
+| `number()`    | Campo number (`.optional()`)                                              |
+| `boolean()`   | Campo boolean (`.optional()`)                                             |
+| `date()`      | Campo date (`.optional()`)                                                |
+| `object(obj)` | Campo objeto aninhado (`.optional()`, `.getType()`, `.getSchema(orm?)`)   |
+| `array(arr)`  | Campo array com items tipados (`.optional()`)                             |
+| `type()`      | Factory para construções avançadas: `.union([...])` e `.pick(obj, [...])` |
 
 Todos os fields expõem `toSchema()` (schema neutro), `getSchema(orm?)` (adaptado ao ORM) e `validate(value)`.
 
@@ -109,7 +108,7 @@ const event = a.object({
 })
 ```
 
-A inferência via `Infer<typeof event>` resolve o campo como `Date | string`.
+A inferência de `event.getType` resolve o campo como `Date | string`.
 
 ### Pick
 

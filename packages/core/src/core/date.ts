@@ -1,5 +1,5 @@
 import { resolveSchema } from '../adapters/registry'
-import { Field, SafeParseResult, ValidationResult } from '../interfaces/field'
+import { Field, ValidationResult } from '../interfaces/field'
 import { SapphireSchemaNode } from '../schema/types'
 import { ORM } from '../types/orm'
 
@@ -7,10 +7,7 @@ type DateConfig = {
   required: boolean
 }
 
-export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn> {
-  declare readonly _output: TOut
-  declare readonly _input: TIn
-
+export class DateField<IsOptional extends boolean = false> implements Field {
   constructor(
     private readonly defaultOrm?: ORM,
     private readonly config: DateConfig = { required: true },
@@ -24,14 +21,11 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn> {
     return resolveSchema(this.toSchema(), orm, this.defaultOrm)
   }
 
-  optional(): DateField<TOut | undefined, TIn | undefined> {
-    return new DateField<TOut | undefined, TIn | undefined>(this.defaultOrm, {
-      ...this.config,
-      required: false,
-    })
+  optional(): DateField<true> {
+    return new DateField<true>(this.defaultOrm, { ...this.config, required: false })
   }
 
-  validate(value: unknown): ValidationResult {
+  validate(value: any): ValidationResult {
     if (value === undefined || value === null) {
       if (this.config.required) return { value, error: 'Field is required' }
       return { value }
@@ -45,13 +39,5 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn> {
       return { value: d }
     }
     return { value }
-  }
-
-  parse(_value: unknown): TOut {
-    throw new Error('parse: implemented in PHASE_8')
-  }
-
-  safeParse(_value: unknown): SafeParseResult<TOut> {
-    throw new Error('safeParse: implemented in PHASE_8')
   }
 }
