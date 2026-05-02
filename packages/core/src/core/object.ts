@@ -8,12 +8,18 @@ import type {
   InternalParseResult,
   ParseContext,
   ParseOptions,
+  ValidationIssue,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { ObjectInput, ObjectOutput } from '../types/infer'
 
 type ObjectConfig = {
   required: boolean
+  nullable?: boolean
+  hasDefault?: boolean
+  default?: unknown
+  description?: string
+  meta?: Record<string, unknown>
   fieldMessage?: FieldMessages | string
 }
 
@@ -43,7 +49,15 @@ export class ObjectField<
     for (const [key, value] of Object.entries(this.obj)) {
       properties[key] = value.toSchema()
     }
-    return { kind: 'object', required: this.config.required, properties }
+    return {
+      kind: 'object',
+      required: this.config.required,
+      ...(this.config.nullable ? { nullable: true } : {}),
+      ...(this.config.hasDefault ? { default: this.config.default } : {}),
+      ...(this.config.description !== undefined ? { description: this.config.description } : {}),
+      ...(this.config.meta ? { meta: this.config.meta } : {}),
+      properties,
+    }
   }
 
   getSchema(name?: string) {
@@ -59,6 +73,50 @@ export class ObjectField<
     )
   }
 
+  nullable(): ObjectField<T, TOut | null, TIn | null> {
+    return new ObjectField<T, TOut | null, TIn | null>(
+      this.obj,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, nullable: true },
+    )
+  }
+
+  default(value: TOut): ObjectField<T, TOut, TIn | undefined> {
+    return new ObjectField<T, TOut, TIn | undefined>(
+      this.obj,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, hasDefault: true, default: value },
+    )
+  }
+
+  describe(text: string): this {
+    const Ctor = this.constructor as new (
+      obj: T,
+      a?: string,
+      b?: InstanceOptions,
+      c?: ObjectConfig,
+    ) => this
+    return new Ctor(this.obj, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      description: text,
+    })
+  }
+
+  adapter(name: string, opts: unknown): this {
+    const Ctor = this.constructor as new (
+      obj: T,
+      a?: string,
+      b?: InstanceOptions,
+      c?: ObjectConfig,
+    ) => this
+    return new Ctor(this.obj, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      meta: { ...(this.config.meta ?? {}), [name]: opts },
+    })
+  }
+
   message(msg: string | FieldMessages): ObjectField<T, TOut, TIn> {
     return new ObjectField<T, TOut, TIn>(this.obj, this.defaultAdapter, this.instanceOpts, {
       ...this.config,
@@ -66,7 +124,17 @@ export class ObjectField<
     })
   }
 
+  /**
+   * _parse order: default substitution → null/undefined handling →
+   * invalid_type check (exclusive) → accumulated per-key checks.
+   */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
+    if (value === undefined && this.config.hasDefault) {
+      value = this.config.default
+    }
+    if (value === null && this.config.nullable) {
+      return { value: null, issues: [] }
+    }
     if (value === undefined || value === null) {
       if (this.config.required) {
         return { value, issues: [buildIssue('required', ctx, {}, this.config.fieldMessage)] }
@@ -89,7 +157,7 @@ export class ObjectField<
 
     const v = value as Record<string, unknown>
     const out: Record<string, unknown> = {}
-    const issues = []
+    const issues: ValidationIssue[] = []
 
     for (const [key, child] of Object.entries(this.obj)) {
       const childCtx: ParseContext = { ...ctx, path: [...ctx.path, key] }

@@ -8,11 +8,19 @@ import type {
   InternalParseResult,
   ParseContext,
   ParseOptions,
+  ValidationIssue,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 
 type NumberConfig = {
   required: boolean
+  nullable?: boolean
+  hasDefault?: boolean
+  default?: unknown
+  description?: string
+  meta?: Record<string, unknown>
+  unique?: boolean
+  index?: boolean | { unique?: boolean }
   fieldMessage?: FieldMessages | string
 }
 
@@ -27,7 +35,16 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   ) {}
 
   toSchema(): SapphireSchemaNode {
-    return { kind: 'number', required: this.config.required }
+    return {
+      kind: 'number',
+      required: this.config.required,
+      ...(this.config.nullable ? { nullable: true } : {}),
+      ...(this.config.hasDefault ? { default: this.config.default } : {}),
+      ...(this.config.description !== undefined ? { description: this.config.description } : {}),
+      ...(this.config.meta ? { meta: this.config.meta } : {}),
+      ...(this.config.unique ? { unique: true } : {}),
+      ...(this.config.index !== undefined ? { index: this.config.index } : {}),
+    }
   }
 
   getSchema(name?: string) {
@@ -41,6 +58,63 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
     })
   }
 
+  nullable(): NumberField<TOut | null, TIn | null> {
+    return new NumberField<TOut | null, TIn | null>(this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      nullable: true,
+    })
+  }
+
+  default(value: TOut): NumberField<TOut, TIn | undefined> {
+    return new NumberField<TOut, TIn | undefined>(this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      hasDefault: true,
+      default: value,
+    })
+  }
+
+  describe(text: string): this {
+    const Ctor = this.constructor as new (
+      a?: string,
+      b?: InstanceOptions,
+      c?: NumberConfig,
+    ) => this
+    return new Ctor(this.defaultAdapter, this.instanceOpts, { ...this.config, description: text })
+  }
+
+  adapter(name: string, opts: unknown): this {
+    const Ctor = this.constructor as new (
+      a?: string,
+      b?: InstanceOptions,
+      c?: NumberConfig,
+    ) => this
+    return new Ctor(this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      meta: { ...(this.config.meta ?? {}), [name]: opts },
+    })
+  }
+
+  unique(): this {
+    const Ctor = this.constructor as new (
+      a?: string,
+      b?: InstanceOptions,
+      c?: NumberConfig,
+    ) => this
+    return new Ctor(this.defaultAdapter, this.instanceOpts, { ...this.config, unique: true })
+  }
+
+  index(opts?: { unique?: boolean }): this {
+    const Ctor = this.constructor as new (
+      a?: string,
+      b?: InstanceOptions,
+      c?: NumberConfig,
+    ) => this
+    return new Ctor(this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      index: opts === undefined ? true : { unique: opts.unique },
+    })
+  }
+
   message(msg: string | FieldMessages): NumberField<TOut, TIn> {
     return new NumberField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
@@ -48,7 +122,17 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
     })
   }
 
+  /**
+   * _parse order: default substitution → null/undefined handling →
+   * invalid_type check (exclusive) → accumulated rule checks.
+   */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
+    if (value === undefined && this.config.hasDefault) {
+      value = this.config.default
+    }
+    if (value === null && this.config.nullable) {
+      return { value: null, issues: [] }
+    }
     if (value === undefined || value === null) {
       if (this.config.required) {
         return { value, issues: [buildIssue('required', ctx, {}, this.config.fieldMessage)] }
@@ -68,7 +152,8 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
         ],
       }
     }
-    return { value, issues: [] }
+    const issues: ValidationIssue[] = []
+    return { value, issues }
   }
 
   parse(value: unknown, opts?: ParseOptions): TOut {
