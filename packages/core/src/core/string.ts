@@ -1,5 +1,5 @@
 import { resolveSchema } from '../adapters/registry'
-import { Field, ValidationResult } from '../interfaces/field'
+import { Field, SafeParseResult, ValidationResult } from '../interfaces/field'
 import { SapphireSchemaNode } from '../schema/types'
 import { ORM } from '../types/orm'
 
@@ -8,7 +8,10 @@ type StringConfig = {
   minLength?: number
 }
 
-export class StringField<IsOptional extends boolean = false> implements Field {
+export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn> {
+  declare readonly _output: TOut
+  declare readonly _input: TIn
+
   constructor(
     private readonly defaultOrm?: ORM,
     private readonly config: StringConfig = { required: true },
@@ -26,18 +29,21 @@ export class StringField<IsOptional extends boolean = false> implements Field {
     return resolveSchema(this.toSchema(), orm, this.defaultOrm)
   }
 
-  optional(): StringField<true> {
-    return new StringField<true>(this.defaultOrm, { ...this.config, required: false })
+  optional(): StringField<TOut | undefined, TIn | undefined> {
+    return new StringField<TOut | undefined, TIn | undefined>(this.defaultOrm, {
+      ...this.config,
+      required: false,
+    })
   }
 
-  min(value: number): StringField<IsOptional> {
+  min(value: number): StringField<TOut, TIn> {
     if (typeof value !== 'number' || value < 0) {
       throw new Error('min must be a non-negative number')
     }
-    return new StringField<IsOptional>(this.defaultOrm, { ...this.config, minLength: value })
+    return new StringField<TOut, TIn>(this.defaultOrm, { ...this.config, minLength: value })
   }
 
-  validate(value: any): ValidationResult {
+  validate(value: unknown): ValidationResult {
     if (value === undefined || value === null) {
       if (this.config.required) return { value, error: 'Field is required' }
       return { value }
@@ -49,5 +55,13 @@ export class StringField<IsOptional extends boolean = false> implements Field {
       return { value, error: `String must have at least ${this.config.minLength} characters` }
     }
     return { value }
+  }
+
+  parse(_value: unknown): TOut {
+    throw new Error('parse: implemented in PHASE_8')
+  }
+
+  safeParse(_value: unknown): SafeParseResult<TOut> {
+    throw new Error('safeParse: implemented in PHASE_8')
   }
 }

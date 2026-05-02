@@ -1,5 +1,6 @@
 import { Sapphire } from './lib/sapphire'
 import { ORM } from './types'
+import type { Infer } from './types/infer'
 
 const a = new Sapphire({ defaultOrm: ORM.MONGO })
 const userOrm = a.object({
@@ -26,7 +27,7 @@ const userOrm = a.object({
   ]),
 })
 
-export type UserType = ReturnType<typeof userOrm.getType>
+export type UserType = Infer<typeof userOrm>
 
 const user: UserType = {
   name: 'ale',
@@ -89,4 +90,4 @@ const test = b.object({
 const c = new Sapphire({ defaultOrm: ORM.MONGO })
 const test2 = c.type().pick(test, ['name', 'age'])
 
-export type Picked = ReturnType<typeof test2.getType>
+export type Picked = Infer<typeof test2>

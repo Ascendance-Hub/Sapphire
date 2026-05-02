@@ -1,5 +1,5 @@
 // Exemplos do README — devem compilar e refletir a API atual.
-import { Sapphire, ORM } from '../src'
+import { Sapphire, ORM, type Infer } from '@ascendance-hub/sapphire-core'
 
 // ---------- Quickstart ----------
 const a = new Sapphire({ defaultOrm: ORM.MONGO })
@@ -10,7 +10,7 @@ const userOrm = a.object({
   birthDate: a.date().optional(),
 })
 
-export type User = ReturnType<typeof userOrm.getType>
+export type User = Infer<typeof userOrm>
 
 const _mongoSchema = userOrm.getSchema()
 void _mongoSchema
@@ -34,7 +34,7 @@ cOrm.getSchema(ORM.MONGO)
 const event = a.object({
   occurredAt: a.type().union([a.date(), a.string()]),
 })
-type Event = ReturnType<typeof event.getType>
+type Event = Infer<typeof event>
 const _evt: Event = { occurredAt: '2026-01-01' }
 void _evt
 
@@ -45,7 +45,7 @@ const fullUser = a.object({
   email: a.string(),
 })
 const summary = a.type().pick(fullUser, ['name', 'age'])
-type Summary = ReturnType<typeof summary.getType>
+type Summary = Infer<typeof summary>
 const _s: Summary = { name: 'ale', age: 30 }
 void _s
 
