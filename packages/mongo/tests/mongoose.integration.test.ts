@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
-import { Sapphire, ORM } from '@ascendance-hub/sapphire-core'
+import { Sapphire } from '@ascendance-hub/sapphire-core'
 import { toMongoSchema } from '../src'
 
 describe('Integração com Mongoose', () => {
-  const a = new Sapphire({ defaultOrm: ORM.MONGO })
+  const a = new Sapphire({ defaultAdapter: 'mongo' })
 
   it('aceita schema simples em new mongoose.Schema', () => {
     const userField = a.object({

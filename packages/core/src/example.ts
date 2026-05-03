@@ -1,8 +1,7 @@
 import { Sapphire } from './lib/sapphire'
-import { ORM } from './types'
 import type { Infer } from './types/infer'
 
-const a = new Sapphire({ defaultOrm: ORM.MONGO })
+const a = new Sapphire({ defaultAdapter: 'mongo' })
 const userOrm = a.object({
   name: a.string(),
   age: a.number().optional(),
@@ -81,13 +80,13 @@ if (invalid.success) {
   console.error('Erro de validação (inválido):', invalid.error.issues)
 }
 
-const b = new Sapphire({ defaultOrm: ORM.MONGO })
+const b = new Sapphire({ defaultAdapter: 'mongo' })
 const test = b.object({
   name: b.string(),
   age: b.number(),
 })
 
-const c = new Sapphire({ defaultOrm: ORM.MONGO })
+const c = new Sapphire({ defaultAdapter: 'mongo' })
 const test2 = c.type().pick(test, ['name', 'age'])
 
 export type Picked = Infer<typeof test2>

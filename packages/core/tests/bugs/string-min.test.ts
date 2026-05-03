@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { Sapphire } from '../../src/lib/sapphire'
-import { ORM } from '../../src/types'
 
 describe('Bug: StringField.min() não valida tamanho', () => {
-  const a = new Sapphire({ defaultOrm: ORM.MONGO })
+  const a = new Sapphire({ defaultAdapter: 'mongo' })
 
   it('falha quando length < min — issue min_length', () => {
     const field = a.string().min(3)

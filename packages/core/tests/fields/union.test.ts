@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { Sapphire } from '../../src/lib/sapphire'
-import { ORM } from '../../src/types'
 
 describe('UnionField', () => {
-  const a = new Sapphire({ defaultOrm: ORM.MONGO })
+  const a = new Sapphire({ defaultAdapter: 'mongo' })
 
   it('aceita primeiro tipo do union', () => {
     const field = a.type().union([a.string(), a.number()])

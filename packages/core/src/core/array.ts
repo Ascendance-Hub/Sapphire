@@ -6,16 +6,34 @@ import type {
   FieldMessages,
   InstanceOptions,
   InternalParseResult,
+  MessageValue,
   ParseContext,
   ParseOptions,
+  ValidationIssue,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { InferElementInputs, InferElementOutputs } from '../types/infer'
-import { ORM } from '../types/orm'
+
+type ArrayRuleMessages = {
+  min_items?: MessageValue
+  max_items?: MessageValue
+  items_length?: MessageValue
+  nonempty?: MessageValue
+}
 
 type ArrayConfig = {
   required: boolean
+  nullable?: boolean
+  hasDefault?: boolean
+  default?: unknown
+  description?: string
+  meta?: Record<string, unknown>
+  minItems?: number
+  maxItems?: number
+  length?: number
+  nonempty?: boolean
   fieldMessage?: FieldMessages | string
+  ruleMessages?: ArrayRuleMessages
 }
 
 export class ArrayField<
@@ -30,37 +48,151 @@ export class ArrayField<
 
   constructor(
     private readonly arr: T,
-    private readonly defaultOrm?: ORM,
+    private readonly defaultAdapter?: string,
     private readonly instanceOpts?: InstanceOptions,
     private readonly config: ArrayConfig = { required: true },
   ) {}
 
   toSchema(): SapphireSchemaNode {
     const items = this.arr.map((item) => item.toSchema())
-    return { kind: 'array', required: this.config.required, items }
+    return {
+      kind: 'array',
+      required: this.config.required,
+      ...(this.config.nullable ? { nullable: true } : {}),
+      ...(this.config.hasDefault ? { default: this.config.default } : {}),
+      ...(this.config.description !== undefined ? { description: this.config.description } : {}),
+      ...(this.config.meta ? { meta: this.config.meta } : {}),
+      ...(this.config.minItems !== undefined ? { minItems: this.config.minItems } : {}),
+      ...(this.config.maxItems !== undefined ? { maxItems: this.config.maxItems } : {}),
+      ...(this.config.length !== undefined ? { length: this.config.length } : {}),
+      ...(this.config.nonempty ? { nonempty: true } : {}),
+      items,
+    }
   }
 
-  getSchema(orm?: ORM) {
-    return resolveSchema(this.toSchema(), orm, this.defaultOrm)
+  getSchema(name?: string) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
   }
 
   optional(): ArrayField<T, TOut | undefined, TIn | undefined> {
     return new ArrayField<T, TOut | undefined, TIn | undefined>(
       this.arr,
-      this.defaultOrm,
+      this.defaultAdapter,
       this.instanceOpts,
       { ...this.config, required: false },
     )
   }
 
+  nullable(): ArrayField<T, TOut | null, TIn | null> {
+    return new ArrayField<T, TOut | null, TIn | null>(
+      this.arr,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, nullable: true },
+    )
+  }
+
+  default(value: TOut): ArrayField<T, TOut, TIn | undefined> {
+    return new ArrayField<T, TOut, TIn | undefined>(
+      this.arr,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, hasDefault: true, default: value },
+    )
+  }
+
+  describe(text: string): this {
+    const Ctor = this.constructor as new (
+      arr: T,
+      a?: string,
+      b?: InstanceOptions,
+      c?: ArrayConfig,
+    ) => this
+    return new Ctor(this.arr, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      description: text,
+    })
+  }
+
+  adapter(name: string, opts: unknown): this {
+    const Ctor = this.constructor as new (
+      arr: T,
+      a?: string,
+      b?: InstanceOptions,
+      c?: ArrayConfig,
+    ) => this
+    return new Ctor(this.arr, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      meta: { ...(this.config.meta ?? {}), [name]: opts },
+    })
+  }
+
+  private clone(patch: Partial<ArrayConfig>): ArrayField<T, TOut, TIn> {
+    return new ArrayField<T, TOut, TIn>(this.arr, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      ...patch,
+    })
+  }
+
+  min(value: number, opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+    return this.clone({
+      minItems: value,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { min_items: opts.message } : {}),
+      },
+    })
+  }
+
+  max(value: number, opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+    return this.clone({
+      maxItems: value,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { max_items: opts.message } : {}),
+      },
+    })
+  }
+
+  length(value: number, opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+    return this.clone({
+      length: value,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { items_length: opts.message } : {}),
+      },
+    })
+  }
+
+  nonempty(opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+    return this.clone({
+      nonempty: true,
+      minItems: Math.max(this.config.minItems ?? 0, 1),
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { nonempty: opts.message } : {}),
+      },
+    })
+  }
+
   message(msg: string | FieldMessages): ArrayField<T, TOut, TIn> {
-    return new ArrayField<T, TOut, TIn>(this.arr, this.defaultOrm, this.instanceOpts, {
+    return new ArrayField<T, TOut, TIn>(this.arr, this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       fieldMessage: msg,
     })
   }
 
+  /**
+   * _parse order: default substitution → null/undefined handling →
+   * invalid_type check (exclusive) → accumulated per-item checks.
+   */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
+    if (value === undefined && this.config.hasDefault) {
+      value = this.config.default
+    }
+    if (value === null && this.config.nullable) {
+      return { value: null, issues: [] }
+    }
     if (value === undefined || value === null) {
       if (this.config.required) {
         return { value, issues: [buildIssue('required', ctx, {}, this.config.fieldMessage)] }
@@ -82,7 +214,42 @@ export class ArrayField<
     }
 
     const out: unknown[] = []
-    const issues = []
+    const issues: ValidationIssue[] = []
+
+    if (this.config.length !== undefined && value.length !== this.config.length) {
+      issues.push(
+        buildIssue(
+          'items_length',
+          ctx,
+          { length: this.config.length, got: value.length },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.items_length,
+        ),
+      )
+    }
+    if (this.config.minItems !== undefined && value.length < this.config.minItems) {
+      const isNonempty = this.config.nonempty && this.config.minItems === 1
+      issues.push(
+        buildIssue(
+          isNonempty ? 'nonempty' : 'min_items',
+          ctx,
+          isNonempty ? { got: value.length } : { min: this.config.minItems, got: value.length },
+          this.config.fieldMessage,
+          isNonempty ? this.config.ruleMessages?.nonempty : this.config.ruleMessages?.min_items,
+        ),
+      )
+    }
+    if (this.config.maxItems !== undefined && value.length > this.config.maxItems) {
+      issues.push(
+        buildIssue(
+          'max_items',
+          ctx,
+          { max: this.config.maxItems, got: value.length },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.max_items,
+        ),
+      )
+    }
 
     for (let i = 0; i < value.length; i++) {
       const itemCtx: ParseContext = { ...ctx, path: [...ctx.path, i] }

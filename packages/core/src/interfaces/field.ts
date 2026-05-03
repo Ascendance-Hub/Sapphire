@@ -1,7 +1,6 @@
 import { SapphireSchemaNode } from '../schema/types'
 import type { InternalParseResult, ParseContext, ParseOptions } from '../lib/types'
 import type { SapphireValidationError } from '../lib/validation-error'
-import { ORM } from '../types/orm'
 
 export type SafeParseResult<T> =
   | { success: true; data: T }
@@ -12,7 +11,7 @@ export interface Field<TOutput = unknown, TInput = TOutput> {
   readonly _input: TInput
 
   toSchema(): SapphireSchemaNode
-  getSchema(orm?: ORM): unknown
+  getSchema(name?: string): unknown
 
   parse(value: unknown, opts?: ParseOptions): TOutput
   safeParse(value: unknown, opts?: ParseOptions): SafeParseResult<TOutput>
