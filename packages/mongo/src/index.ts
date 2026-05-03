@@ -76,11 +76,7 @@ export function toMongoSchema(node: SapphireSchemaNode): any {
     }
     case 'literal': {
       const ctor =
-        typeof node.value === 'number'
-          ? Number
-          : typeof node.value === 'boolean'
-            ? Boolean
-            : String
+        typeof node.value === 'number' ? Number : typeof node.value === 'boolean' ? Boolean : String
       const def: Record<string, any> = {
         type: ctor,
         required: node.required,

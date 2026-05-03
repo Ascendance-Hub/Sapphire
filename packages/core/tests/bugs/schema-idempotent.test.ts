@@ -12,7 +12,7 @@ describe('Bug: getSchema() não pode mutar estado entre chamadas', () => {
   })
 
   it('ArrayField.getSchema é idempotente', () => {
-    const field = a.array([a.string(), a.number()])
+    const field = a.array(a.type().union([a.string(), a.number()]))
     const first = field.getSchema()
     const second = field.getSchema()
     expect(second).toEqual(first)
@@ -22,7 +22,7 @@ describe('Bug: getSchema() não pode mutar estado entre chamadas', () => {
     const field = a.object({
       user: a.object({
         name: a.string(),
-        jobs: a.array([a.object({ title: a.string() })]),
+        jobs: a.array(a.object({ title: a.string() })),
       }),
     })
     const first = JSON.stringify(field.getSchema())

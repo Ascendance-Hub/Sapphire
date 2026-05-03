@@ -76,7 +76,7 @@ describe('Builder imutável', () => {
   })
 
   it('ArrayField.optional() não muta', () => {
-    const base = a.array([a.string()])
+    const base = a.array(a.string())
     const opt = base.optional()
     expect(base.toSchema().required).toBe(true)
     expect(opt.toSchema().required).toBe(false)

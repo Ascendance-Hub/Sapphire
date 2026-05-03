@@ -71,17 +71,17 @@ describe('Infer — object', () => {
 
 describe('Infer — array', () => {
   it('array de string → string[]', () => {
-    const arr = a.array([a.string()])
+    const arr = a.array(a.string())
     expectTypeOf<Infer<typeof arr>>().toEqualTypeOf<string[]>()
   })
 
   it('array optional', () => {
-    const arr = a.array([a.string()]).optional()
+    const arr = a.array(a.string()).optional()
     expectTypeOf<Infer<typeof arr>>().toEqualTypeOf<string[] | undefined>()
   })
 
-  it('array com múltiplos fields → união[]', () => {
-    const arr = a.array([a.string(), a.number()])
+  it('array com union interno → união[]', () => {
+    const arr = a.array(a.type().union([a.string(), a.number()]))
     type T = Infer<typeof arr>
     expectTypeOf<T>().toEqualTypeOf<(string | number)[]>()
   })

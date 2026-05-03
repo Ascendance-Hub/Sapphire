@@ -17,13 +17,13 @@ const userOrm = a.object({
   birthDate: a.date().optional(),
   deathDate: a.type().union([a.date(), a.string()]),
   isIncomeTaxed: a.boolean().optional(),
-  employmentHistory: a.array([
+  employmentHistory: a.array(
     a.object({
       name: a.string(),
       salary: a.number(),
       company: a.string(),
     }),
-  ]),
+  ),
 })
 
 export type UserType = Infer<typeof userOrm>

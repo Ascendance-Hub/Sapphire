@@ -12,7 +12,7 @@ describe('Validation — path em estruturas aninhadas', () => {
   })
 
   it('ArrayField appenda index no path', () => {
-    const f = a.array([a.string()])
+    const f = a.array(a.string())
     const r = f.safeParse(['ok', 123])
     expect(r.success).toBe(false)
     if (!r.success) expect(r.error.issues[0].path).toEqual([1])
@@ -20,12 +20,12 @@ describe('Validation — path em estruturas aninhadas', () => {
 
   it('Object > Array > Object: path completo', () => {
     const f = a.object({
-      employmentHistory: a.array([
+      employmentHistory: a.array(
         a.object({
           company: a.string(),
           salary: a.number(),
         }),
-      ]),
+      ),
     })
     const r = f.safeParse({
       employmentHistory: [
@@ -35,10 +35,8 @@ describe('Validation — path em estruturas aninhadas', () => {
     })
     expect(r.success).toBe(false)
     if (!r.success) {
-      // O array tenta cada field por item; quando nenhum casa, emite union_no_match
-      // no path do item — em F8 (legado pré-F10) o single-field array reporta o
-      // erro do item como union_no_match no índice. F10 vai mudar para erro
-      // detalhado por subcampo. Aqui validamos só que o path inclui o índice.
+      // F10: ArrayField homogêneo valida cada item contra o field único e propaga
+      // a issue do subcampo (path completo até a chave).
       const paths = r.error.issues.map((i) => i.path)
       expect(paths.some((p) => p[0] === 'employmentHistory' && p[1] === 1)).toBe(true)
     }

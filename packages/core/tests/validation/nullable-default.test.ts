@@ -106,7 +106,7 @@ describe('Modifiers — nullable / default / describe / adapter / unique / index
   })
 
   it('array().default([]) substitutes undefined', () => {
-    const f = a.array([a.string()]).default([])
+    const f = a.array(a.string()).default([])
     const r = f.safeParse(undefined)
     expect(r.success).toBe(true)
     if (r.success) expect(r.data).toEqual([])

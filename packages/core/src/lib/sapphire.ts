@@ -46,8 +46,8 @@ export class Sapphire {
     return new DateField(this.defaultAdapter, this.instanceOpts)
   }
 
-  array<Arr extends Array<Field>>(arr: Arr): ArrayField<Arr> {
-    return new ArrayField(arr, this.defaultAdapter, this.instanceOpts)
+  array<F extends Field>(item: F): ArrayField<F> {
+    return new ArrayField(item, this.defaultAdapter, this.instanceOpts)
   }
 
   object<Obj extends Record<string, Field>>(obj: Obj): ObjectField<Obj> {
