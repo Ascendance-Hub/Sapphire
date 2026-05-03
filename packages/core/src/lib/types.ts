@@ -1,4 +1,5 @@
 import type { IssueCode } from './issue-codes'
+import type { NamedSchemaRegistry } from './named-registry'
 
 export interface MessageContext {
   path: (string | number)[]
@@ -27,6 +28,7 @@ export interface InstanceOptions {
   messages?: FieldMessages
   abortEarly?: boolean
   stripUnknown?: boolean
+  namedSchemas?: NamedSchemaRegistry
 }
 
 export interface ParseContext {

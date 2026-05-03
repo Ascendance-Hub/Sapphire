@@ -21,6 +21,7 @@ type ObjectConfig = {
   description?: string
   meta?: Record<string, unknown>
   fieldMessage?: FieldMessages | string
+  name?: string
 }
 
 export class ObjectField<
@@ -56,6 +57,7 @@ export class ObjectField<
       ...(this.config.hasDefault ? { default: this.config.default } : {}),
       ...(this.config.description !== undefined ? { description: this.config.description } : {}),
       ...(this.config.meta ? { meta: this.config.meta } : {}),
+      ...(this.config.name !== undefined ? { name: this.config.name } : {}),
       properties,
     }
   }
@@ -122,6 +124,30 @@ export class ObjectField<
       ...this.config,
       fieldMessage: msg,
     })
+  }
+
+  /**
+   * Registers this schema in the parent Sapphire instance's named registry,
+   * making it targetable by `a.ref(...)`. Returns a NEW ObjectField whose IR
+   * carries the name. Throws if the name is already registered.
+   */
+  name(n: string): this {
+    const Ctor = this.constructor as new (
+      obj: T,
+      a?: string,
+      b?: InstanceOptions,
+      c?: ObjectConfig,
+    ) => this
+    const next = new Ctor(this.obj, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      name: n,
+    })
+    this.instanceOpts?.namedSchemas?.register(n, next as ObjectField<Record<string, Field>>)
+    return next
+  }
+
+  getName(): string | undefined {
+    return this.config.name
   }
 
   /**

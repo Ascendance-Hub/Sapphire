@@ -4,11 +4,13 @@ import {
   DateField,
   NumberField,
   ObjectField,
+  RefField,
   StringField,
   TupleField,
   TypeField,
 } from '../core'
 import { Field } from '../interfaces/field'
+import { NamedSchemaRegistry } from './named-registry'
 import type { FieldMessages, InstanceOptions } from './types'
 
 export interface SapphireOptions {
@@ -21,13 +23,16 @@ export interface SapphireOptions {
 export class Sapphire {
   private readonly defaultAdapter?: string
   private readonly instanceOpts: InstanceOptions
+  private readonly namedSchemas: NamedSchemaRegistry
 
   constructor(opts?: SapphireOptions) {
     this.defaultAdapter = opts?.defaultAdapter
+    this.namedSchemas = new NamedSchemaRegistry()
     this.instanceOpts = {
       messages: opts?.messages,
       abortEarly: opts?.abortEarly,
       stripUnknown: opts?.stripUnknown,
+      namedSchemas: this.namedSchemas,
     }
   }
 
@@ -61,5 +66,17 @@ export class Sapphire {
 
   type(): TypeField {
     return new TypeField(this.defaultAdapter, this.instanceOpts)
+  }
+
+  ref(target: ObjectField<Record<string, Field>> | string): RefField {
+    return new RefField(target, this.defaultAdapter, this.instanceOpts)
+  }
+
+  /**
+   * Returns the list of registered named schemas in this instance.
+   * Mostly useful for tests/debugging.
+   */
+  listNamedSchemas(): string[] {
+    return this.namedSchemas.list()
   }
 }
