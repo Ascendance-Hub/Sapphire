@@ -20,6 +20,7 @@ type BooleanConfig = {
   description?: string
   meta?: Record<string, unknown>
   index?: boolean | { unique?: boolean }
+  coerce?: boolean
   fieldMessage?: FieldMessages | string
 }
 
@@ -44,6 +45,7 @@ export class BooleanField<TOut = boolean, TIn = boolean>
       ...(this.config.description !== undefined ? { description: this.config.description } : {}),
       ...(this.config.meta ? { meta: this.config.meta } : {}),
       ...(this.config.index !== undefined ? { index: this.config.index } : {}),
+      ...(this.config.coerce ? { coerce: true } : {}),
     }
   }
 
@@ -106,6 +108,13 @@ export class BooleanField<TOut = boolean, TIn = boolean>
     })
   }
 
+  coerce(): BooleanField<TOut, TIn> {
+    return new BooleanField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      coerce: true,
+    })
+  }
+
   message(msg: string | FieldMessages): BooleanField<TOut, TIn> {
     return new BooleanField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
@@ -118,6 +127,17 @@ export class BooleanField<TOut = boolean, TIn = boolean>
    * invalid_type check (exclusive) → accumulated rule checks.
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
+    if (
+      this.config.coerce &&
+      typeof value !== 'boolean' &&
+      value !== null &&
+      value !== undefined
+    ) {
+      if (value === 'true') value = true
+      else if (value === 'false') value = false
+      else if (value === 1) value = true
+      else if (value === 0) value = false
+    }
     if (value === undefined && this.config.hasDefault) {
       value = this.config.default
     }

@@ -13,6 +13,19 @@ import type {
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 
+type StringTransform = 'trim' | 'toLowerCase' | 'toUpperCase'
+type StringFormat = 'email' | 'url' | 'uuid'
+
+type StringRuleMessages = {
+  min_length?: MessageValue
+  max_length?: MessageValue
+  length?: MessageValue
+  regex?: MessageValue
+  format?: MessageValue
+  starts_with?: MessageValue
+  ends_with?: MessageValue
+}
+
 type StringConfig = {
   required: boolean
   nullable?: boolean
@@ -23,9 +36,20 @@ type StringConfig = {
   unique?: boolean
   index?: boolean | { unique?: boolean }
   minLength?: number
+  maxLength?: number
+  length?: number
+  regex?: { source: string; flags: string }
+  format?: StringFormat
+  startsWith?: string
+  endsWith?: string
+  transforms?: StringTransform[]
+  coerce?: boolean
   fieldMessage?: FieldMessages | string
-  ruleMessages?: { min_length?: MessageValue }
+  ruleMessages?: StringRuleMessages
 }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn>, InternalField {
   declare readonly _output: TOut
@@ -48,11 +72,28 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
       ...(this.config.unique ? { unique: true } : {}),
       ...(this.config.index !== undefined ? { index: this.config.index } : {}),
       ...(this.config.minLength !== undefined ? { minLength: this.config.minLength } : {}),
+      ...(this.config.maxLength !== undefined ? { maxLength: this.config.maxLength } : {}),
+      ...(this.config.length !== undefined ? { length: this.config.length } : {}),
+      ...(this.config.regex !== undefined ? { regex: this.config.regex } : {}),
+      ...(this.config.format !== undefined ? { format: this.config.format } : {}),
+      ...(this.config.startsWith !== undefined ? { startsWith: this.config.startsWith } : {}),
+      ...(this.config.endsWith !== undefined ? { endsWith: this.config.endsWith } : {}),
+      ...(this.config.transforms && this.config.transforms.length > 0
+        ? { transforms: [...this.config.transforms] }
+        : {}),
+      ...(this.config.coerce ? { coerce: true } : {}),
     }
   }
 
   getSchema(name?: string) {
     return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  }
+
+  private clone(patch: Partial<StringConfig>): StringField<TOut, TIn> {
+    return new StringField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      ...patch,
+    })
   }
 
   optional(): StringField<TOut | undefined, TIn | undefined> {
@@ -129,14 +170,115 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
     if (typeof value !== 'number' || value < 0) {
       throw new Error('min must be a non-negative number')
     }
-    return new StringField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
-      ...this.config,
+    return this.clone({
       minLength: value,
       ruleMessages: {
         ...this.config.ruleMessages,
         ...(opts?.message !== undefined ? { min_length: opts.message } : {}),
       },
     })
+  }
+
+  max(value: number, opts?: { message?: MessageValue }): StringField<TOut, TIn> {
+    if (typeof value !== 'number' || value < 0) {
+      throw new Error('max must be a non-negative number')
+    }
+    return this.clone({
+      maxLength: value,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { max_length: opts.message } : {}),
+      },
+    })
+  }
+
+  length(value: number, opts?: { message?: MessageValue }): StringField<TOut, TIn> {
+    if (typeof value !== 'number' || value < 0) {
+      throw new Error('length must be a non-negative number')
+    }
+    return this.clone({
+      length: value,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { length: opts.message } : {}),
+      },
+    })
+  }
+
+  regex(re: RegExp, opts?: { message?: MessageValue }): StringField<TOut, TIn> {
+    return this.clone({
+      regex: { source: re.source, flags: re.flags },
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { regex: opts.message } : {}),
+      },
+    })
+  }
+
+  email(opts?: { message?: MessageValue }): StringField<TOut, TIn> {
+    return this.clone({
+      format: 'email',
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { format: opts.message } : {}),
+      },
+    })
+  }
+
+  url(opts?: { message?: MessageValue }): StringField<TOut, TIn> {
+    return this.clone({
+      format: 'url',
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { format: opts.message } : {}),
+      },
+    })
+  }
+
+  uuid(opts?: { message?: MessageValue }): StringField<TOut, TIn> {
+    return this.clone({
+      format: 'uuid',
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { format: opts.message } : {}),
+      },
+    })
+  }
+
+  startsWith(prefix: string, opts?: { message?: MessageValue }): StringField<TOut, TIn> {
+    return this.clone({
+      startsWith: prefix,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { starts_with: opts.message } : {}),
+      },
+    })
+  }
+
+  endsWith(suffix: string, opts?: { message?: MessageValue }): StringField<TOut, TIn> {
+    return this.clone({
+      endsWith: suffix,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { ends_with: opts.message } : {}),
+      },
+    })
+  }
+
+  trim(): StringField<TOut, TIn> {
+    return this.clone({ transforms: [...(this.config.transforms ?? []), 'trim'] })
+  }
+
+  toLowerCase(): StringField<TOut, TIn> {
+    return this.clone({ transforms: [...(this.config.transforms ?? []), 'toLowerCase'] })
+  }
+
+  toUpperCase(): StringField<TOut, TIn> {
+    return this.clone({ transforms: [...(this.config.transforms ?? []), 'toUpperCase'] })
+  }
+
+  coerce(): StringField<TOut, TIn> {
+    return this.clone({ coerce: true })
   }
 
   message(msg: string | FieldMessages): StringField<TOut, TIn> {
@@ -147,10 +289,18 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
   }
 
   /**
-   * _parse order: default substitution → null/undefined handling →
-   * invalid_type check (exclusive — short-circuits) → accumulated rule checks.
+   * _parse order: coerce → default substitution → null/undefined handling →
+   * invalid_type check (exclusive — short-circuits) → transforms → accumulated rule checks.
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
+    if (
+      this.config.coerce &&
+      typeof value !== 'string' &&
+      value !== null &&
+      value !== undefined
+    ) {
+      value = String(value)
+    }
     if (value === undefined && this.config.hasDefault) {
       value = this.config.default
     }
@@ -176,19 +326,109 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
         ],
       }
     }
+    let str = value
+    if (this.config.transforms) {
+      for (const t of this.config.transforms) {
+        if (t === 'trim') str = str.trim()
+        else if (t === 'toLowerCase') str = str.toLowerCase()
+        else if (t === 'toUpperCase') str = str.toUpperCase()
+      }
+    }
     const issues: ValidationIssue[] = []
-    if (this.config.minLength !== undefined && value.length < this.config.minLength) {
+    if (this.config.length !== undefined && str.length !== this.config.length) {
+      issues.push(
+        buildIssue(
+          'length',
+          ctx,
+          { length: this.config.length, got: str.length },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.length,
+        ),
+      )
+    }
+    if (this.config.minLength !== undefined && str.length < this.config.minLength) {
       issues.push(
         buildIssue(
           'min_length',
           ctx,
-          { min: this.config.minLength, got: value.length },
+          { min: this.config.minLength, got: str.length },
           this.config.fieldMessage,
           this.config.ruleMessages?.min_length,
         ),
       )
     }
-    return { value, issues }
+    if (this.config.maxLength !== undefined && str.length > this.config.maxLength) {
+      issues.push(
+        buildIssue(
+          'max_length',
+          ctx,
+          { max: this.config.maxLength, got: str.length },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.max_length,
+        ),
+      )
+    }
+    if (this.config.regex !== undefined) {
+      const re = new RegExp(this.config.regex.source, this.config.regex.flags)
+      if (!re.test(str)) {
+        issues.push(
+          buildIssue(
+            'regex',
+            ctx,
+            { pattern: this.config.regex.source },
+            this.config.fieldMessage,
+            this.config.ruleMessages?.regex,
+          ),
+        )
+      }
+    }
+    if (this.config.format !== undefined) {
+      let ok = true
+      if (this.config.format === 'email') ok = EMAIL_RE.test(str)
+      else if (this.config.format === 'uuid') ok = UUID_RE.test(str)
+      else if (this.config.format === 'url') {
+        try {
+          new URL(str)
+          ok = true
+        } catch {
+          ok = false
+        }
+      }
+      if (!ok) {
+        issues.push(
+          buildIssue(
+            'format',
+            ctx,
+            { format: this.config.format },
+            this.config.fieldMessage,
+            this.config.ruleMessages?.format,
+          ),
+        )
+      }
+    }
+    if (this.config.startsWith !== undefined && !str.startsWith(this.config.startsWith)) {
+      issues.push(
+        buildIssue(
+          'starts_with',
+          ctx,
+          { prefix: this.config.startsWith },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.starts_with,
+        ),
+      )
+    }
+    if (this.config.endsWith !== undefined && !str.endsWith(this.config.endsWith)) {
+      issues.push(
+        buildIssue(
+          'ends_with',
+          ctx,
+          { suffix: this.config.endsWith },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.ends_with,
+        ),
+      )
+    }
+    return { value: str, issues }
   }
 
   parse(value: unknown, opts?: ParseOptions): TOut {

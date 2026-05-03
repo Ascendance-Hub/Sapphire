@@ -27,4 +27,41 @@ describe('DateField', () => {
     const field = a.date().optional()
     expect(field.safeParse(undefined).success).toBe(true)
   })
+
+  describe('vocabulary', () => {
+    it('min: valid and invalid', () => {
+      const field = a.date().min(new Date('2020-01-01'))
+      expect(field.safeParse(new Date('2021-01-01')).success).toBe(true)
+      const r = field.safeParse(new Date('2019-01-01'))
+      expect(r.success).toBe(false)
+      if (!r.success) expect(r.error.issues.some((i) => i.code === 'min')).toBe(true)
+    })
+
+    it('min: per-rule message override', () => {
+      const field = a.date().min(new Date('2020-01-01'), { message: 'too early' })
+      const r = field.safeParse(new Date('2019-01-01'))
+      if (!r.success) expect(r.error.issues[0].message).toBe('too early')
+    })
+
+    it('max: valid and invalid', () => {
+      const field = a.date().max(new Date('2020-01-01'))
+      expect(field.safeParse(new Date('2019-01-01')).success).toBe(true)
+      const r = field.safeParse(new Date('2021-01-01'))
+      expect(r.success).toBe(false)
+      if (!r.success) expect(r.error.issues.some((i) => i.code === 'max')).toBe(true)
+    })
+
+    it('max: per-rule message override', () => {
+      const field = a.date().max(new Date('2020-01-01'), { message: 'too late' })
+      const r = field.safeParse(new Date('2021-01-01'))
+      if (!r.success) expect(r.error.issues[0].message).toBe('too late')
+    })
+
+    it('coerce: timestamp number → Date', () => {
+      const field = a.date().coerce()
+      const r = field.safeParse(0)
+      expect(r.success).toBe(true)
+      if (r.success) expect(r.data).toBeInstanceOf(Date)
+    })
+  })
 })

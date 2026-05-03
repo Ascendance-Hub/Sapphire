@@ -6,11 +6,25 @@ import type {
   FieldMessages,
   InstanceOptions,
   InternalParseResult,
+  MessageValue,
   ParseContext,
   ParseOptions,
   ValidationIssue,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
+
+type NumberRuleMessages = {
+  min?: MessageValue
+  max?: MessageValue
+  gt?: MessageValue
+  gte?: MessageValue
+  lt?: MessageValue
+  lte?: MessageValue
+  int?: MessageValue
+  multiple_of?: MessageValue
+  finite?: MessageValue
+  safe?: MessageValue
+}
 
 type NumberConfig = {
   required: boolean
@@ -21,7 +35,22 @@ type NumberConfig = {
   meta?: Record<string, unknown>
   unique?: boolean
   index?: boolean | { unique?: boolean }
+  min?: number
+  max?: number
+  exclusiveMin?: number
+  exclusiveMax?: number
+  // Tracks which alias produced min/max so issue codes (gte/lte) survive.
+  minCode?: 'min' | 'gte'
+  maxCode?: 'max' | 'lte'
+  exclusiveMinCode?: 'gt'
+  exclusiveMaxCode?: 'lt'
+  int?: boolean
+  multipleOf?: number
+  finite?: boolean
+  safe?: boolean
+  coerce?: boolean
   fieldMessage?: FieldMessages | string
+  ruleMessages?: NumberRuleMessages
 }
 
 export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn>, InternalField {
@@ -44,11 +73,27 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
       ...(this.config.meta ? { meta: this.config.meta } : {}),
       ...(this.config.unique ? { unique: true } : {}),
       ...(this.config.index !== undefined ? { index: this.config.index } : {}),
+      ...(this.config.min !== undefined ? { min: this.config.min } : {}),
+      ...(this.config.max !== undefined ? { max: this.config.max } : {}),
+      ...(this.config.exclusiveMin !== undefined ? { exclusiveMin: this.config.exclusiveMin } : {}),
+      ...(this.config.exclusiveMax !== undefined ? { exclusiveMax: this.config.exclusiveMax } : {}),
+      ...(this.config.int ? { int: true } : {}),
+      ...(this.config.multipleOf !== undefined ? { multipleOf: this.config.multipleOf } : {}),
+      ...(this.config.finite ? { finite: true } : {}),
+      ...(this.config.safe ? { safe: true } : {}),
+      ...(this.config.coerce ? { coerce: true } : {}),
     }
   }
 
   getSchema(name?: string) {
     return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  }
+
+  private clone(patch: Partial<NumberConfig>): NumberField<TOut, TIn> {
+    return new NumberField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      ...patch,
+    })
   }
 
   optional(): NumberField<TOut | undefined, TIn | undefined> {
@@ -115,6 +160,132 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
     })
   }
 
+  min(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.clone({
+      min: value,
+      minCode: 'min',
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { min: opts.message } : {}),
+      },
+    })
+  }
+
+  max(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.clone({
+      max: value,
+      maxCode: 'max',
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { max: opts.message } : {}),
+      },
+    })
+  }
+
+  gt(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.clone({
+      exclusiveMin: value,
+      exclusiveMinCode: 'gt',
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { gt: opts.message } : {}),
+      },
+    })
+  }
+
+  gte(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.clone({
+      min: value,
+      minCode: 'gte',
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { gte: opts.message } : {}),
+      },
+    })
+  }
+
+  lt(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.clone({
+      exclusiveMax: value,
+      exclusiveMaxCode: 'lt',
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { lt: opts.message } : {}),
+      },
+    })
+  }
+
+  lte(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.clone({
+      max: value,
+      maxCode: 'lte',
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { lte: opts.message } : {}),
+      },
+    })
+  }
+
+  int(opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.clone({
+      int: true,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { int: opts.message } : {}),
+      },
+    })
+  }
+
+  positive(opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.gt(0, opts)
+  }
+
+  negative(opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.lt(0, opts)
+  }
+
+  nonnegative(opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.gte(0, opts)
+  }
+
+  nonpositive(opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.lte(0, opts)
+  }
+
+  multipleOf(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.clone({
+      multipleOf: value,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { multiple_of: opts.message } : {}),
+      },
+    })
+  }
+
+  finite(opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.clone({
+      finite: true,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { finite: opts.message } : {}),
+      },
+    })
+  }
+
+  safe(opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    return this.clone({
+      safe: true,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { safe: opts.message } : {}),
+      },
+    })
+  }
+
+  coerce(): NumberField<TOut, TIn> {
+    return this.clone({ coerce: true })
+  }
+
   message(msg: string | FieldMessages): NumberField<TOut, TIn> {
     return new NumberField<TOut, TIn>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
@@ -123,10 +294,19 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   /**
-   * _parse order: default substitution → null/undefined handling →
-   * invalid_type check (exclusive) → accumulated rule checks.
+   * _parse order: coerce → default substitution → null/undefined handling →
+   * invalid_type check (NaN counts as invalid) → accumulated rule checks.
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
+    if (
+      this.config.coerce &&
+      typeof value !== 'number' &&
+      value !== null &&
+      value !== undefined
+    ) {
+      const n = Number(value)
+      if (!Number.isNaN(n)) value = n
+    }
     if (value === undefined && this.config.hasDefault) {
       value = this.config.default
     }
@@ -139,7 +319,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
       }
       return { value, issues: [] }
     }
-    if (typeof value !== 'number') {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
       return {
         value,
         issues: [
@@ -152,8 +332,99 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
         ],
       }
     }
+    const n = value
     const issues: ValidationIssue[] = []
-    return { value, issues }
+    if (this.config.int && !Number.isInteger(n)) {
+      issues.push(
+        buildIssue(
+          'int',
+          ctx,
+          { got: n },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.int,
+        ),
+      )
+    }
+    if (this.config.finite && !Number.isFinite(n)) {
+      issues.push(
+        buildIssue(
+          'finite',
+          ctx,
+          { got: n },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.finite,
+        ),
+      )
+    }
+    if (this.config.safe && !Number.isSafeInteger(n)) {
+      issues.push(
+        buildIssue(
+          'safe',
+          ctx,
+          { got: n },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.safe,
+        ),
+      )
+    }
+    if (this.config.min !== undefined && n < this.config.min) {
+      const code = this.config.minCode ?? 'min'
+      issues.push(
+        buildIssue(
+          code,
+          ctx,
+          { min: this.config.min, got: n },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.[code],
+        ),
+      )
+    }
+    if (this.config.max !== undefined && n > this.config.max) {
+      const code = this.config.maxCode ?? 'max'
+      issues.push(
+        buildIssue(
+          code,
+          ctx,
+          { max: this.config.max, got: n },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.[code],
+        ),
+      )
+    }
+    if (this.config.exclusiveMin !== undefined && n <= this.config.exclusiveMin) {
+      issues.push(
+        buildIssue(
+          'gt',
+          ctx,
+          { exclusiveMin: this.config.exclusiveMin, got: n },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.gt,
+        ),
+      )
+    }
+    if (this.config.exclusiveMax !== undefined && n >= this.config.exclusiveMax) {
+      issues.push(
+        buildIssue(
+          'lt',
+          ctx,
+          { exclusiveMax: this.config.exclusiveMax, got: n },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.lt,
+        ),
+      )
+    }
+    if (this.config.multipleOf !== undefined && n % this.config.multipleOf !== 0) {
+      issues.push(
+        buildIssue(
+          'multiple_of',
+          ctx,
+          { multipleOf: this.config.multipleOf },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.multiple_of,
+        ),
+      )
+    }
+    return { value: n, issues }
   }
 
   parse(value: unknown, opts?: ParseOptions): TOut {

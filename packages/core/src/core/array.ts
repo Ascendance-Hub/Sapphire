@@ -6,12 +6,20 @@ import type {
   FieldMessages,
   InstanceOptions,
   InternalParseResult,
+  MessageValue,
   ParseContext,
   ParseOptions,
   ValidationIssue,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 import { InferElementInputs, InferElementOutputs } from '../types/infer'
+
+type ArrayRuleMessages = {
+  min_items?: MessageValue
+  max_items?: MessageValue
+  items_length?: MessageValue
+  nonempty?: MessageValue
+}
 
 type ArrayConfig = {
   required: boolean
@@ -20,7 +28,12 @@ type ArrayConfig = {
   default?: unknown
   description?: string
   meta?: Record<string, unknown>
+  minItems?: number
+  maxItems?: number
+  length?: number
+  nonempty?: boolean
   fieldMessage?: FieldMessages | string
+  ruleMessages?: ArrayRuleMessages
 }
 
 export class ArrayField<
@@ -49,6 +62,10 @@ export class ArrayField<
       ...(this.config.hasDefault ? { default: this.config.default } : {}),
       ...(this.config.description !== undefined ? { description: this.config.description } : {}),
       ...(this.config.meta ? { meta: this.config.meta } : {}),
+      ...(this.config.minItems !== undefined ? { minItems: this.config.minItems } : {}),
+      ...(this.config.maxItems !== undefined ? { maxItems: this.config.maxItems } : {}),
+      ...(this.config.length !== undefined ? { length: this.config.length } : {}),
+      ...(this.config.nonempty ? { nonempty: true } : {}),
       items,
     }
   }
@@ -110,6 +127,54 @@ export class ArrayField<
     })
   }
 
+  private clone(patch: Partial<ArrayConfig>): ArrayField<T, TOut, TIn> {
+    return new ArrayField<T, TOut, TIn>(this.arr, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      ...patch,
+    })
+  }
+
+  min(value: number, opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+    return this.clone({
+      minItems: value,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { min_items: opts.message } : {}),
+      },
+    })
+  }
+
+  max(value: number, opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+    return this.clone({
+      maxItems: value,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { max_items: opts.message } : {}),
+      },
+    })
+  }
+
+  length(value: number, opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+    return this.clone({
+      length: value,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { items_length: opts.message } : {}),
+      },
+    })
+  }
+
+  nonempty(opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+    return this.clone({
+      nonempty: true,
+      minItems: 1,
+      ruleMessages: {
+        ...this.config.ruleMessages,
+        ...(opts?.message !== undefined ? { nonempty: opts.message } : {}),
+      },
+    })
+  }
+
   message(msg: string | FieldMessages): ArrayField<T, TOut, TIn> {
     return new ArrayField<T, TOut, TIn>(this.arr, this.defaultAdapter, this.instanceOpts, {
       ...this.config,
@@ -150,6 +215,45 @@ export class ArrayField<
 
     const out: unknown[] = []
     const issues: ValidationIssue[] = []
+
+    if (this.config.length !== undefined && value.length !== this.config.length) {
+      issues.push(
+        buildIssue(
+          'items_length',
+          ctx,
+          { length: this.config.length, got: value.length },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.items_length,
+        ),
+      )
+    }
+    if (this.config.minItems !== undefined && value.length < this.config.minItems) {
+      const isNonempty = this.config.nonempty && this.config.minItems === 1
+      issues.push(
+        buildIssue(
+          isNonempty ? 'nonempty' : 'min_items',
+          ctx,
+          isNonempty
+            ? { got: value.length }
+            : { min: this.config.minItems, got: value.length },
+          this.config.fieldMessage,
+          isNonempty
+            ? this.config.ruleMessages?.nonempty
+            : this.config.ruleMessages?.min_items,
+        ),
+      )
+    }
+    if (this.config.maxItems !== undefined && value.length > this.config.maxItems) {
+      issues.push(
+        buildIssue(
+          'max_items',
+          ctx,
+          { max: this.config.maxItems, got: value.length },
+          this.config.fieldMessage,
+          this.config.ruleMessages?.max_items,
+        ),
+      )
+    }
 
     for (let i = 0; i < value.length; i++) {
       const itemCtx: ParseContext = { ...ctx, path: [...ctx.path, i] }
