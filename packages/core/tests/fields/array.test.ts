@@ -5,12 +5,12 @@ describe('ArrayField', () => {
   const a = new Sapphire({ defaultAdapter: 'mongo' })
 
   it('valida array de strings', () => {
-    const field = a.array([a.string()])
+    const field = a.array(a.string())
     expect(field.safeParse(['a', 'b', 'c']).success).toBe(true)
   })
 
   it('valida array de objetos', () => {
-    const field = a.array([a.object({ name: a.string(), salary: a.number() })])
+    const field = a.array(a.object({ name: a.string(), salary: a.number() }))
     expect(
       field.safeParse([
         { name: 'dev', salary: 5000 },
@@ -20,14 +20,14 @@ describe('ArrayField', () => {
   })
 
   it('falha para não-array', () => {
-    const field = a.array([a.string()])
+    const field = a.array(a.string())
     const r = field.safeParse('a')
     expect(r.success).toBe(false)
     if (!r.success) expect(r.error.issues[0].code).toBe('invalid_type')
   })
 
   it('falha para undefined obrigatório', () => {
-    const field = a.array([a.string()])
+    const field = a.array(a.string())
     const r = field.safeParse(undefined)
     expect(r.success).toBe(false)
     if (!r.success) expect(r.error.issues[0].code).toBe('required')
@@ -35,7 +35,7 @@ describe('ArrayField', () => {
 
   describe('vocabulary', () => {
     it('min: valid and invalid', () => {
-      const field = a.array([a.string()]).min(2)
+      const field = a.array(a.string()).min(2)
       expect(field.safeParse(['a', 'b']).success).toBe(true)
       const r = field.safeParse(['a'])
       expect(r.success).toBe(false)
@@ -43,7 +43,7 @@ describe('ArrayField', () => {
     })
 
     it('min: per-rule message override', () => {
-      const field = a.array([a.string()]).min(2, { message: 'need 2' })
+      const field = a.array(a.string()).min(2, { message: 'need 2' })
       const r = field.safeParse([])
       if (!r.success) {
         const issue = r.error.issues.find((i) => i.code === 'min_items')
@@ -52,7 +52,7 @@ describe('ArrayField', () => {
     })
 
     it('max: valid and invalid', () => {
-      const field = a.array([a.string()]).max(2)
+      const field = a.array(a.string()).max(2)
       expect(field.safeParse(['a', 'b']).success).toBe(true)
       const r = field.safeParse(['a', 'b', 'c'])
       expect(r.success).toBe(false)
@@ -60,7 +60,7 @@ describe('ArrayField', () => {
     })
 
     it('max: per-rule message override', () => {
-      const field = a.array([a.string()]).max(1, { message: 'too many' })
+      const field = a.array(a.string()).max(1, { message: 'too many' })
       const r = field.safeParse(['a', 'b'])
       if (!r.success) {
         const issue = r.error.issues.find((i) => i.code === 'max_items')
@@ -69,7 +69,7 @@ describe('ArrayField', () => {
     })
 
     it('length: exact', () => {
-      const field = a.array([a.string()]).length(2)
+      const field = a.array(a.string()).length(2)
       expect(field.safeParse(['a', 'b']).success).toBe(true)
       const r = field.safeParse(['a'])
       expect(r.success).toBe(false)
@@ -77,7 +77,7 @@ describe('ArrayField', () => {
     })
 
     it('length: per-rule message override', () => {
-      const field = a.array([a.string()]).length(2, { message: 'wrong' })
+      const field = a.array(a.string()).length(2, { message: 'wrong' })
       const r = field.safeParse([])
       if (!r.success) {
         const issue = r.error.issues.find((i) => i.code === 'items_length')
@@ -86,7 +86,7 @@ describe('ArrayField', () => {
     })
 
     it('nonempty: rejects empty', () => {
-      const field = a.array([a.string()]).nonempty()
+      const field = a.array(a.string()).nonempty()
       expect(field.safeParse(['a']).success).toBe(true)
       const r = field.safeParse([])
       expect(r.success).toBe(false)
@@ -94,7 +94,7 @@ describe('ArrayField', () => {
     })
 
     it('nonempty: per-rule message override', () => {
-      const field = a.array([a.string()]).nonempty({ message: 'empty no' })
+      const field = a.array(a.string()).nonempty({ message: 'empty no' })
       const r = field.safeParse([])
       if (!r.success) {
         const issue = r.error.issues.find((i) => i.code === 'nonempty')

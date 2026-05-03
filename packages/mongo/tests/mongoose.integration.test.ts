@@ -23,7 +23,7 @@ describe('Integração com Mongoose', () => {
   it('aceita schema aninhado com object e array', () => {
     const productField = a.object({
       title: a.string().min(1),
-      tags: a.array([a.string()]).optional(),
+      tags: a.array(a.string()).optional(),
       metadata: a.object({
         createdAt: a.date(),
         updatedAt: a.date().optional(),

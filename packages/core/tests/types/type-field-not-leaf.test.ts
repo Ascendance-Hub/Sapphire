@@ -17,14 +17,10 @@ describe('TypeField não é Field — não compila como leaf', () => {
     expect(schema.properties.x.kind).toBe('union')
   })
 
-  it('a.type().pick(other, [...]) gera ObjectField válido', () => {
-    const source = a.object({
-      name: a.string(),
-      age: a.number(),
-      extra: a.boolean(),
-    })
-    const picked = a.type().pick(source, ['name', 'age'])
-    const schema = picked.toSchema() as any
-    expect(Object.keys(schema.properties)).toEqual(['name', 'age'])
+  it('a.type().literal(value) gera LiteralField válido', () => {
+    const lit = a.type().literal('admin')
+    const schema = lit.toSchema() as any
+    expect(schema.kind).toBe('literal')
+    expect(schema.value).toBe('admin')
   })
 })

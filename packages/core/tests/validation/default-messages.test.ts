@@ -29,7 +29,7 @@ describe('Default messages — Dispatch D (novos codes)', () => {
   })
 
   it('nonempty: a.array(...).nonempty() on empty array', () => {
-    const r = a.array([a.string()]).nonempty().safeParse([])
+    const r = a.array(a.string()).nonempty().safeParse([])
     expect(r.success).toBe(false)
     if (!r.success) expect(r.error.issues[0].message).toBe('Must not be empty')
   })

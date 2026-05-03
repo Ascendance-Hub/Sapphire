@@ -39,7 +39,11 @@ export type SapphireSchemaNode =
     })
   | (NodeBase & { kind: 'boolean'; coerce?: boolean })
   | (NodeBase & { kind: 'date'; min?: Date; max?: Date; coerce?: boolean })
-  | (NodeBase & { kind: 'object'; properties: Record<string, SapphireSchemaNode> })
+  | (NodeBase & {
+      kind: 'object'
+      name?: string
+      properties: Record<string, SapphireSchemaNode>
+    })
   | (NodeBase & {
       kind: 'array'
       /**
@@ -53,4 +57,13 @@ export type SapphireSchemaNode =
       length?: number
       nonempty?: boolean
     })
+  | (NodeBase & { kind: 'tuple'; items: SapphireSchemaNode[] })
   | (NodeBase & { kind: 'union'; options: SapphireSchemaNode[] })
+  | (NodeBase & { kind: 'literal'; value: string | number | boolean })
+  | (NodeBase & { kind: 'enum'; values: readonly (string | number)[] })
+  | (NodeBase & {
+      kind: 'record'
+      keys: SapphireSchemaNode
+      values: SapphireSchemaNode
+    })
+  | (NodeBase & { kind: 'ref'; target: string })

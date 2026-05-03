@@ -17,13 +17,13 @@ const userOrm = a.object({
   birthDate: a.date().optional(),
   deathDate: a.type().union([a.date(), a.string()]),
   isIncomeTaxed: a.boolean().optional(),
-  employmentHistory: a.array([
+  employmentHistory: a.array(
     a.object({
       name: a.string(),
       salary: a.number(),
       company: a.string(),
     }),
-  ]),
+  ),
 })
 
 export type UserType = Infer<typeof userOrm>
@@ -86,7 +86,5 @@ const test = b.object({
   age: b.number(),
 })
 
-const c = new Sapphire({ defaultAdapter: 'mongo' })
-const test2 = c.type().pick(test, ['name', 'age'])
-
-export type Picked = Infer<typeof test2>
+// pick será reintroduzido em F11 como ObjectField.pick(...)
+export type Picked = Infer<typeof test>

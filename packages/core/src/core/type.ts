@@ -1,6 +1,8 @@
 import { Field } from '../interfaces/field'
 import type { InstanceOptions } from '../lib/types'
-import { ObjectField } from './object'
+import { EnumField, type EnumValue, extractEnumValues } from './enum'
+import { LiteralField, type LiteralValue } from './literal'
+import { RecordField } from './record'
 import { UnionField } from './union'
 
 export class TypeField {
@@ -13,15 +15,20 @@ export class TypeField {
     return new UnionField(fields, this.defaultAdapter, this.instanceOpts)
   }
 
-  pick<T extends Record<string, Field>, K extends readonly (keyof T)[]>(
-    objectField: ObjectField<T>,
-    keys: K,
-  ): ObjectField<Pick<T, K[number]>> {
-    const sourceObj = objectField.getObj()
-    const pickedObj = Object.fromEntries(keys.map((key) => [key, sourceObj[key]])) as Pick<
-      T,
-      K[number]
-    >
-    return new ObjectField(pickedObj, this.defaultAdapter, this.instanceOpts)
+  literal<V extends LiteralValue>(value: V): LiteralField<V> {
+    return new LiteralField<V>(value, this.defaultAdapter, this.instanceOpts)
+  }
+
+  enum<const T extends ReadonlyArray<EnumValue>>(values: T): EnumField<T[number]>
+  enum<T extends Record<string, EnumValue>>(
+    tsEnum: T,
+  ): EnumField<T[keyof T] extends EnumValue ? T[keyof T] : never>
+  enum(input: unknown): EnumField<EnumValue> {
+    const values = extractEnumValues(input)
+    return new EnumField<EnumValue>(values, this.defaultAdapter, this.instanceOpts)
+  }
+
+  record<K extends Field, V extends Field>(keyField: K, valueField: V): RecordField<K, V> {
+    return new RecordField<K, V>(keyField, valueField, this.defaultAdapter, this.instanceOpts)
   }
 }

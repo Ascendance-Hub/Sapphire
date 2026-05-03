@@ -12,7 +12,6 @@ import type {
   ValidationIssue,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
-import { InferElementInputs, InferElementOutputs } from '../types/infer'
 
 type ArrayRuleMessages = {
   min_items?: MessageValue
@@ -36,25 +35,20 @@ type ArrayConfig = {
   ruleMessages?: ArrayRuleMessages
 }
 
-export class ArrayField<
-  T extends Array<Field>,
-  TOut = InferElementOutputs<T>[number][],
-  TIn = InferElementInputs<T>[number][],
->
+export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'][]>
   implements Field<TOut, TIn>, InternalField
 {
   declare readonly _output: TOut
   declare readonly _input: TIn
 
   constructor(
-    private readonly arr: T,
+    private readonly item: F,
     private readonly defaultAdapter?: string,
     private readonly instanceOpts?: InstanceOptions,
     private readonly config: ArrayConfig = { required: true },
   ) {}
 
   toSchema(): SapphireSchemaNode {
-    const items = this.arr.map((item) => item.toSchema())
     return {
       kind: 'array',
       required: this.config.required,
@@ -66,7 +60,7 @@ export class ArrayField<
       ...(this.config.maxItems !== undefined ? { maxItems: this.config.maxItems } : {}),
       ...(this.config.length !== undefined ? { length: this.config.length } : {}),
       ...(this.config.nonempty ? { nonempty: true } : {}),
-      items,
+      items: this.item.toSchema(),
     }
   }
 
@@ -74,27 +68,27 @@ export class ArrayField<
     return resolveSchema(this.toSchema(), name, this.defaultAdapter)
   }
 
-  optional(): ArrayField<T, TOut | undefined, TIn | undefined> {
-    return new ArrayField<T, TOut | undefined, TIn | undefined>(
-      this.arr,
+  optional(): ArrayField<F, TOut | undefined, TIn | undefined> {
+    return new ArrayField<F, TOut | undefined, TIn | undefined>(
+      this.item,
       this.defaultAdapter,
       this.instanceOpts,
       { ...this.config, required: false },
     )
   }
 
-  nullable(): ArrayField<T, TOut | null, TIn | null> {
-    return new ArrayField<T, TOut | null, TIn | null>(
-      this.arr,
+  nullable(): ArrayField<F, TOut | null, TIn | null> {
+    return new ArrayField<F, TOut | null, TIn | null>(
+      this.item,
       this.defaultAdapter,
       this.instanceOpts,
       { ...this.config, nullable: true },
     )
   }
 
-  default(value: TOut): ArrayField<T, TOut, TIn | undefined> {
-    return new ArrayField<T, TOut, TIn | undefined>(
-      this.arr,
+  default(value: TOut): ArrayField<F, TOut, TIn | undefined> {
+    return new ArrayField<F, TOut, TIn | undefined>(
+      this.item,
       this.defaultAdapter,
       this.instanceOpts,
       { ...this.config, hasDefault: true, default: value },
@@ -103,12 +97,12 @@ export class ArrayField<
 
   describe(text: string): this {
     const Ctor = this.constructor as new (
-      arr: T,
+      item: F,
       a?: string,
       b?: InstanceOptions,
       c?: ArrayConfig,
     ) => this
-    return new Ctor(this.arr, this.defaultAdapter, this.instanceOpts, {
+    return new Ctor(this.item, this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       description: text,
     })
@@ -116,25 +110,25 @@ export class ArrayField<
 
   adapter(name: string, opts: unknown): this {
     const Ctor = this.constructor as new (
-      arr: T,
+      item: F,
       a?: string,
       b?: InstanceOptions,
       c?: ArrayConfig,
     ) => this
-    return new Ctor(this.arr, this.defaultAdapter, this.instanceOpts, {
+    return new Ctor(this.item, this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       meta: { ...(this.config.meta ?? {}), [name]: opts },
     })
   }
 
-  private clone(patch: Partial<ArrayConfig>): ArrayField<T, TOut, TIn> {
-    return new ArrayField<T, TOut, TIn>(this.arr, this.defaultAdapter, this.instanceOpts, {
+  private clone(patch: Partial<ArrayConfig>): ArrayField<F, TOut, TIn> {
+    return new ArrayField<F, TOut, TIn>(this.item, this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       ...patch,
     })
   }
 
-  min(value: number, opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+  min(value: number, opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
     return this.clone({
       minItems: value,
       ruleMessages: {
@@ -144,7 +138,7 @@ export class ArrayField<
     })
   }
 
-  max(value: number, opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+  max(value: number, opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
     return this.clone({
       maxItems: value,
       ruleMessages: {
@@ -154,7 +148,7 @@ export class ArrayField<
     })
   }
 
-  length(value: number, opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+  length(value: number, opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
     return this.clone({
       length: value,
       ruleMessages: {
@@ -164,7 +158,7 @@ export class ArrayField<
     })
   }
 
-  nonempty(opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
+  nonempty(opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
     return this.clone({
       nonempty: true,
       minItems: Math.max(this.config.minItems ?? 0, 1),
@@ -175,8 +169,8 @@ export class ArrayField<
     })
   }
 
-  message(msg: string | FieldMessages): ArrayField<T, TOut, TIn> {
-    return new ArrayField<T, TOut, TIn>(this.arr, this.defaultAdapter, this.instanceOpts, {
+  message(msg: string | FieldMessages): ArrayField<F, TOut, TIn> {
+    return new ArrayField<F, TOut, TIn>(this.item, this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       fieldMessage: msg,
     })
@@ -184,7 +178,8 @@ export class ArrayField<
 
   /**
    * _parse order: default substitution → null/undefined handling →
-   * invalid_type check (exclusive) → accumulated per-item checks.
+   * invalid_type check (exclusive) → accumulated per-item checks
+   * (each item validated against the single inner field).
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined && this.config.hasDefault) {
@@ -253,20 +248,10 @@ export class ArrayField<
 
     for (let i = 0; i < value.length; i++) {
       const itemCtx: ParseContext = { ...ctx, path: [...ctx.path, i] }
-      let matched = false
-      for (const f of this.arr) {
-        const sub = (f as unknown as InternalField)._parse(value[i], itemCtx)
-        if (sub.issues.length === 0) {
-          out[i] = sub.value
-          matched = true
-          break
-        }
-      }
-      if (!matched) {
-        out[i] = value[i]
-        issues.push(buildIssue('union_no_match', itemCtx, {}, this.config.fieldMessage))
-        if (ctx.abortEarly) break
-      }
+      const sub = (this.item as unknown as InternalField)._parse(value[i], itemCtx)
+      out[i] = sub.value
+      issues.push(...sub.issues)
+      if (ctx.abortEarly && issues.length > 0) break
     }
 
     return { value: out, issues }

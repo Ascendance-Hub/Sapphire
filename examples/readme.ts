@@ -38,16 +38,17 @@ type Event = Infer<typeof event>
 const _evt: Event = { occurredAt: '2026-01-01' }
 void _evt
 
-// ---------- Pick ----------
-const fullUser = a.object({
-  name: a.string(),
-  age: a.number(),
-  email: a.string(),
-})
-const summary = a.type().pick(fullUser, ['name', 'age'])
-type Summary = Infer<typeof summary>
-const _s: Summary = { name: 'ale', age: 30 }
-void _s
+// ---------- Literal ----------
+const role = a.type().literal('admin')
+type Role = Infer<typeof role>
+const _r: Role = 'admin'
+void _r
+
+// ---------- Tuple ----------
+const point = a.tuple([a.number(), a.number()])
+type Point = Infer<typeof point>
+const _p: Point = [10, 20]
+void _p
 
 // ---------- Imutabilidade ----------
 const baseName = a.string()
