@@ -24,6 +24,7 @@ export type IssueCode =
   | 'nonempty'
   | 'enum'
   | 'literal'
+  | 'tuple_length'
   | 'union_no_match'
   | 'unknown_key'
   | (string & {})

@@ -5,6 +5,7 @@ import {
   NumberField,
   ObjectField,
   StringField,
+  TupleField,
   TypeField,
 } from '../core'
 import { Field } from '../interfaces/field'
@@ -48,6 +49,10 @@ export class Sapphire {
 
   array<F extends Field>(item: F): ArrayField<F> {
     return new ArrayField(item, this.defaultAdapter, this.instanceOpts)
+  }
+
+  tuple<T extends ReadonlyArray<Field>>(items: T): TupleField<T> {
+    return new TupleField<T>(items, this.defaultAdapter, this.instanceOpts)
   }
 
   object<Obj extends Record<string, Field>>(obj: Obj): ObjectField<Obj> {

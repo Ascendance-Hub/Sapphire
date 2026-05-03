@@ -10,7 +10,7 @@ Sapphire é uma biblioteca TypeScript para definição de **schemas** com geraç
 - Geração automática de tipos TypeScript a partir do schema
 - Campos opcionais (`optional()`) e validação de tamanho mínimo (`min()`)
 - Schemas aninhados, arrays tipados e **unions polimórficos** (`type().union()`)
-- **Pick** para derivar schemas (`type().pick()`)
+- Tuples e literais (`tuple()`, `type().literal()`)
 - **Multi-ORM**: uma mesma instância pode gerar schemas para diferentes alvos
 - Builder **imutável**: `optional()`/`min()` retornam nova instância — fields-base podem ser reusados sem vazar estado
 - Zero dependências de runtime
@@ -111,20 +111,17 @@ const event = a.object({
 
 A inferência via `Infer<typeof event>` resolve o campo como `Date | string`.
 
-### Pick
-
-Para derivar um novo objeto a partir de um subset das chaves de outro:
+### Tuples e literais
 
 ```typescript
-const userOrm = a.object({
-  name: a.string(),
-  age: a.number(),
-  email: a.string(),
-})
+const point = a.tuple([a.number(), a.number()])
+// Infer<typeof point> = [number, number]
 
-const summary = a.type().pick(userOrm, ['name', 'age'])
-// summary tem apenas 'name' e 'age', com tipos preservados
+const role = a.type().literal('admin')
+// Infer<typeof role> = 'admin'
 ```
+
+`pick`/`omit`/`partial`/`extend` retornam em F11 como métodos de `ObjectField`.
 
 ---
 

@@ -81,6 +81,15 @@ export const defaultMessages: FieldMessages = {
     const values = (ctx as unknown as { values?: unknown[] }).values ?? []
     return `Must be one of: ${values.join(', ')}`
   },
+  literal: (ctx) => {
+    const expected = (ctx as unknown as { expected?: unknown }).expected
+    return `Must be exactly ${JSON.stringify(expected)}`
+  },
+  tuple_length: (ctx) => {
+    const expected = (ctx as unknown as { expected?: number }).expected
+    const got = (ctx as unknown as { got?: number }).got
+    return `Tuple must have exactly ${expected} elements (got ${got})`
+  },
   union_no_match: 'Value does not match any allowed type',
   unknown_key: (ctx) => {
     const key = (ctx as { key?: string | number }).key

@@ -1,6 +1,6 @@
 import { Field } from '../interfaces/field'
 import type { InstanceOptions } from '../lib/types'
-import { ObjectField } from './object'
+import { LiteralField, type LiteralValue } from './literal'
 import { UnionField } from './union'
 
 export class TypeField {
@@ -13,15 +13,7 @@ export class TypeField {
     return new UnionField(fields, this.defaultAdapter, this.instanceOpts)
   }
 
-  pick<T extends Record<string, Field>, K extends readonly (keyof T)[]>(
-    objectField: ObjectField<T>,
-    keys: K,
-  ): ObjectField<Pick<T, K[number]>> {
-    const sourceObj = objectField.getObj()
-    const pickedObj = Object.fromEntries(keys.map((key) => [key, sourceObj[key]])) as Pick<
-      T,
-      K[number]
-    >
-    return new ObjectField(pickedObj, this.defaultAdapter, this.instanceOpts)
+  literal<V extends LiteralValue>(value: V): LiteralField<V> {
+    return new LiteralField<V>(value, this.defaultAdapter, this.instanceOpts)
   }
 }
