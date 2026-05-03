@@ -233,13 +233,9 @@ export class ArrayField<
         buildIssue(
           isNonempty ? 'nonempty' : 'min_items',
           ctx,
-          isNonempty
-            ? { got: value.length }
-            : { min: this.config.minItems, got: value.length },
+          isNonempty ? { got: value.length } : { min: this.config.minItems, got: value.length },
           this.config.fieldMessage,
-          isNonempty
-            ? this.config.ruleMessages?.nonempty
-            : this.config.ruleMessages?.min_items,
+          isNonempty ? this.config.ruleMessages?.nonempty : this.config.ruleMessages?.min_items,
         ),
       )
     }

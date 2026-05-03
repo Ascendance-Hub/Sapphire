@@ -72,10 +72,14 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
   }
 
   optional(): DateField<TOut | undefined, TIn | undefined> {
-    return new DateField<TOut | undefined, TIn | undefined>(this.defaultAdapter, this.instanceOpts, {
-      ...this.config,
-      required: false,
-    })
+    return new DateField<TOut | undefined, TIn | undefined>(
+      this.defaultAdapter,
+      this.instanceOpts,
+      {
+        ...this.config,
+        required: false,
+      },
+    )
   }
 
   nullable(): DateField<TOut | null, TIn | null> {
@@ -94,20 +98,12 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
   }
 
   describe(text: string): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: DateConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: DateConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, { ...this.config, description: text })
   }
 
   adapter(name: string, opts: unknown): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: DateConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: DateConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       meta: { ...(this.config.meta ?? {}), [name]: opts },
@@ -115,20 +111,12 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
   }
 
   unique(): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: DateConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: DateConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, { ...this.config, unique: true })
   }
 
   index(opts?: { unique?: boolean }): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: DateConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: DateConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       index: opts === undefined ? true : { unique: opts.unique },

@@ -97,10 +97,14 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   optional(): NumberField<TOut | undefined, TIn | undefined> {
-    return new NumberField<TOut | undefined, TIn | undefined>(this.defaultAdapter, this.instanceOpts, {
-      ...this.config,
-      required: false,
-    })
+    return new NumberField<TOut | undefined, TIn | undefined>(
+      this.defaultAdapter,
+      this.instanceOpts,
+      {
+        ...this.config,
+        required: false,
+      },
+    )
   }
 
   nullable(): NumberField<TOut | null, TIn | null> {
@@ -119,20 +123,12 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   describe(text: string): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: NumberConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: NumberConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, { ...this.config, description: text })
   }
 
   adapter(name: string, opts: unknown): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: NumberConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: NumberConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       meta: { ...(this.config.meta ?? {}), [name]: opts },
@@ -140,20 +136,12 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   unique(): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: NumberConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: NumberConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, { ...this.config, unique: true })
   }
 
   index(opts?: { unique?: boolean }): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: NumberConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: NumberConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       index: opts === undefined ? true : { unique: opts.unique },
@@ -298,12 +286,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
    * invalid_type check (NaN counts as invalid) → accumulated rule checks.
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
-    if (
-      this.config.coerce &&
-      typeof value !== 'number' &&
-      value !== null &&
-      value !== undefined
-    ) {
+    if (this.config.coerce && typeof value !== 'number' && value !== null && value !== undefined) {
       const n = Number(value)
       if (!Number.isNaN(n)) value = n
     }
@@ -336,13 +319,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
     const issues: ValidationIssue[] = []
     if (this.config.int && !Number.isInteger(n)) {
       issues.push(
-        buildIssue(
-          'int',
-          ctx,
-          { got: n },
-          this.config.fieldMessage,
-          this.config.ruleMessages?.int,
-        ),
+        buildIssue('int', ctx, { got: n }, this.config.fieldMessage, this.config.ruleMessages?.int),
       )
     }
     if (this.config.finite && !Number.isFinite(n)) {

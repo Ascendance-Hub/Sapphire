@@ -59,15 +59,15 @@ new Sapphire(opts?: { defaultAdapter?: string })
 
 ### Métodos da `Sapphire`
 
-| Método        | Descrição                                                                                      |
-| ------------- | ---------------------------------------------------------------------------------------------- |
-| `string()`    | Campo string (`.optional()`, `.min(n)`)                                                        |
-| `number()`    | Campo number (`.optional()`)                                                                   |
-| `boolean()`   | Campo boolean (`.optional()`)                                                                  |
-| `date()`      | Campo date (`.optional()`)                                                                     |
+| Método        | Descrição                                                                                       |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| `string()`    | Campo string (`.optional()`, `.min(n)`)                                                         |
+| `number()`    | Campo number (`.optional()`)                                                                    |
+| `boolean()`   | Campo boolean (`.optional()`)                                                                   |
+| `date()`      | Campo date (`.optional()`)                                                                      |
 | `object(obj)` | Campo objeto aninhado (`.optional()`, `.getSchema(name?)`); use `Infer<typeof obj>` para o tipo |
-| `array(arr)`  | Campo array com items tipados (`.optional()`)                                                  |
-| `type()`      | Factory para construções avançadas: `.union([...])` e `.pick(obj, [...])`                      |
+| `array(arr)`  | Campo array com items tipados (`.optional()`)                                                   |
+| `type()`      | Factory para construções avançadas: `.union([...])` e `.pick(obj, [...])`                       |
 
 Todos os fields expõem `toSchema()` (schema neutro), `getSchema(name?)` (adaptado ao adapter alvo) e `validate(value)`.
 

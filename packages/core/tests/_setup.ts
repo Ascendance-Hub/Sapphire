@@ -4,4 +4,4 @@
 // real adapter when it's imported in its own test suite.
 import { registerAdapter, type SapphireSchemaNode } from '../src'
 
-registerAdapter("mongo", (node: SapphireSchemaNode) => node)
+registerAdapter('mongo', (node: SapphireSchemaNode) => node)

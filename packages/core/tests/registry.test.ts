@@ -55,9 +55,7 @@ describe('adapter registry', () => {
   })
 
   it('resolveSchema lança "No adapter specified" quando name e defaultAdapter são undefined', () => {
-    expect(() => resolveSchema(node, undefined, undefined)).toThrow(
-      /^No adapter specified\./,
-    )
+    expect(() => resolveSchema(node, undefined, undefined)).toThrow(/^No adapter specified\./)
   })
 
   it('resolveSchema usa defaultAdapter quando name é undefined', () => {

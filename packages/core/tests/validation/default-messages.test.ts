@@ -47,7 +47,10 @@ describe('Default messages — Dispatch D (novos codes)', () => {
   })
 
   it('regex: a.string().regex(/^[a-z]+$/) on bad input', () => {
-    const r = a.string().regex(/^[a-z]+$/).safeParse('ABC')
+    const r = a
+      .string()
+      .regex(/^[a-z]+$/)
+      .safeParse('ABC')
     expect(r.success).toBe(false)
     if (!r.success) expect(r.error.issues[0].message).toBe('Does not match required pattern')
   })

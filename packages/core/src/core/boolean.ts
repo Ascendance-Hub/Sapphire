@@ -54,10 +54,14 @@ export class BooleanField<TOut = boolean, TIn = boolean>
   }
 
   optional(): BooleanField<TOut | undefined, TIn | undefined> {
-    return new BooleanField<TOut | undefined, TIn | undefined>(this.defaultAdapter, this.instanceOpts, {
-      ...this.config,
-      required: false,
-    })
+    return new BooleanField<TOut | undefined, TIn | undefined>(
+      this.defaultAdapter,
+      this.instanceOpts,
+      {
+        ...this.config,
+        required: false,
+      },
+    )
   }
 
   nullable(): BooleanField<TOut | null, TIn | null> {
@@ -127,12 +131,7 @@ export class BooleanField<TOut = boolean, TIn = boolean>
    * invalid_type check (exclusive) → accumulated rule checks.
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
-    if (
-      this.config.coerce &&
-      typeof value !== 'boolean' &&
-      value !== null &&
-      value !== undefined
-    ) {
+    if (this.config.coerce && typeof value !== 'boolean' && value !== null && value !== undefined) {
       if (value === 'true') value = true
       else if (value === 'false') value = false
       else if (value === 1) value = true

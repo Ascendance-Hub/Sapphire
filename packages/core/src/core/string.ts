@@ -97,10 +97,14 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
   }
 
   optional(): StringField<TOut | undefined, TIn | undefined> {
-    return new StringField<TOut | undefined, TIn | undefined>(this.defaultAdapter, this.instanceOpts, {
-      ...this.config,
-      required: false,
-    })
+    return new StringField<TOut | undefined, TIn | undefined>(
+      this.defaultAdapter,
+      this.instanceOpts,
+      {
+        ...this.config,
+        required: false,
+      },
+    )
   }
 
   nullable(): StringField<TOut | null, TIn | null> {
@@ -119,11 +123,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
   }
 
   describe(text: string): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: StringConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: StringConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       description: text,
@@ -131,11 +131,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
   }
 
   adapter(name: string, opts: unknown): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: StringConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: StringConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       meta: { ...(this.config.meta ?? {}), [name]: opts },
@@ -143,11 +139,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
   }
 
   unique(): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: StringConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: StringConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       unique: true,
@@ -155,11 +147,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
   }
 
   index(opts?: { unique?: boolean }): this {
-    const Ctor = this.constructor as new (
-      a?: string,
-      b?: InstanceOptions,
-      c?: StringConfig,
-    ) => this
+    const Ctor = this.constructor as new (a?: string, b?: InstanceOptions, c?: StringConfig) => this
     return new Ctor(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
       index: opts === undefined ? true : { unique: opts.unique },
@@ -293,12 +281,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
    * invalid_type check (exclusive — short-circuits) → transforms → accumulated rule checks.
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
-    if (
-      this.config.coerce &&
-      typeof value !== 'string' &&
-      value !== null &&
-      value !== undefined
-    ) {
+    if (this.config.coerce && typeof value !== 'string' && value !== null && value !== undefined) {
       value = String(value)
     }
     if (value === undefined && this.config.hasDefault) {
