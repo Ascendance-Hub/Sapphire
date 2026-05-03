@@ -28,7 +28,9 @@
       "Bash(git restore *)",
       "Bash(git check-ignore *)",
       "Bash(npm test *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "PowerShell(npx vitest run --reporter=dot --config vitest.config.ts 2>&1 | Select-Object -Last 10)",
+      "PowerShell(npx vitest run --reporter=dot --config vitest.config.ts 2>&1 | Select-Object -First 20)"
     ]
   }
 }

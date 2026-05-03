@@ -167,7 +167,7 @@ export class ArrayField<
   nonempty(opts?: { message?: MessageValue }): ArrayField<T, TOut, TIn> {
     return this.clone({
       nonempty: true,
-      minItems: 1,
+      minItems: Math.max(this.config.minItems ?? 0, 1),
       ruleMessages: {
         ...this.config.ruleMessages,
         ...(opts?.message !== undefined ? { nonempty: opts.message } : {}),
