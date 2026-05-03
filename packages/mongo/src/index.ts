@@ -66,6 +66,57 @@ export function toMongoSchema(node: SapphireSchemaNode): any {
     }
     case 'union':
       return { type: mongoose.Schema.Types.Mixed, required: node.required }
+    case 'tuple': {
+      const def: Record<string, any> = {
+        type: [mongoose.Schema.Types.Mixed],
+        required: node.required,
+      }
+      applyCommon(def, node)
+      return def
+    }
+    case 'literal': {
+      const ctor =
+        typeof node.value === 'number'
+          ? Number
+          : typeof node.value === 'boolean'
+            ? Boolean
+            : String
+      const def: Record<string, any> = {
+        type: ctor,
+        required: node.required,
+        enum: [node.value],
+      }
+      applyCommon(def, node)
+      return def
+    }
+    case 'enum': {
+      const ctor = typeof node.values[0] === 'number' ? Number : String
+      const def: Record<string, any> = {
+        type: ctor,
+        required: node.required,
+        enum: [...node.values],
+      }
+      applyCommon(def, node)
+      return def
+    }
+    case 'record': {
+      const def: Record<string, any> = {
+        type: Map,
+        of: toMongoSchema(node.values),
+        required: node.required,
+      }
+      applyCommon(def, node)
+      return def
+    }
+    case 'ref': {
+      const def: Record<string, any> = {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: node.target,
+        required: node.required,
+      }
+      applyCommon(def, node)
+      return def
+    }
   }
 }
 
