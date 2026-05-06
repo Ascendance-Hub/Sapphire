@@ -35,6 +35,8 @@ type ObjectConfig = {
   meta?: Record<string, unknown>
   fieldMessage?: FieldMessages | string
   name?: string
+  timestamps?: boolean
+  indexes?: { keys: string[]; unique?: boolean }[]
 }
 
 export class ObjectField<
@@ -71,6 +73,10 @@ export class ObjectField<
       ...(this.config.description !== undefined ? { description: this.config.description } : {}),
       ...(this.config.meta ? { meta: this.config.meta } : {}),
       ...(this.config.name !== undefined ? { name: this.config.name } : {}),
+      ...(this.config.timestamps ? { timestamps: true } : {}),
+      ...(this.config.indexes && this.config.indexes.length > 0
+        ? { indexes: this.config.indexes.map((i) => ({ ...i })) }
+        : {}),
       properties,
     }
   }
@@ -202,6 +208,58 @@ export class ObjectField<
 
   getName(): string | undefined {
     return this.config.name
+  }
+
+  /**
+   * Marks the schema as having `createdAt`/`updatedAt` timestamps. Adapters
+   * materialize this — Mongo emits `{ timestamps: true }` on the schema,
+   * Drizzle adds the columns, JSON Schema documents them. Sapphire core just
+   * carries the flag in the IR.
+   *
+   * Returns a new ObjectField (immutable). Config is preserved otherwise.
+   */
+  timestamps(): this {
+    const Ctor = this.constructor as new (
+      obj: T,
+      a?: string,
+      b?: InstanceOptions,
+      c?: ObjectConfig,
+    ) => this
+    return new Ctor(this.obj, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      timestamps: true,
+    })
+  }
+
+  /**
+   * Adds a per-collection composite index on the listed keys.
+   *
+   * Different from field-level `.index()` (which marks ONE column for
+   * indexing) — this declares an index across multiple fields, optionally
+   * unique. Multiple calls accumulate; each `.index([...])` produces an
+   * additional entry in the IR's `indexes` array.
+   *
+   * Adapters materialize this — Mongo via `schema.index({...}, { unique })`,
+   * Drizzle via table-level `.index().on(...)`. JSON Schema has no equivalent
+   * and ignores it.
+   *
+   * Returns a new ObjectField (immutable).
+   */
+  index(keys: (keyof T & string)[], opts?: { unique?: boolean }): this {
+    const newIndex: { keys: string[]; unique?: boolean } = {
+      keys: [...keys],
+      ...(opts?.unique ? { unique: true } : {}),
+    }
+    const Ctor = this.constructor as new (
+      obj: T,
+      a?: string,
+      b?: InstanceOptions,
+      c?: ObjectConfig,
+    ) => this
+    return new Ctor(this.obj, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      indexes: [...(this.config.indexes ?? []), newIndex],
+    })
   }
 
   /**
