@@ -160,6 +160,54 @@ export class ObjectField<
   }
 
   /**
+   * Returns a new ObjectField containing only the listed keys.
+   *
+   * The new schema has a fresh config (no `name`, no `timestamps`, no
+   * `indexes`, no `meta`, no `description`, no field-level message). Only
+   * `required` is preserved. Subsets are conceptually new schemas — if you
+   * want a name, call `.name(...)` on the result.
+   *
+   * Pass keys with `as const` for literal-typed inference:
+   * `User.pick(['name', 'age'] as const)`.
+   */
+  pick<K extends readonly (keyof T)[]>(keys: K): ObjectField<Pick<T, K[number]>> {
+    const next: Record<string, Field> = {}
+    for (const k of keys) {
+      const key = k as keyof T
+      if (key in this.obj) {
+        next[key as string] = this.obj[key]
+      }
+    }
+    return new ObjectField<Pick<T, K[number]>>(
+      next as Pick<T, K[number]>,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { required: this.config.required },
+    )
+  }
+
+  /**
+   * Returns a new ObjectField with the listed keys removed.
+   *
+   * Same config rules as `pick`: only `required` is preserved.
+   */
+  omit<K extends readonly (keyof T)[]>(keys: K): ObjectField<Omit<T, K[number]>> {
+    const exclude = new Set<keyof T>(keys as readonly (keyof T)[])
+    const next: Record<string, Field> = {}
+    for (const k of Object.keys(this.obj) as (keyof T)[]) {
+      if (!exclude.has(k)) {
+        next[k as string] = this.obj[k]
+      }
+    }
+    return new ObjectField<Omit<T, K[number]>>(
+      next as Omit<T, K[number]>,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { required: this.config.required },
+    )
+  }
+
+  /**
    * _parse order: default substitution → null/undefined handling →
    * invalid_type check (exclusive) → accumulated per-key checks.
    */
