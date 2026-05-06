@@ -253,6 +253,36 @@ export class ObjectField<
   }
 
   /**
+   * Returns a new ObjectField with additional keys merged in.
+   *
+   * Conflict resolution: **last wins** — if a key in `shape` already exists
+   * in `T`, the incoming definition replaces the original. (Same convention
+   * as Zod's `.extend()`.)
+   *
+   * Config of `this` is preserved (extend is a same-schema operation, just
+   * wider). Config of incoming shape's fields lives at the field level and
+   * survives intact.
+   */
+  extend<U extends Record<string, Field>>(shape: U): ObjectField<Omit<T, keyof U> & U> {
+    const next = { ...this.obj, ...shape }
+    return new ObjectField(next, this.defaultAdapter, this.instanceOpts, this.config) as unknown as ObjectField<Omit<T, keyof U> & U>
+  }
+
+  /**
+   * Returns a new ObjectField merging another ObjectField's shape into this.
+   *
+   * Equivalent to `this.extend(other.getObj())` — same last-wins rule, same
+   * config-preservation rule. The `other`'s schema-level config (name,
+   * timestamps, indexes, description) is **not** copied; only its property
+   * shape is merged.
+   */
+  merge<U extends Record<string, Field>>(
+    other: ObjectField<U>,
+  ): ObjectField<Omit<T, keyof U> & U> {
+    return this.extend(other.getObj())
+  }
+
+  /**
    * _parse order: default substitution → null/undefined handling →
    * invalid_type check (exclusive) → accumulated per-key checks.
    */

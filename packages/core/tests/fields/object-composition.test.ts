@@ -165,3 +165,85 @@ describe('ObjectField.required', () => {
     expect(User.safeParse({}).success).toBe(false)
   })
 })
+
+describe('ObjectField.extend', () => {
+  it('adds new keys at runtime', () => {
+    const User = a.object({ name: a.string() })
+    const Extended = User.extend({ age: a.number() })
+    expect(Extended.parse({ name: 'Alice', age: 30 })).toEqual({ name: 'Alice', age: 30 })
+    expect(Extended.safeParse({ name: 'Alice' }).success).toBe(false)
+  })
+
+  it('infers Omit<T, keyof U> & U at the type level', () => {
+    const User = a.object({ name: a.string(), age: a.number() })
+    const Extended = User.extend({ role: a.string() })
+    expectTypeOf<Infer<typeof Extended>>().toEqualTypeOf<{
+      name: string
+      age: number
+      role: string
+    }>()
+  })
+
+  it('right wins on key conflict (runtime)', () => {
+    const User = a.object({ name: a.string() })
+    const Override = User.extend({ name: a.number() })
+    expect(Override.parse({ name: 42 })).toEqual({ name: 42 })
+    expect(Override.safeParse({ name: 'Alice' }).success).toBe(false)
+  })
+
+  it('right wins on key conflict (type)', () => {
+    const User = a.object({ name: a.string(), age: a.number() })
+    const Override = User.extend({ name: a.number() })
+    expectTypeOf<Infer<typeof Override>>().toEqualTypeOf<{
+      name: number
+      age: number
+    }>()
+  })
+
+  it('preserves config (description survives)', () => {
+    const User = a.object({ x: a.string() }).describe('a thing')
+    const E = User.extend({ y: a.number() })
+    const ir = E.toSchema()
+    expect(ir.kind).toBe('object')
+    if (ir.kind === 'object') {
+      expect(ir.description).toBe('a thing')
+    }
+  })
+})
+
+describe('ObjectField.merge', () => {
+  it('merges another ObjectField shape (right wins)', () => {
+    const Base = a.object({ name: a.string(), age: a.number() })
+    const Other = a.object({ age: a.string(), email: a.string().email() })
+    const Merged = Base.merge(Other)
+    // age came from `Other` — string, not number
+    expect(Merged.parse({ name: 'Alice', age: '30', email: 'a@b.com' })).toEqual({
+      name: 'Alice',
+      age: '30',
+      email: 'a@b.com',
+    })
+    expect(Merged.safeParse({ name: 'Alice', age: 30, email: 'a@b.com' }).success).toBe(false)
+  })
+
+  it('infers Omit<T, keyof U> & U at the type level', () => {
+    const Base = a.object({ name: a.string(), age: a.number() })
+    const Other = a.object({ age: a.string(), email: a.string() })
+    const Merged = Base.merge(Other)
+    expectTypeOf<Infer<typeof Merged>>().toEqualTypeOf<{
+      name: string
+      age: string
+      email: string
+    }>()
+  })
+
+  it('does not copy `other`s schema-level config (name not transferred)', () => {
+    const Base = a.object({ a: a.string() })
+    const Other = a.object({ b: a.number() }).name('OtherSchema_MergeTest')
+    const Merged = Base.merge(Other)
+    const ir = Merged.toSchema()
+    expect(ir.kind).toBe('object')
+    if (ir.kind === 'object') {
+      expect(ir.name).toBeUndefined()
+    }
+  })
+})
