@@ -93,3 +93,75 @@ describe('pick/omit immutability', () => {
     expect(Object.keys(User.getObj())).toEqual(['name', 'age'])
   })
 })
+
+describe('ObjectField.partial', () => {
+  it('makes every key optional at runtime (parse with empty object passes)', () => {
+    const User = a.object({ name: a.string(), age: a.number() })
+    const Patch = User.partial()
+    expect(Patch.parse({}).name).toBeUndefined()
+    expect(Patch.parse({ name: 'Alice' })).toEqual({ name: 'Alice' })
+    expect(Patch.parse({ name: 'Bob', age: 7 })).toEqual({ name: 'Bob', age: 7 })
+  })
+
+  it('original schema still rejects missing keys', () => {
+    const User = a.object({ name: a.string(), age: a.number() })
+    User.partial()
+    expect(User.safeParse({}).success).toBe(false)
+  })
+
+  it('infers all keys as optional at the type level', () => {
+    const User = a.object({ name: a.string(), age: a.number() })
+    const Patch = User.partial()
+    expectTypeOf<Infer<typeof Patch>>().toEqualTypeOf<{ name?: string; age?: number }>()
+  })
+
+  it('preserves config (description survives)', () => {
+    const User = a.object({ x: a.string() }).describe('a thing')
+    const P = User.partial()
+    const ir = P.toSchema()
+    expect(ir.kind).toBe('object')
+    if (ir.kind === 'object') {
+      expect(ir.description).toBe('a thing')
+    }
+  })
+})
+
+describe('ObjectField.required', () => {
+  it('makes every key required at runtime', () => {
+    const User = a.object({ name: a.string(), age: a.number() })
+    const Patch = User.partial()
+    const Strict = Patch.required()
+    expect(Strict.safeParse({}).success).toBe(false)
+    expect(Strict.parse({ name: 'Alice', age: 30 })).toEqual({ name: 'Alice', age: 30 })
+  })
+
+  it('round-trips partial().required() to the original required shape', () => {
+    const User = a.object({ name: a.string(), age: a.number() })
+    const RoundTrip = User.partial().required()
+    expectTypeOf<Infer<typeof RoundTrip>>().toEqualTypeOf<{ name: string; age: number }>()
+  })
+
+  it('also flips object-level optional back (config.required = true)', () => {
+    const Optional = a.object({ x: a.string() }).optional()
+    const NotOptional = Optional.required()
+    expect(NotOptional.safeParse(undefined).success).toBe(false)
+  })
+
+  it('preserves config (description survives)', () => {
+    const User = a.object({ x: a.string().optional() }).describe('a thing')
+    const R = User.required()
+    const ir = R.toSchema()
+    expect(ir.kind).toBe('object')
+    if (ir.kind === 'object') {
+      expect(ir.description).toBe('a thing')
+    }
+  })
+
+  it('source schema is unchanged after partial/required', () => {
+    const User = a.object({ name: a.string() })
+    User.partial()
+    User.required()
+    // original still expects name to be required
+    expect(User.safeParse({}).success).toBe(false)
+  })
+})

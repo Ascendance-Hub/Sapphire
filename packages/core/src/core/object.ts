@@ -13,6 +13,19 @@ import type {
 import { SapphireSchemaNode } from '../schema/types'
 import { ObjectInput, ObjectOutput } from '../types/infer'
 
+/** Structural lookup of a field's `.required()` / `.optional()` return type.
+ *  Used by `ObjectField.required()` / `partial()` to map each child without
+ *  forcing those methods into the `Field` interface contract. */
+type RequiredOf<F> = F extends { required(): infer R } ? (R extends Field ? R : F) : F
+type OptionalOf<F> = F extends { optional(): infer R } ? (R extends Field ? R : F) : F
+
+type RequiredAll<T extends Record<string, Field>> = {
+  [K in keyof T]: RequiredOf<T[K]> extends Field ? RequiredOf<T[K]> : T[K]
+}
+type PartialAll<T extends Record<string, Field>> = {
+  [K in keyof T]: OptionalOf<T[K]> extends Field ? OptionalOf<T[K]> : T[K]
+}
+
 type ObjectConfig = {
   required: boolean
   nullable?: boolean
@@ -75,13 +88,45 @@ export class ObjectField<
     )
   }
 
-  required(): ObjectField<T, Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
-    return new ObjectField<T, Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
-      this.obj,
+  /**
+   * Returns a new ObjectField where every child field has `.required()`
+   * applied (Zod-style "make all keys required"). The object itself is also
+   * marked required (`config.required = true`), matching the universal
+   * "remove `| undefined`" semantic.
+   *
+   * Config is preserved otherwise — name/timestamps/indexes/meta/description
+   * survive (this is the same conceptual schema, just stricter).
+   */
+  required(): ObjectField<RequiredAll<T>> {
+    const next: Record<string, Field> = {}
+    for (const [k, f] of Object.entries(this.obj)) {
+      next[k] = (f as unknown as { required(): Field }).required()
+    }
+    return new ObjectField(next, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      required: true,
+    }) as unknown as ObjectField<RequiredAll<T>>
+  }
+
+  /**
+   * Returns a new ObjectField where every child field has `.optional()`
+   * applied (Zod-style "make all keys optional"). The object itself keeps its
+   * own `required`/`optional` flag — `partial()` is about children, not about
+   * whether the object itself can be `undefined`.
+   *
+   * Config is preserved (same conceptual schema, just looser).
+   */
+  partial(): ObjectField<PartialAll<T>> {
+    const next: Record<string, Field> = {}
+    for (const [k, f] of Object.entries(this.obj)) {
+      next[k] = f.optional()
+    }
+    return new ObjectField(
+      next,
       this.defaultAdapter,
       this.instanceOpts,
-      { ...this.config, required: true },
-    )
+      this.config,
+    ) as unknown as ObjectField<PartialAll<T>>
   }
 
   nullable(): ObjectField<T, TOut | null, TIn | null> {
