@@ -75,6 +75,15 @@ export class ObjectField<
     )
   }
 
+  required(): ObjectField<T, Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new ObjectField<T, Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.obj,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, required: true },
+    )
+  }
+
   nullable(): ObjectField<T, TOut | null, TIn | null> {
     return new ObjectField<T, TOut | null, TIn | null>(
       this.obj,

@@ -65,6 +65,15 @@ export class UnionField<
     )
   }
 
+  required(): UnionField<Fields, Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new UnionField<Fields, Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.fields,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, required: true },
+    )
+  }
+
   nullable(): UnionField<Fields, TOut | null, TIn | null> {
     return new UnionField<Fields, TOut | null, TIn | null>(
       this.fields,

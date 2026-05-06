@@ -17,6 +17,7 @@ export interface Field<TOutput = unknown, TInput = TOutput> {
   safeParse(value: unknown, opts?: ParseOptions): SafeParseResult<TOutput>
 
   optional(): Field<TOutput | undefined, TInput | undefined>
+  required(): Field<Exclude<TOutput, undefined>, Exclude<TInput, undefined>>
 }
 
 /**

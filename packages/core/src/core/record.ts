@@ -71,6 +71,16 @@ export class RecordField<
     )
   }
 
+  required(): RecordField<K, V, Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new RecordField<K, V, Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.keyField,
+      this.valueField,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, required: true },
+    )
+  }
+
   nullable(): RecordField<K, V, TOut | null, TIn | null> {
     return new RecordField<K, V, TOut | null, TIn | null>(
       this.keyField,

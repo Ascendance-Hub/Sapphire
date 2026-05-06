@@ -77,6 +77,15 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
     )
   }
 
+  required(): ArrayField<F, Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new ArrayField<F, Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.item,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, required: true },
+    )
+  }
+
   nullable(): ArrayField<F, TOut | null, TIn | null> {
     return new ArrayField<F, TOut | null, TIn | null>(
       this.item,

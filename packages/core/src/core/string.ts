@@ -107,6 +107,17 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
     )
   }
 
+  required(): StringField<Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new StringField<Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.defaultAdapter,
+      this.instanceOpts,
+      {
+        ...this.config,
+        required: true,
+      },
+    )
+  }
+
   nullable(): StringField<TOut | null, TIn | null> {
     return new StringField<TOut | null, TIn | null>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,

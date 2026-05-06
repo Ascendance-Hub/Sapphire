@@ -61,6 +61,15 @@ export class LiteralField<V extends LiteralValue, TOut = V, TIn = V>
     )
   }
 
+  required(): LiteralField<V, Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new LiteralField<V, Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.value,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, required: true },
+    )
+  }
+
   nullable(): LiteralField<V, TOut | null, TIn | null> {
     return new LiteralField<V, TOut | null, TIn | null>(
       this.value,

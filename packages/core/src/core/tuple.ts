@@ -71,6 +71,15 @@ export class TupleField<
     )
   }
 
+  required(): TupleField<T, Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new TupleField<T, Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.items,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, required: true },
+    )
+  }
+
   nullable(): TupleField<T, TOut | null, TIn | null> {
     return new TupleField<T, TOut | null, TIn | null>(
       this.items,

@@ -107,6 +107,17 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
     )
   }
 
+  required(): NumberField<Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new NumberField<Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.defaultAdapter,
+      this.instanceOpts,
+      {
+        ...this.config,
+        required: true,
+      },
+    )
+  }
+
   nullable(): NumberField<TOut | null, TIn | null> {
     return new NumberField<TOut | null, TIn | null>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,

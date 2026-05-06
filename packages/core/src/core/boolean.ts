@@ -64,6 +64,17 @@ export class BooleanField<TOut = boolean, TIn = boolean>
     )
   }
 
+  required(): BooleanField<Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new BooleanField<Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.defaultAdapter,
+      this.instanceOpts,
+      {
+        ...this.config,
+        required: true,
+      },
+    )
+  }
+
   nullable(): BooleanField<TOut | null, TIn | null> {
     return new BooleanField<TOut | null, TIn | null>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,

@@ -82,6 +82,17 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
     )
   }
 
+  required(): DateField<Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new DateField<Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.defaultAdapter,
+      this.instanceOpts,
+      {
+        ...this.config,
+        required: true,
+      },
+    )
+  }
+
   nullable(): DateField<TOut | null, TIn | null> {
     return new DateField<TOut | null, TIn | null>(this.defaultAdapter, this.instanceOpts, {
       ...this.config,
