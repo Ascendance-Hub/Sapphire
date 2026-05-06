@@ -323,7 +323,12 @@ export class ObjectField<
    */
   extend<U extends Record<string, Field>>(shape: U): ObjectField<Omit<T, keyof U> & U> {
     const next = { ...this.obj, ...shape }
-    return new ObjectField(next, this.defaultAdapter, this.instanceOpts, this.config) as unknown as ObjectField<Omit<T, keyof U> & U>
+    return new ObjectField(
+      next,
+      this.defaultAdapter,
+      this.instanceOpts,
+      this.config,
+    ) as unknown as ObjectField<Omit<T, keyof U> & U>
   }
 
   /**
@@ -334,9 +339,7 @@ export class ObjectField<
    * timestamps, indexes, description) is **not** copied; only its property
    * shape is merged.
    */
-  merge<U extends Record<string, Field>>(
-    other: ObjectField<U>,
-  ): ObjectField<Omit<T, keyof U> & U> {
+  merge<U extends Record<string, Field>>(other: ObjectField<U>): ObjectField<Omit<T, keyof U> & U> {
     return this.extend(other.getObj())
   }
 
