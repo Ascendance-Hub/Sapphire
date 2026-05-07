@@ -17,6 +17,11 @@ export interface Field<TOutput = unknown, TInput = TOutput> {
   safeParse(value: unknown, opts?: ParseOptions): SafeParseResult<TOutput>
 
   optional(): Field<TOutput | undefined, TInput | undefined>
+  // NOTE: every concrete field also exposes `required(): SelfField<Exclude<...>, Exclude<...>>`,
+  // but the signature is not part of the Field contract because `ObjectField.required()`
+  // overrides with a recursive shape ({ [K]: T[K]['required']() }) that's not assignable
+  // to `Field<Exclude<TOut, undefined>, ...>`. Treat `required()` as a universal modifier
+  // by convention; if you need it via a `Field` reference, narrow first.
 }
 
 /**

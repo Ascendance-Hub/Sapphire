@@ -80,6 +80,15 @@ export class EnumField<V extends EnumValue, TOut = V, TIn = V>
     )
   }
 
+  required(): EnumField<V, Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new EnumField<V, Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.values,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, required: true },
+    )
+  }
+
   nullable(): EnumField<V, TOut | null, TIn | null> {
     return new EnumField<V, TOut | null, TIn | null>(
       this.values,

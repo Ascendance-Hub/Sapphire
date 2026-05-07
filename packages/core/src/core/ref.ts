@@ -83,6 +83,15 @@ export class RefField<TOut = unknown, TIn = unknown> implements Field<TOut, TIn>
     )
   }
 
+  required(): RefField<Exclude<TOut, undefined>, Exclude<TIn, undefined>> {
+    return new RefField<Exclude<TOut, undefined>, Exclude<TIn, undefined>>(
+      this.targetName,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { ...this.config, required: true },
+    )
+  }
+
   nullable(): RefField<TOut | null, TIn | null> {
     return new RefField<TOut | null, TIn | null>(
       this.targetName,

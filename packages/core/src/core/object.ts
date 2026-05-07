@@ -13,6 +13,19 @@ import type {
 import { SapphireSchemaNode } from '../schema/types'
 import { ObjectInput, ObjectOutput } from '../types/infer'
 
+/** Structural lookup of a field's `.required()` / `.optional()` return type.
+ *  Used by `ObjectField.required()` / `partial()` to map each child without
+ *  forcing those methods into the `Field` interface contract. */
+type RequiredOf<F> = F extends { required(): infer R } ? (R extends Field ? R : F) : F
+type OptionalOf<F> = F extends { optional(): infer R } ? (R extends Field ? R : F) : F
+
+type RequiredAll<T extends Record<string, Field>> = {
+  [K in keyof T]: RequiredOf<T[K]> extends Field ? RequiredOf<T[K]> : T[K]
+}
+type PartialAll<T extends Record<string, Field>> = {
+  [K in keyof T]: OptionalOf<T[K]> extends Field ? OptionalOf<T[K]> : T[K]
+}
+
 type ObjectConfig = {
   required: boolean
   nullable?: boolean
@@ -22,6 +35,8 @@ type ObjectConfig = {
   meta?: Record<string, unknown>
   fieldMessage?: FieldMessages | string
   name?: string
+  timestamps?: boolean
+  indexes?: { keys: string[]; unique?: boolean }[]
 }
 
 export class ObjectField<
@@ -58,6 +73,10 @@ export class ObjectField<
       ...(this.config.description !== undefined ? { description: this.config.description } : {}),
       ...(this.config.meta ? { meta: this.config.meta } : {}),
       ...(this.config.name !== undefined ? { name: this.config.name } : {}),
+      ...(this.config.timestamps ? { timestamps: true } : {}),
+      ...(this.config.indexes && this.config.indexes.length > 0
+        ? { indexes: this.config.indexes.map((i) => ({ ...i })) }
+        : {}),
       properties,
     }
   }
@@ -73,6 +92,47 @@ export class ObjectField<
       this.instanceOpts,
       { ...this.config, required: false },
     )
+  }
+
+  /**
+   * Returns a new ObjectField where every child field has `.required()`
+   * applied (Zod-style "make all keys required"). The object itself is also
+   * marked required (`config.required = true`), matching the universal
+   * "remove `| undefined`" semantic.
+   *
+   * Config is preserved otherwise — name/timestamps/indexes/meta/description
+   * survive (this is the same conceptual schema, just stricter).
+   */
+  required(): ObjectField<RequiredAll<T>> {
+    const next: Record<string, Field> = {}
+    for (const [k, f] of Object.entries(this.obj)) {
+      next[k] = (f as unknown as { required(): Field }).required()
+    }
+    return new ObjectField(next, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      required: true,
+    }) as unknown as ObjectField<RequiredAll<T>>
+  }
+
+  /**
+   * Returns a new ObjectField where every child field has `.optional()`
+   * applied (Zod-style "make all keys optional"). The object itself keeps its
+   * own `required`/`optional` flag — `partial()` is about children, not about
+   * whether the object itself can be `undefined`.
+   *
+   * Config is preserved (same conceptual schema, just looser).
+   */
+  partial(): ObjectField<PartialAll<T>> {
+    const next: Record<string, Field> = {}
+    for (const [k, f] of Object.entries(this.obj)) {
+      next[k] = f.optional()
+    }
+    return new ObjectField(
+      next,
+      this.defaultAdapter,
+      this.instanceOpts,
+      this.config,
+    ) as unknown as ObjectField<PartialAll<T>>
   }
 
   nullable(): ObjectField<T, TOut | null, TIn | null> {
@@ -148,6 +208,139 @@ export class ObjectField<
 
   getName(): string | undefined {
     return this.config.name
+  }
+
+  /**
+   * Marks the schema as having `createdAt`/`updatedAt` timestamps. Adapters
+   * materialize this — Mongo emits `{ timestamps: true }` on the schema,
+   * Drizzle adds the columns, JSON Schema documents them. Sapphire core just
+   * carries the flag in the IR.
+   *
+   * Returns a new ObjectField (immutable). Config is preserved otherwise.
+   */
+  timestamps(): this {
+    const Ctor = this.constructor as new (
+      obj: T,
+      a?: string,
+      b?: InstanceOptions,
+      c?: ObjectConfig,
+    ) => this
+    return new Ctor(this.obj, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      timestamps: true,
+    })
+  }
+
+  /**
+   * Adds a per-collection composite index on the listed keys.
+   *
+   * Different from field-level `.index()` (which marks ONE column for
+   * indexing) — this declares an index across multiple fields, optionally
+   * unique. Multiple calls accumulate; each `.index([...])` produces an
+   * additional entry in the IR's `indexes` array.
+   *
+   * Adapters materialize this — Mongo via `schema.index({...}, { unique })`,
+   * Drizzle via table-level `.index().on(...)`. JSON Schema has no equivalent
+   * and ignores it.
+   *
+   * Returns a new ObjectField (immutable).
+   */
+  index(keys: (keyof T & string)[], opts?: { unique?: boolean }): this {
+    const newIndex: { keys: string[]; unique?: boolean } = {
+      keys: [...keys],
+      ...(opts?.unique ? { unique: true } : {}),
+    }
+    const Ctor = this.constructor as new (
+      obj: T,
+      a?: string,
+      b?: InstanceOptions,
+      c?: ObjectConfig,
+    ) => this
+    return new Ctor(this.obj, this.defaultAdapter, this.instanceOpts, {
+      ...this.config,
+      indexes: [...(this.config.indexes ?? []), newIndex],
+    })
+  }
+
+  /**
+   * Returns a new ObjectField containing only the listed keys.
+   *
+   * The new schema has a fresh config (no `name`, no `timestamps`, no
+   * `indexes`, no `meta`, no `description`, no field-level message). Only
+   * `required` is preserved. Subsets are conceptually new schemas — if you
+   * want a name, call `.name(...)` on the result.
+   *
+   * Pass keys with `as const` for literal-typed inference:
+   * `User.pick(['name', 'age'] as const)`.
+   */
+  pick<K extends readonly (keyof T)[]>(keys: K): ObjectField<Pick<T, K[number]>> {
+    const next: Record<string, Field> = {}
+    for (const k of keys) {
+      const key = k as keyof T
+      if (key in this.obj) {
+        next[key as string] = this.obj[key]
+      }
+    }
+    return new ObjectField<Pick<T, K[number]>>(
+      next as Pick<T, K[number]>,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { required: this.config.required },
+    )
+  }
+
+  /**
+   * Returns a new ObjectField with the listed keys removed.
+   *
+   * Same config rules as `pick`: only `required` is preserved.
+   */
+  omit<K extends readonly (keyof T)[]>(keys: K): ObjectField<Omit<T, K[number]>> {
+    const exclude = new Set<keyof T>(keys as readonly (keyof T)[])
+    const next: Record<string, Field> = {}
+    for (const k of Object.keys(this.obj) as (keyof T)[]) {
+      if (!exclude.has(k)) {
+        next[k as string] = this.obj[k]
+      }
+    }
+    return new ObjectField<Omit<T, K[number]>>(
+      next as Omit<T, K[number]>,
+      this.defaultAdapter,
+      this.instanceOpts,
+      { required: this.config.required },
+    )
+  }
+
+  /**
+   * Returns a new ObjectField with additional keys merged in.
+   *
+   * Conflict resolution: **last wins** — if a key in `shape` already exists
+   * in `T`, the incoming definition replaces the original. (Same convention
+   * as Zod's `.extend()`.)
+   *
+   * Config of `this` is preserved (extend is a same-schema operation, just
+   * wider). Config of incoming shape's fields lives at the field level and
+   * survives intact.
+   */
+  extend<U extends Record<string, Field>>(shape: U): ObjectField<Omit<T, keyof U> & U> {
+    const next = { ...this.obj, ...shape }
+    return new ObjectField(
+      next,
+      this.defaultAdapter,
+      this.instanceOpts,
+      this.config,
+    ) as unknown as ObjectField<Omit<T, keyof U> & U>
+  }
+
+  /**
+   * Returns a new ObjectField merging another ObjectField's shape into this.
+   *
+   * Equivalent to `this.extend(other.getObj())` — same last-wins rule, same
+   * config-preservation rule. The `other`'s schema-level config (name,
+   * timestamps, indexes, description) is **not** copied; only its property
+   * shape is merged.
+   */
+  merge<U extends Record<string, Field>>(other: ObjectField<U>): ObjectField<Omit<T, keyof U> & U> {
+    return this.extend(other.getObj())
   }
 
   /**
