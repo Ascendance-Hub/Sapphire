@@ -1,7 +1,6 @@
 import mongoose from 'mongoose'
 import {
   formatValidators,
-  registerAdapter,
   type SapphireSchemaNode,
   type StringFormat,
 } from '@ascendance-hub/sapphire-core'
@@ -278,4 +277,3 @@ export function toMongoSchema(
   return buildField(node, options)
 }
 
-registerAdapter('mongo', toMongoSchema as any)

@@ -27,6 +27,6 @@ describe('Bug: ObjectField.optional() não funciona', () => {
 
   it('schema reflete required:false após optional()', () => {
     const field = a.object({ name: a.string() }).optional()
-    expect((field.getSchema() as { required: boolean }).required).toBe(false)
+    expect(field.toSchema().required).toBe(false)
   })
 })

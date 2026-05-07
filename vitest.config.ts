@@ -13,6 +13,6 @@ export default defineConfig({
   test: {
     include: ['packages/*/tests/**/*.test.ts'],
     environment: 'node',
-    setupFiles: ['packages/core/tests/_setup.ts'],
+    setupFiles: ['packages/core/tests/_setup.ts', 'packages/mongo/tests/_setup.ts'],
   },
 })
