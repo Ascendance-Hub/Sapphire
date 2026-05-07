@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { toMongoSchema } from '../src'
-import { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
+import type { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 
-describe('toMongoSchema', () => {
+describe('toMongoSchema (primitives + composites — buildField)', () => {
   it('string → { type: String, required }', () => {
     const node: SapphireSchemaNode = { kind: 'string', required: true }
     expect(toMongoSchema(node)).toEqual({ type: String, required: true })
@@ -29,7 +29,7 @@ describe('toMongoSchema', () => {
     expect(toMongoSchema(node)).toEqual({ type: Date, required: true })
   })
 
-  it('object → { type: { ...properties }, required }', () => {
+  it('top-level object → mongoose.Schema instance', () => {
     const node: SapphireSchemaNode = {
       kind: 'object',
       required: true,
@@ -38,40 +38,62 @@ describe('toMongoSchema', () => {
         age: { kind: 'number', required: false },
       },
     }
-    expect(toMongoSchema(node)).toEqual({
-      type: {
-        name: { type: String, required: true },
-        age: { type: Number, required: false },
-      },
-      required: true,
-    })
+    const result = toMongoSchema(node)
+    expect(result).toBeInstanceOf(mongoose.Schema)
+    const schema = result as mongoose.Schema
+    expect(schema.path('name')).toBeDefined()
+    expect(schema.path('age')).toBeDefined()
   })
 
-  it('array de tipo único → { type: [itemSchema], required }', () => {
+  it('nested object vira subdoc Schema com _id: false por default', () => {
+    const node: SapphireSchemaNode = {
+      kind: 'object',
+      required: true,
+      properties: {
+        meta: {
+          kind: 'object',
+          required: true,
+          properties: {
+            createdAt: { kind: 'date', required: true },
+          },
+        },
+      },
+    }
+    const schema = toMongoSchema(node) as mongoose.Schema
+    const subPath = schema.path('meta') as any
+    expect(subPath.schema).toBeInstanceOf(mongoose.Schema)
+    expect(subPath.schema.options._id).toBe(false)
+  })
+
+  it('subdocId: true repassa para nested Schema', () => {
+    const node: SapphireSchemaNode = {
+      kind: 'object',
+      required: true,
+      properties: {
+        meta: {
+          kind: 'object',
+          required: true,
+          properties: {
+            createdAt: { kind: 'date', required: true },
+          },
+        },
+      },
+    }
+    const schema = toMongoSchema(node, { subdocId: true }) as mongoose.Schema
+    const subPath = schema.path('meta') as any
+    expect(subPath.schema.options._id).toBe(true)
+  })
+
+  it('array (homogêneo) → { type: [itemSchema], required }', () => {
     const node: SapphireSchemaNode = {
       kind: 'array',
       required: true,
-      items: [{ kind: 'string', required: true }],
+      items: { kind: 'string', required: true },
     }
     expect(toMongoSchema(node)).toEqual({
       type: [{ type: String, required: true }],
       required: true,
     })
-  })
-
-  it('array heterogêneo → { type: [Mixed], required }', () => {
-    const node: SapphireSchemaNode = {
-      kind: 'array',
-      required: true,
-      items: [
-        { kind: 'string', required: true },
-        { kind: 'number', required: true },
-      ],
-    }
-    const result = toMongoSchema(node)
-    expect(result.required).toBe(true)
-    expect(Array.isArray(result.type)).toBe(true)
-    expect(result.type[0]).toBe(mongoose.Schema.Types.Mixed)
   })
 
   it('union → { type: Mixed, required }', () => {
@@ -83,7 +105,7 @@ describe('toMongoSchema', () => {
         { kind: 'date', required: true },
       ],
     }
-    const result = toMongoSchema(node)
+    const result = toMongoSchema(node) as Record<string, any>
     expect(result.type).toBe(mongoose.Schema.Types.Mixed)
     expect(result.required).toBe(false)
   })
