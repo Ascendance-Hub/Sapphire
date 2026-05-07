@@ -1,5 +1,10 @@
 import mongoose from 'mongoose'
-import { registerAdapter, type SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
+import {
+  formatValidators,
+  registerAdapter,
+  type SapphireSchemaNode,
+  type StringFormat,
+} from '@ascendance-hub/sapphire-core'
 
 export interface MongoAdapterOptions {
   /**
@@ -17,6 +22,16 @@ type ObjectNode = Extract<SapphireSchemaNode, { kind: 'object' }>
  * These are computed by Sapphire and overriding them would break the adapter.
  */
 const META_BLACKLIST = new Set(['type', 'required'])
+
+function stringFormatValidator(format: StringFormat): {
+  validator: (v: string) => boolean
+  message: string
+} {
+  return {
+    validator: formatValidators[format],
+    message: `Invalid ${format}`,
+  }
+}
 
 function applyCommon(
   def: Record<string, any>,
@@ -63,6 +78,29 @@ function buildField(
       if (node.regex !== undefined) {
         def.match = new RegExp(node.regex.source, node.regex.flags)
       }
+      const validators: Array<{ validator: (v: string) => boolean; message: string }> = []
+      if (node.format !== undefined) {
+        validators.push(stringFormatValidator(node.format))
+      }
+      if (node.startsWith !== undefined) {
+        const prefix = node.startsWith
+        validators.push({
+          validator: (v) => v.startsWith(prefix),
+          message: `String must start with "${prefix}"`,
+        })
+      }
+      if (node.endsWith !== undefined) {
+        const suffix = node.endsWith
+        validators.push({
+          validator: (v) => v.endsWith(suffix),
+          message: `String must end with "${suffix}"`,
+        })
+      }
+      if (validators.length === 1) def.validate = validators[0]
+      else if (validators.length > 1) def.validate = validators
+      if (node.transforms?.includes('trim')) def.trim = true
+      if (node.transforms?.includes('toLowerCase')) def.lowercase = true
+      if (node.transforms?.includes('toUpperCase')) def.uppercase = true
       applyCommon(def, node, options)
       return def
     }
@@ -70,6 +108,36 @@ function buildField(
       const def: Record<string, any> = { type: Number, required: node.required }
       if (node.min !== undefined) def.min = node.min
       if (node.max !== undefined) def.max = node.max
+      const validators: Array<{ validator: (v: number) => boolean; message: string }> = []
+      if (node.exclusiveMin !== undefined) {
+        const exMin = node.exclusiveMin
+        validators.push({ validator: (v) => v > exMin, message: `Must be > ${exMin}` })
+      }
+      if (node.exclusiveMax !== undefined) {
+        const exMax = node.exclusiveMax
+        validators.push({ validator: (v) => v < exMax, message: `Must be < ${exMax}` })
+      }
+      if (node.int) {
+        validators.push({ validator: (v) => Number.isInteger(v), message: 'Must be integer' })
+      }
+      if (node.multipleOf !== undefined) {
+        const m = node.multipleOf
+        validators.push({
+          validator: (v) => Math.abs(v % m) < Number.EPSILON,
+          message: `Must be multiple of ${m}`,
+        })
+      }
+      if (node.finite) {
+        validators.push({ validator: (v) => Number.isFinite(v), message: 'Must be finite' })
+      }
+      if (node.safe) {
+        validators.push({
+          validator: (v) => Number.isSafeInteger(v),
+          message: 'Must be safe integer',
+        })
+      }
+      if (validators.length === 1) def.validate = validators[0]
+      else if (validators.length > 1) def.validate = validators
       applyCommon(def, node, options)
       return def
     }
