@@ -170,9 +170,14 @@ function buildField(
       return def
     }
     case 'tuple': {
+      const expectedLength = node.items.length
       const def: Record<string, any> = {
         type: [mongoose.Schema.Types.Mixed],
         required: node.required,
+        validate: {
+          validator: (arr: unknown[]) => Array.isArray(arr) && arr.length === expectedLength,
+          message: `Tuple must have exactly ${expectedLength} items`,
+        },
       }
       applyCommon(def, node, options)
       return def
@@ -203,9 +208,21 @@ function buildField(
       return def
     }
     case 'record': {
+      const keyKind = node.keys.kind
+      const isStringKey = keyKind === 'string' || keyKind === 'enum' || keyKind === 'literal'
+      if (isStringKey) {
+        const def: Record<string, any> = {
+          type: Map,
+          of: buildField(node.values, options),
+          required: node.required,
+        }
+        applyCommon(def, node, options)
+        return def
+      }
+      // Non-string keys (e.g., number) → fallback to Mixed.
+      // Mongoose Map keys are strings under the hood; we lose key typing.
       const def: Record<string, any> = {
-        type: Map,
-        of: buildField(node.values, options),
+        type: mongoose.Schema.Types.Mixed,
         required: node.required,
       }
       applyCommon(def, node, options)
