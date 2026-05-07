@@ -61,10 +61,7 @@ function applyCommon(
   }
 }
 
-function buildField(
-  node: SapphireSchemaNode,
-  options: MongoAdapterOptions,
-): Record<string, any> {
+function buildField(node: SapphireSchemaNode, options: MongoAdapterOptions): Record<string, any> {
   switch (node.kind) {
     case 'string': {
       const def: Record<string, any> = { type: String, required: node.required }
@@ -183,11 +180,7 @@ function buildField(
     }
     case 'literal': {
       const ctor =
-        typeof node.value === 'number'
-          ? Number
-          : typeof node.value === 'boolean'
-            ? Boolean
-            : String
+        typeof node.value === 'number' ? Number : typeof node.value === 'boolean' ? Boolean : String
       const def: Record<string, any> = {
         type: ctor,
         required: node.required,
@@ -276,4 +269,3 @@ export function toMongoSchema(
   }
   return buildField(node, options)
 }
-
