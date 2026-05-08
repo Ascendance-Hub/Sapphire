@@ -1,5 +1,6 @@
 import { resolveSchema } from '../adapters/registry'
 import { Field, InternalField, SafeParseResult } from '../interfaces/field'
+import { formatValidators } from '../lib/format-validators'
 import { buildIssue } from '../lib/issue-builder'
 import { runParse, runSafeParse } from '../lib/parse-runner'
 import type {
@@ -47,9 +48,6 @@ type StringConfig = {
   fieldMessage?: FieldMessages | string
   ruleMessages?: StringRuleMessages
 }
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn>, InternalField {
   declare readonly _output: TOut
@@ -377,17 +375,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
       }
     }
     if (this.config.format !== undefined) {
-      let ok = true
-      if (this.config.format === 'email') ok = EMAIL_RE.test(str)
-      else if (this.config.format === 'uuid') ok = UUID_RE.test(str)
-      else if (this.config.format === 'url') {
-        try {
-          new URL(str)
-          ok = true
-        } catch {
-          ok = false
-        }
-      }
+      const ok = formatValidators[this.config.format](str)
       if (!ok) {
         issues.push(
           buildIssue(

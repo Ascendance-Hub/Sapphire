@@ -6,18 +6,15 @@ import { toMongoSchema } from '../src'
 describe('Integração com Mongoose', () => {
   const a = new Sapphire({ defaultAdapter: 'mongo' })
 
-  it('aceita schema simples em new mongoose.Schema', () => {
+  it('top-level object retorna mongoose.Schema diretamente', () => {
     const userField = a.object({
       name: a.string(),
       age: a.number().optional(),
     })
-    const node = userField.toSchema()
-    if (node.kind !== 'object') throw new Error('expected object node')
-    const mongoDef: Record<string, any> = {}
-    for (const [key, child] of Object.entries(node.properties)) {
-      mongoDef[key] = toMongoSchema(child)
-    }
-    expect(() => new mongoose.Schema(mongoDef)).not.toThrow()
+    const schema = toMongoSchema(userField.toSchema()) as mongoose.Schema
+    expect(schema).toBeInstanceOf(mongoose.Schema)
+    expect(schema.path('name')).toBeDefined()
+    expect(schema.path('age')).toBeDefined()
   })
 
   it('aceita schema aninhado com object e array', () => {
@@ -29,40 +26,28 @@ describe('Integração com Mongoose', () => {
         updatedAt: a.date().optional(),
       }),
     })
-    const node = productField.toSchema()
-    if (node.kind !== 'object') throw new Error('expected object node')
-    const mongoDef: Record<string, any> = {}
-    for (const [key, child] of Object.entries(node.properties)) {
-      mongoDef[key] = toMongoSchema(child)
-    }
-    expect(() => new mongoose.Schema(mongoDef)).not.toThrow()
+    const schema = toMongoSchema(productField.toSchema()) as mongoose.Schema
+    expect(schema).toBeInstanceOf(mongoose.Schema)
+    const sub = schema.path('metadata') as any
+    expect(sub.schema).toBeInstanceOf(mongoose.Schema)
+    expect(sub.schema.options._id).toBe(false)
   })
 
   it('aceita union (vira Mixed)', () => {
     const field = a.object({
       val: a.type().union([a.string(), a.number()]),
     })
-    const node = field.toSchema()
-    if (node.kind !== 'object') throw new Error('expected object node')
-    const mongoDef: Record<string, any> = {}
-    for (const [key, child] of Object.entries(node.properties)) {
-      mongoDef[key] = toMongoSchema(child)
-    }
-    expect(() => new mongoose.Schema(mongoDef)).not.toThrow()
+    const schema = toMongoSchema(field.toSchema()) as mongoose.Schema
+    const valPath = schema.path('val') as any
+    expect(valPath.instance).toBe('Mixed')
   })
 
-  it('valida required em string em runtime mongoose', async () => {
+  it('valida required em string em runtime mongoose', () => {
     const userField = a.object({
       name: a.string(),
     })
-    const node = userField.toSchema()
-    if (node.kind !== 'object') throw new Error('expected object node')
-    const mongoDef: Record<string, any> = {}
-    for (const [key, child] of Object.entries(node.properties)) {
-      mongoDef[key] = toMongoSchema(child)
-    }
-    const Schema = new mongoose.Schema(mongoDef)
-    const Model = mongoose.model('TestUser_' + Date.now(), Schema)
+    const schema = toMongoSchema(userField.toSchema()) as mongoose.Schema
+    const Model = mongoose.model('TestUser_' + Date.now(), schema)
     const doc = new Model({})
     const err = doc.validateSync()
     expect(err).toBeDefined()
