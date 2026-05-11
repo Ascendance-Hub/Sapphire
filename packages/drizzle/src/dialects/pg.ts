@@ -9,6 +9,8 @@ import {
   jsonb,
   serial,
   uuid as pgUuid,
+  index,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { applyCommon } from '../shared/common'
 import type { DrizzleAdapterOptions } from '../index'
@@ -116,7 +118,21 @@ export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
     cols[key] = pgColumn(key, child, ctx)
   }
 
-  const table = pgTable(ctx.tableName, cols)
+  // Composite indexes/uniques declared on the schema (`objectField.index(keys, opts)`)
+  // are emitted via the third-arg callback of `pgTable`. We use the **array** form
+  // (the object form is deprecated in drizzle-orm). Index names follow the
+  // pattern `<tableName>_idx_<i>` to stay stable & unique within the table.
+  const idxList = obj.indexes ?? []
+  const table =
+    idxList.length > 0
+      ? pgTable(ctx.tableName, cols, (t: any) => {
+          return idxList.map((idx, i) => {
+            const idxName = `${ctx.tableName}_idx_${i}`
+            const idxCols = idx.keys.map((k) => t[k]) as [any, ...any[]]
+            return idx.unique ? uniqueIndex(idxName).on(...idxCols) : index(idxName).on(...idxCols)
+          })
+        })
+      : pgTable(ctx.tableName, cols)
   ctx.tables.set(obj.name ?? ctx.tableName, table)
   return table
 }
