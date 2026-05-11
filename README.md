@@ -1,157 +1,80 @@
 # Sapphire
 
-Sapphire é uma biblioteca TypeScript para definição de **schemas** com geração automática de **tipos TypeScript** e adaptação para múltiplos ORMs. Hoje suporta MongoDB (via Mongoose), com arquitetura de adapters preparada para outros ORMs.
+> **Schema once, types and adapters everywhere.** Sapphire is a TypeScript schema definition library that compiles to TS types plus ORM-specific outputs (MongoDB via Mongoose, Drizzle, JSON Schema 2020-12) through a pluggable adapter registry.
 
----
+## Install
 
-## Recursos
+Core:
 
-- Definição fluente de schemas (`string`, `number`, `boolean`, `date`, `object`, `array`)
-- Geração automática de tipos TypeScript a partir do schema
-- Campos opcionais (`optional()`) e validação de tamanho mínimo (`min()`)
-- Schemas aninhados, arrays tipados e **unions polimórficos** (`type().union()`)
-- Tuples e literais (`tuple()`, `type().literal()`)
-- **Multi-ORM**: uma mesma instância pode gerar schemas para diferentes alvos
-- Builder **imutável**: `optional()`/`min()` retornam nova instância — fields-base podem ser reusados sem vazar estado
-- Zero dependências de runtime
+```bash
+npm install @ascendance-hub/sapphire-core
+```
 
----
+Plus the adapter(s) you want. Each one declares its own peer dependencies — install them alongside.
 
-## Instalação
+Mongoose adapter (`mongoose` is a peer dep):
 
-> **Nota:** Sapphire ainda não está publicada no npm.
-> Para usar localmente, importe os arquivos a partir do código-fonte.
+```bash
+npm install @ascendance-hub/sapphire-mongo mongoose
+```
 
----
+Drizzle adapter (`drizzle-orm` is a peer dep, supported range `^0.44 || ^0.45`):
+
+```bash
+npm install @ascendance-hub/sapphire-drizzle drizzle-orm
+```
+
+JSON Schema 2020-12 adapter (no extra peer deps):
+
+```bash
+npm install @ascendance-hub/sapphire-json-schema
+```
 
 ## Quickstart
 
-```typescript
-import { Sapphire, type Infer } from '@ascendance-hub/sapphire-core'
-import '@ascendance-hub/sapphire-mongo' // registra o adapter 'mongo'
+```ts
+// see docs/getting-started.md for the full walkthrough
+import mongoose from 'mongoose'
+import { Sapphire, registerAdapter, type Infer } from '@ascendance-hub/sapphire-core'
+import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+
+registerAdapter('mongo', toMongoSchema)
 
 const a = new Sapphire({ defaultAdapter: 'mongo' })
 
-const userOrm = a.object({
-  name: a.string(),
-  age: a.number().optional(),
-  birthDate: a.date().optional(),
+const userSchema = a.object({
+  name: a.string().min(1),
+  email: a.string().email(),
+  age: a.number().int().min(0).optional(),
 })
 
-// Tipo TypeScript inferido a partir do schema
-export type User = Infer<typeof userOrm>
+type User = Infer<typeof userSchema>
+// User = { name: string; email: string; age?: number | undefined }
 
-// Schema pronto para o ORM (Mongoose, no caso do adapter 'mongo')
-const mongoSchema = userOrm.getSchema()
+const user = userSchema.parse({ name: 'Ada', email: 'ada@example.com' })
+
+const mongoSchema = userSchema.getSchema() as mongoose.Schema
+const UserModel = mongoose.model('User', mongoSchema)
 ```
 
----
+The same `userSchema` would emit a Drizzle table via the Drizzle adapter, or a JSON Schema 2020-12 document via the JSON Schema adapter — one definition, three outputs.
 
-## API
+## Docs
 
-### Construtor
+- [Getting Started](./docs/getting-started.md) — install, your first schema, parsing, and plugging in an adapter.
+- [Concepts](./docs/concepts/) — fields, modifiers, validation, inference, refs, composition.
+- [Adapters](./docs/adapters/) — Mongo, JSON Schema, Drizzle (coming in F15).
+- [Recipes](./docs/recipes/) — form validation, MCP tools, custom adapters (coming in F15).
 
-```typescript
-new Sapphire(opts?: { defaultAdapter?: string })
-```
+## Packages
 
-`defaultAdapter` é opcional. Quando ausente, `getSchema()` exige que o nome do adapter seja passado por chamada.
+| Package                                | Description                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `@ascendance-hub/sapphire-core`        | Core — field DSL, IR (`SapphireSchemaNode`), validation, adapter registry, type inference. |
+| `@ascendance-hub/sapphire-mongo`       | Mongoose adapter — emits `mongoose.Schema` from any Sapphire IR.                           |
+| `@ascendance-hub/sapphire-drizzle`     | Drizzle adapter — emits `pgTable` / `mysqlTable` / `sqliteTable`.                          |
+| `@ascendance-hub/sapphire-json-schema` | JSON Schema 2020-12 adapter — for AJV, MCP tools, form generators.                         |
 
-### Métodos da `Sapphire`
+## License
 
-| Método        | Descrição                                                                                       |
-| ------------- | ----------------------------------------------------------------------------------------------- |
-| `string()`    | Campo string (`.optional()`, `.min(n)`)                                                         |
-| `number()`    | Campo number (`.optional()`)                                                                    |
-| `boolean()`   | Campo boolean (`.optional()`)                                                                   |
-| `date()`      | Campo date (`.optional()`)                                                                      |
-| `object(obj)` | Campo objeto aninhado (`.optional()`, `.getSchema(name?)`); use `Infer<typeof obj>` para o tipo |
-| `array(arr)`  | Campo array com items tipados (`.optional()`)                                                   |
-| `type()`      | Factory para construções avançadas: `.union([...])` e `.pick(obj, [...])`                       |
-
-Todos os fields expõem `toSchema()` (schema neutro), `getSchema(name?)` (adaptado ao adapter alvo) e `validate(value)`.
-
----
-
-## Recursos avançados
-
-### Multi-ORM
-
-Você pode criar uma `Sapphire` sem `defaultAdapter` e escolher o adapter por chamada:
-
-```typescript
-const a = new Sapphire()
-
-const productOrm = a.object({
-  title: a.string(),
-  price: a.number(),
-})
-
-const mongoSchema = productOrm.getSchema('mongo')
-// futuramente: productOrm.getSchema('prisma'), etc.
-```
-
-Ou definir um default e ainda assim sobrescrever pontualmente:
-
-```typescript
-const a = new Sapphire({ defaultAdapter: 'mongo' })
-productOrm.getSchema() // usa 'mongo'
-productOrm.getSchema('mongo') // override explícito
-```
-
-### Unions
-
-Para campos que aceitam mais de um tipo:
-
-```typescript
-const event = a.object({
-  occurredAt: a.type().union([a.date(), a.string()]),
-})
-```
-
-A inferência via `Infer<typeof event>` resolve o campo como `Date | string`.
-
-### Tuples e literais
-
-```typescript
-const point = a.tuple([a.number(), a.number()])
-// Infer<typeof point> = [number, number]
-
-const role = a.type().literal('admin')
-// Infer<typeof role> = 'admin'
-```
-
-`pick`/`omit`/`partial`/`extend` retornam em F11 como métodos de `ObjectField`.
-
----
-
-## Imutabilidade do builder
-
-Modificadores como `optional()` e `min()` **não mutam** a instância — eles retornam uma **nova** instância com a configuração atualizada. Isso significa que você pode definir um field-base e reusar com segurança:
-
-```typescript
-const baseName = a.string()
-
-const userSchema = a.object({ name: baseName }) // name obrigatório
-const adminSchema = a.object({ name: baseName.optional() }) // name opcional
-
-// baseName segue obrigatório — nada vazou.
-```
-
-`a.string().min(3).min(5)` também é seguro: cada chamada retorna uma nova instância (a final tem `minLength: 5`), sem afetar as anteriores.
-
----
-
-## Roadmap
-
-- Suporte a outros ORMs além do MongoDB (Prisma, Drizzle…)
-- Validações customizadas e mensagens de erro configuráveis
-- Hooks e middlewares
-- Geração de mocks dinâmicos
-- Publish no npm (Fase 5: CI no GitHub Actions, lint/format, exports map)
-
----
-
-## Licença
-
-BSD-3-Clause license
+BSD-3-Clause. © Alexandre Damas Murata.
