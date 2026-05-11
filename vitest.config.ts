@@ -17,6 +17,7 @@ export default defineConfig({
       'packages/core/tests/_setup.ts',
       'packages/mongo/tests/_setup.ts',
       'packages/json-schema/tests/_setup.ts',
+      'packages/drizzle/tests/_setup.ts',
     ],
   },
 })
