@@ -28,12 +28,12 @@ Schema once, types and adapters everywhere. These docs walk you from a first ins
 
 ## Recipes
 
-- _Form validation_ — _(coming in F15)_
-- _Share types with the frontend_ — _(coming in F15)_
-- _One schema, many adapters_ — _(coming in F15)_
-- _Writing a custom adapter_ — _(coming in F15)_
-- _Custom error messages_ — _(coming in F15)_
-- _Migrating from Zod_ — _(coming in F15)_
+- [Form validation](./recipes/form-validation.md) — collect every issue from `safeParse` and pivot to per-field UI errors.
+- [Share types with the frontend](./recipes/share-types-with-frontend.md) — one schema feeds Mongo, `Infer<>` types, and JSON Schema for forms or MCP tools.
+- [One schema, many adapters](./recipes/one-schema-many-adapters.md) — register multiple adapters and emit each from the same IR.
+- [Writing a custom adapter](./recipes/custom-adapter.md) — walk the IR's 12 kinds and plug into the registry.
+- [Custom error messages](./recipes/custom-error-messages.md) — i18n and branded messages through the 5-level resolution hierarchy.
+- [Migrating from Zod](./recipes/migrating-from-zod.md) — side-by-side mapping plus what each library does that the other doesn't.
 
 ## Meta
 
