@@ -11,12 +11,13 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['packages/*/tests/**/*.test.ts'],
+    include: ['packages/*/tests/**/*.test.ts', 'packages/*/tests/**/*.test-d.ts'],
     environment: 'node',
     setupFiles: [
       'packages/core/tests/_setup.ts',
       'packages/mongo/tests/_setup.ts',
       'packages/json-schema/tests/_setup.ts',
+      'packages/drizzle/tests/_setup.ts',
     ],
   },
 })

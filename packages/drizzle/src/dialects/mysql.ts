@@ -1,0 +1,156 @@
+import type { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
+import {
+  mysqlTable,
+  varchar,
+  int,
+  double,
+  boolean,
+  datetime,
+  json,
+  serial,
+  index,
+  uniqueIndex,
+} from 'drizzle-orm/mysql-core'
+import { applyCommon } from '../shared/common'
+import type { DrizzleAdapterOptions } from '../index'
+import type { DrizzleTableRegistry } from '../registry'
+
+type ObjectNode = Extract<SapphireSchemaNode, { kind: 'object' }>
+
+export interface Ctx {
+  options: DrizzleAdapterOptions
+  tables: DrizzleTableRegistry
+  tableName: string
+}
+
+/**
+ * Build a single MySQL column from a Sapphire IR node.
+ *
+ * Runtime column-type names (drizzle-orm ^0.45.2 mysql-core):
+ *   varchar  → MySqlVarChar (dataType 'string',  exposes `.length`)
+ *   int      → MySqlInt     (dataType 'number')
+ *   double   → MySqlDouble  (dataType 'number')
+ *   boolean  → MySqlBoolean (dataType 'boolean')
+ *   datetime → MySqlDateTime(dataType 'date')
+ *   json     → MySqlJson    (dataType 'json')
+ *   serial   → MySqlSerial  (dataType 'number', used for implicit PK)
+ *
+ * Notes:
+ *  - MySQL `varchar` requires `length`. We use IR `maxLength` when present,
+ *    otherwise default to 255 (documented in the README).
+ *  - `string` with `format='uuid'` maps to `varchar(name, { length: 36 })` —
+ *    MySQL has no native UUID type; storing as char-ish varchar(36) is the
+ *    conventional choice. (Users may opt-in to `binary(16)` via meta.)
+ *  - `literal` / `enum` map to `varchar(length: 255)`. `mysqlEnum` exists but
+ *    requires explicit opt-in via meta — out of scope for dispatch F.
+ *  - Composite kinds (array/tuple/union/record/nested object) all fall back to
+ *    `json(name)` — runtime validation lives in the core `safeParse`.
+ */
+function mysqlColumn(name: string, node: SapphireSchemaNode, ctx: Ctx): any {
+  let col: any
+  switch (node.kind) {
+    case 'string': {
+      const fmt = (node as any).format as string | undefined
+      if (fmt === 'uuid') {
+        col = varchar(name, { length: 36 })
+      } else {
+        const len = (node as any).maxLength ?? 255
+        col = varchar(name, { length: len })
+      }
+      break
+    }
+    case 'number': {
+      col = (node as any).int ? int(name) : double(name)
+      break
+    }
+    case 'boolean': {
+      col = boolean(name)
+      break
+    }
+    case 'date': {
+      // `fsp` (fractional seconds) left at default; users wanting millisecond
+      // precision can override via meta `{ mysql: {...} }`.
+      col = datetime(name, { mode: 'date' })
+      break
+    }
+    case 'literal': {
+      col = varchar(name, { length: 255 })
+      break
+    }
+    case 'enum': {
+      // mysqlEnum exists but requires explicit opt-in via meta (F15 recipe).
+      // Default: varchar(255) + runtime validation in safeParse.
+      col = varchar(name, { length: 255 })
+      break
+    }
+    case 'array':
+    case 'tuple':
+    case 'union':
+    case 'record':
+    case 'object': {
+      col = json(name)
+      break
+    }
+    case 'ref': {
+      const targetName = (node as any).target as string
+      const pkName =
+        ctx.options.primaryKey === false
+          ? 'id'
+          : typeof ctx.options.primaryKey === 'string'
+            ? ctx.options.primaryKey
+            : 'id'
+      col = int(name).references((): any => {
+        const target = ctx.tables.get(targetName)
+        if (!target) {
+          throw new Error(
+            `drizzle adapter: ref target table "${targetName}" not registered. Emit it before invoking queries that traverse this reference.`,
+          )
+        }
+        return (target as any)[pkName]
+      })
+      break
+    }
+    default: {
+      const _exhaustive: never = node
+      throw new Error(`mysqlColumn: unhandled node kind ${(node as any).kind} (${_exhaustive})`)
+    }
+  }
+  return applyCommon(col, node, ctx)
+}
+
+export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
+  if (node.kind !== 'object') {
+    throw new Error('mysql.buildTable: expected ObjectField at root')
+  }
+  const obj = node as ObjectNode
+  const cols: Record<string, any> = {}
+
+  if (ctx.options.primaryKey !== false) {
+    const pkName = typeof ctx.options.primaryKey === 'string' ? ctx.options.primaryKey : 'id'
+    // `serial` in mysql-core is an unsigned bigint autoincrement alias —
+    // the canonical implicit PK choice. Fallback `int().autoincrement().primaryKey()`
+    // is unnecessary in drizzle-orm ^0.45.2 (serial is present).
+    cols[pkName] = serial(pkName).primaryKey()
+  }
+
+  for (const [key, child] of Object.entries(obj.properties)) {
+    cols[key] = mysqlColumn(key, child, ctx)
+  }
+
+  // Composite indexes/uniques declared on the schema (`objectField.index(keys, opts)`)
+  // emit via the third-arg callback of `mysqlTable`, array form. Index names
+  // follow `<tableName>_idx_<i>` (stable, unique within table).
+  const idxList = obj.indexes ?? []
+  const table =
+    idxList.length > 0
+      ? mysqlTable(ctx.tableName, cols, (t: any) => {
+          return idxList.map((idx, i) => {
+            const idxName = `${ctx.tableName}_idx_${i}`
+            const idxCols = idx.keys.map((k) => t[k]) as [any, ...any[]]
+            return idx.unique ? uniqueIndex(idxName).on(...idxCols) : index(idxName).on(...idxCols)
+          })
+        })
+      : mysqlTable(ctx.tableName, cols)
+  ctx.tables.set(obj.name ?? ctx.tableName, table)
+  return table
+}
