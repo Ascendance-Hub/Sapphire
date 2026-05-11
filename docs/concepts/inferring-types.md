@@ -59,4 +59,4 @@ Note the last row: chaining `.optional()` **before** `.default('x')` keeps the o
 
 - [Fields and modifiers](./fields-and-modifiers.md) — the per-field modifier tables.
 - [Composition](./composition.md) — how `pick`/`omit`/`partial`/`required`/`extend`/`merge` recompute `Infer`.
-- _Nullable vs optional_ _(coming in F15)_.
+- [Nullable vs optional](./nullable-vs-optional.md).

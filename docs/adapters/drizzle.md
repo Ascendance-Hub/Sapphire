@@ -253,5 +253,5 @@ To swap the column constructor itself (e.g. force `text` instead of `varchar` in
 - [Fields and modifiers](../concepts/fields-and-modifiers.md) — what each IR kind models.
 - [Refs and relations](../concepts/refs-and-relations.md) — ref lifecycle across adapters.
 - [Escape hatch](../concepts/escape-hatch.md) — universal `.adapter(name, opts)` contract.
-- [Recipes → One schema, many adapters](../recipes/one-schema-many-adapters.md) _(coming in F15)_.
-- [Recipes → Writing a custom adapter](../recipes/custom-adapter.md) _(coming in F15)_.
+- [Recipes → One schema, many adapters](../recipes/one-schema-many-adapters.md).
+- [Recipes → Writing a custom adapter](../recipes/custom-adapter.md).

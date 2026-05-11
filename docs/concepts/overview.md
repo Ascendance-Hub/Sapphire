@@ -50,5 +50,5 @@ Where Sapphire wins: when the **same** schema needs to land in multiple places �
 ## Links
 
 - [Getting Started](../getting-started.md) — install and your first schema.
-- _Adapters → Mongo / JSON Schema / Drizzle_ — _(coming in F15)_
-- _Concepts → Fields and modifiers_ — _(coming in F15)_
+- [Adapters → Mongo](../adapters/mongo.md) / [JSON Schema](../adapters/json-schema.md) / [Drizzle](../adapters/drizzle.md).
+- [Concepts → Fields and modifiers](./fields-and-modifiers.md).

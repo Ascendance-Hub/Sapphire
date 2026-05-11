@@ -121,7 +121,7 @@ Heterogeneous, fixed-length. See [Tuples vs arrays](./tuples-vs-arrays.md) for t
 
 ## Refs
 
-`a.ref(target)` declares "this position holds a reference to a named schema". `target` is either an `ObjectField` returned by `.name(...)` or the name string directly. Validation only checks presence in v1; adapters resolve the target shape (Mongo `ObjectId`, JSON Schema `$ref`, Drizzle `references(() => target.id)`). Detailed coverage in _Refs and relations_ _(coming in F15)_.
+`a.ref(target)` declares "this position holds a reference to a named schema". `target` is either an `ObjectField` returned by `.name(...)` or the name string directly. Validation only checks presence in v1; adapters resolve the target shape (Mongo `ObjectId`, JSON Schema `$ref`, Drizzle `references(() => target.id)`). Detailed coverage in [Refs and relations](./refs-and-relations.md).
 
 ## Universal modifiers
 
@@ -131,7 +131,7 @@ These are available on every field. (`unique`, `index`, and the schema-level `na
 | ---------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------- |
 | `.optional()`          | `() => Field<T \| undefined>`                    | Removes the required flag. `_output` and `_input` both become `T \| undefined`.       |
 | `.required()`          | `() => Field<Exclude<T, undefined>>`             | Inverse of `.optional()`. Useful inside generic composition.                          |
-| `.nullable()`          | `() => Field<T \| null>`                         | Distinct from optional. See _nullable-vs-optional_ _(coming in F15)_.                 |
+| `.nullable()`          | `() => Field<T \| null>`                         | Distinct from optional. See [Nullable vs optional](./nullable-vs-optional.md).        |
 | `.default(value)`      | `(value: TOut) => Field<TOut, TIn \| undefined>` | When input is `undefined`, the default fills in. `_input` widens to `T \| undefined`. |
 | `.describe(text)`      | `(text: string) => Field`                        | Free-form description; adapters surface it (Mongo `meta`, JSON Schema `description`). |
 | `.adapter(name, opts)` | `(name: string, opts: unknown) => Field`         | Per-adapter escape hatch — opts are merged into the adapter's output for this field.  |
@@ -163,7 +163,7 @@ const role = a.string().default('member')
 > ```
 
 > [!WARNING]
-> **`.nullable()` is NOT `.optional()`.** `nullable` accepts `null`; `optional` accepts `undefined`. They are independent — combine them if you want both. See _nullable-vs-optional_ _(coming in F15)_.
+> **`.nullable()` is NOT `.optional()`.** `nullable` accepts `null`; `optional` accepts `undefined`. They are independent — combine them if you want both. See [Nullable vs optional](./nullable-vs-optional.md).
 
 ## Related
 
@@ -171,5 +171,5 @@ const role = a.string().default('member')
 - [Composition](./composition.md) — `pick`, `omit`, `partial`, `required`, `extend`, `merge`.
 - [Unions, literals, and enums](./unions-literals-enums.md).
 - [Tuples vs arrays](./tuples-vs-arrays.md).
-- _Recipes → Custom error messages_ _(coming in F15)_.
-- _Recipes → Custom adapter_ _(coming in F15)_.
+- [Recipes → Custom error messages](../recipes/custom-error-messages.md).
+- [Recipes → Writing a custom adapter](../recipes/custom-adapter.md).

@@ -9,16 +9,16 @@ Schema once, types and adapters everywhere. These docs walk you from a first ins
 ## Concepts
 
 - [Overview](./concepts/overview.md) — what Sapphire is, what it isn't, and the mental model.
-- _Fields and modifiers_ — _(coming in F15)_
-- _Inferring types_ — _(coming in F15)_
-- _Composition (pick/omit/partial/required/extend/merge)_ — _(coming in F15)_
-- _Unions, literals, and enums_ — _(coming in F15)_
-- _Tuples vs arrays_ — _(coming in F15)_
-- _Refs and relations_ — _(coming in F15)_
-- _Nullable vs optional_ — _(coming in F15)_
-- _Validation_ — _(coming in F15)_
-- _Config_ — _(coming in F15)_
-- _Escape hatch (`.adapter(name, opts)`)_ — _(coming in F15)_
+- [Fields and modifiers](./concepts/fields-and-modifiers.md) — full vocabulary of primitives, composites, and modifiers.
+- [Inferring types](./concepts/inferring-types.md) — `Infer<>` vs `InferInput<>` and the brand-type model.
+- [Composition](./concepts/composition.md) — `pick`, `omit`, `partial`, `required`, `extend`, `merge`.
+- [Unions, literals, and enums](./concepts/unions-literals-enums.md) — the `a.type()` namespace.
+- [Tuples vs arrays](./concepts/tuples-vs-arrays.md) — fixed-position vs homogeneous collections.
+- [Refs and relations](./concepts/refs-and-relations.md) — named schemas and `a.ref()`.
+- [Nullable vs optional](./concepts/nullable-vs-optional.md) — the canonical confusion, resolved.
+- [Validation](./concepts/validation.md) — `parse` / `safeParse`, issues, message resolution.
+- [Config](./concepts/config.md) — `Sapphire` options and per-call overrides.
+- [Escape hatch](./concepts/escape-hatch.md) — `.adapter(name, opts)` for ORM-specific options.
 
 ## Adapters
 
@@ -37,6 +37,6 @@ Schema once, types and adapters everywhere. These docs walk you from a first ins
 
 ## Meta
 
-- _Architecture_ — _(coming in F15)_
-- _Design decisions_ — _(coming in F15)_
-- _Contributing_ — _(coming in F15)_
+- [Architecture](./meta/architecture.md) — the 3-layer model (DSL → IR → adapter) with a Mermaid diagram.
+- [Design decisions](./meta/design-decisions.md) — why the API looks the way it does.
+- [Contributing](./meta/contributing.md) — repo setup and how to write a third-party adapter.

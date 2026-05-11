@@ -179,5 +179,5 @@ toMongoSchema(node, { subdocId: true })
 - [Fields and modifiers](../concepts/fields-and-modifiers.md) — what each IR kind models.
 - [Refs and relations](../concepts/refs-and-relations.md) — ref lifecycle across adapters.
 - [Escape hatch](../concepts/escape-hatch.md) — universal `.adapter(name, opts)` contract.
-- [Recipes → One schema, many adapters](../recipes/one-schema-many-adapters.md) _(coming in F15)_.
-- [Recipes → Custom error messages](../recipes/custom-error-messages.md) _(coming in F15)_.
+- [Recipes → One schema, many adapters](../recipes/one-schema-many-adapters.md).
+- [Recipes → Custom error messages](../recipes/custom-error-messages.md).

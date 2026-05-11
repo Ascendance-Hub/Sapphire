@@ -162,4 +162,4 @@ Compose schemas from every IR kind across the test suite — that's how the in-t
 - [Concepts → Overview](../concepts/overview.md) — the DSL → IR → adapter mental model.
 - [Concepts → Escape hatch](../concepts/escape-hatch.md) — how `meta` is read by adapters.
 - [Recipes → One schema, many adapters](./one-schema-many-adapters.md) — sister recipe for combining adapters.
-- _Meta → Contributing_ — _(coming in F15)_
+- [Meta → Contributing](../meta/contributing.md) — repo setup and the full step-by-step for publishing a third-party adapter.

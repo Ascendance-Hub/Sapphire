@@ -76,4 +76,4 @@ TS numeric enums compile to `{ Active: 1, Inactive: 2, '1': 'Active', '2': 'Inac
 
 - [Fields and modifiers](./fields-and-modifiers.md) — the `a.type()` builder reference.
 - [Inferring types](./inferring-types.md).
-- _Recipes → Sharing types with the frontend_ _(coming in F15)_.
+- [Recipes → Share types with the frontend](../recipes/share-types-with-frontend.md).

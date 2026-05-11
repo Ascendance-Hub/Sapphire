@@ -165,4 +165,4 @@ Pass the same `DrizzleTableRegistry` across all `toDrizzleSchema` calls in a rel
 
 - [Fields and modifiers](./fields-and-modifiers.md) — ObjectField's `.name()` API.
 - [Nullable vs optional](./nullable-vs-optional.md) — how `.optional()` and `.nullable()` apply to refs.
-- _Recipes → One schema, many adapters_ — [link](../recipes/one-schema-many-adapters.md) _(coming in F15)_.
+- [Recipes → One schema, many adapters](../recipes/one-schema-many-adapters.md).

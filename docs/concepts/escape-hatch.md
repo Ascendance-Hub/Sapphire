@@ -122,4 +122,4 @@ const pgTable = toDrizzleSchema(user.toSchema(), {
 
 - [Config](./config.md) — `defaultAdapter`, instance options.
 - [Refs and relations](./refs-and-relations.md) — uses `meta` indirectly via the named-schema registry.
-- _Recipes → Custom adapter_ — [link](../recipes/custom-adapter.md) _(coming in F15)_.
+- [Recipes → Writing a custom adapter](../recipes/custom-adapter.md).

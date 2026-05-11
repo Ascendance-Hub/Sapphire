@@ -168,4 +168,4 @@ const lax = user.parse({ name: 'Ada', rogue: 1 }, { stripUnknown: true })
 
 - [Config](./config.md) — instance options and per-call overrides in detail.
 - [Nullable vs optional](./nullable-vs-optional.md) — when `required` vs `invalid_type` fires.
-- _Recipes → Custom error messages_ — [link](../recipes/custom-error-messages.md) _(coming in F15)_.
+- [Recipes → Custom error messages](../recipes/custom-error-messages.md).

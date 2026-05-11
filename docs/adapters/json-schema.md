@@ -195,4 +195,4 @@ const META_BLACKLIST = new Set(['type', '$ref'])
 - [Refs and relations](../concepts/refs-and-relations.md) — how named schemas become `$ref`s.
 - [Nullable vs optional](../concepts/nullable-vs-optional.md) — drives the `oneOf` vs type-union choice.
 - [Escape hatch](../concepts/escape-hatch.md) — universal `.adapter(name, opts)` contract.
-- [Recipes → Share types with the frontend](../recipes/share-types-with-frontend.md) _(coming in F15)_.
+- [Recipes → Share types with the frontend](../recipes/share-types-with-frontend.md).

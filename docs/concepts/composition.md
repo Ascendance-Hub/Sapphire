@@ -125,4 +125,4 @@ type UserWithAudit = Infer<typeof userWithAudit>
 
 - [Fields and modifiers](./fields-and-modifiers.md) — the full ObjectField surface.
 - [Inferring types](./inferring-types.md) — how `Infer<>` walks through composition.
-- _Recipes → Sharing types with the frontend_ _(coming in F15)_.
+- [Recipes → Share types with the frontend](../recipes/share-types-with-frontend.md).
