@@ -86,7 +86,7 @@ const result = userSchema.safeParse({
 if (!result.success) {
   // result.error.issues is an array of { path, code, message }
   for (const issue of result.error.issues) {
-    // e.g. { path: ['email'], code: 'invalid_format', message: '...' }
+    // e.g. { path: ['email'], code: 'format', message: '...' }
     // issue.path: where in the value the problem is
     // issue.code: a stable string from the IssueCode union
     // issue.message: the resolved message (string or object)
@@ -98,7 +98,7 @@ if (!result.success) {
 Each `ValidationIssue` carries three fields you care about:
 
 - `path` — a `(string | number)[]` pointing to the offending value (e.g. `['address', 'zip']`).
-- `code` — a stable string from the `IssueCode` union (e.g. `invalid_type`, `too_small`, `invalid_format`). Use this for branching, not the message.
+- `code` — a stable string from the `IssueCode` union (e.g. `invalid_type`, `min_length`, `format`). Use this for branching, not the message.
 - `message` — the resolved message (string or object). Resolution walks the per-call → per-rule → field → instance → built-in hierarchy.
 
 ## Add an adapter

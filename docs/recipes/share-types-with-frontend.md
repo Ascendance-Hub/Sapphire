@@ -8,7 +8,7 @@ Your backend owns the canonical user model. You want to:
 2. Get a TypeScript type (`Infer<>`) shared via a workspace package so the frontend's request/response types stay in lockstep.
 3. Emit a JSON Schema 2020-12 document the frontend can hand to a form generator (`@rjsf/core`, JSON Forms, etc.) or that an MCP tool can use as `inputSchema`.
 
-Sapphire was designed for exactly this. Define once, fan out to three consumers — no duplication, no drift.
+Sapphire was designed for exactly this. Define once, fan out to three consumers — one source for the IR keeps the three outputs aligned. (Per-adapter escape hatches can still drift if you layer them; treat them as the exception.)
 
 ## End-to-end example
 

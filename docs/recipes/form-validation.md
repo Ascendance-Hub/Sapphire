@@ -96,7 +96,7 @@ If you want a single message for _every_ min-length failure (e.g. for an i18n bu
 const a = new Sapphire({
   messages: {
     min_length: (ctx) => `Field is too short (min ${ctx.min}).`,
-    invalid_format: 'Invalid format.',
+    format: 'Invalid format.',
   },
 })
 ```

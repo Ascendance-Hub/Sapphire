@@ -68,7 +68,7 @@ User.pick(['name', 'email'] as const)
 User.omit(['age'] as const)
 User.partial()
 User.extend({ role: a.string() })
-User.merge(Other)
+User.merge(OtherSchema)
 ```
 
 API parity, two notable differences: Sapphire's `pick`/`omit` take an array of keys (with `as const` for literal inference) instead of an object mask, and the composition methods are only available on **ObjectField** — primitives don't have them. See [Concepts → Composition](../concepts/composition.md).

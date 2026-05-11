@@ -65,7 +65,7 @@ describe('docs/getting-started.md — snippet pinning', () => {
     if (!result.success) {
       // result.error.issues is an array of { path, code, message }
       for (const issue of result.error.issues) {
-        // e.g. { path: ['email'], code: 'invalid_format', message: '...' }
+        // e.g. { path: ['email'], code: 'format', message: '...' }
         // issue.path: where in the value the problem is
         // issue.code: a stable string from the IssueCode union
         // issue.message: the resolved message (string or object)

@@ -70,7 +70,7 @@ interface ValidationIssue {
 | `gt` / `gte` / `lt` / `lte`                             | Numeric strict / inclusive bound failed                                        |
 | `int`                                                   | `.int()` got a non-integer                                                     |
 | `multiple_of`                                           | `.multipleOf(n)` failed                                                        |
-| `finite`                                                | `.finite()` got `Infinity` or `NaN`                                            |
+| `finite`                                                | `.finite()` got `±Infinity` (NaN is caught earlier by `invalid_type`)          |
 | `safe`                                                  | `.safe()` got an unsafe integer                                                |
 | `min_items` / `max_items` / `items_length` / `nonempty` | Array constraints                                                              |
 | `enum`                                                  | Value not in `enum(...)` set                                                   |

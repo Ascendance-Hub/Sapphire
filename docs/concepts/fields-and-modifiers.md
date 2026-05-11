@@ -26,21 +26,21 @@ type User = Infer<typeof user>
 
 ### `a.string()`
 
-| Modifier                     | Signature                                          | Notes                                                               |
-| ---------------------------- | -------------------------------------------------- | ------------------------------------------------------------------- |
-| `.min(n, opts?)`             | `(n: number, opts?: { message? }) => StringField`  | Minimum length. Error code `min_length`.                            |
-| `.max(n, opts?)`             | same                                               | Maximum length. Error code `max_length`.                            |
-| `.length(n, opts?)`          | same                                               | Exact length. Error code `length`.                                  |
-| `.regex(re, opts?)`          | `(re: RegExp, opts?: { message? }) => StringField` | Tests with `re.test(str)`. Error code `regex`.                      |
-| `.email(opts?)`              | `(opts?: { message? }) => StringField`             | Built-in format check. Error code `format`.                         |
-| `.url(opts?)`                | same                                               | Format `url`.                                                       |
-| `.uuid(opts?)`               | same                                               | Format `uuid`.                                                      |
-| `.startsWith(prefix, opts?)` | `(prefix: string, opts?) => StringField`           | Error code `starts_with`.                                           |
-| `.endsWith(suffix, opts?)`   | `(suffix: string, opts?) => StringField`           | Error code `ends_with`.                                             |
-| `.trim()`                    | `() => StringField`                                | Transform — runs after coerce, before rule checks.                  |
-| `.toLowerCase()`             | `() => StringField`                                | Transform.                                                          |
-| `.toUpperCase()`             | `() => StringField`                                | Transform.                                                          |
-| `.coerce()`                  | `() => StringField`                                | `String(value)` if input is not a string. Runs first (see pitfall). |
+| Modifier                     | Signature                                          | Notes                                                                                                                                               |
+| ---------------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.min(n, opts?)`             | `(n: number, opts?: { message? }) => StringField`  | Minimum length. Error code `min_length`.                                                                                                            |
+| `.max(n, opts?)`             | same                                               | Maximum length. Error code `max_length`.                                                                                                            |
+| `.length(n, opts?)`          | same                                               | Exact length. Error code `length`.                                                                                                                  |
+| `.regex(re, opts?)`          | `(re: RegExp, opts?: { message? }) => StringField` | Tests with `re.test(str)`. Error code `regex`.                                                                                                      |
+| `.email(opts?)`              | `(opts?: { message? }) => StringField`             | Built-in format check. Error code `format`.                                                                                                         |
+| `.url(opts?)`                | same                                               | Format `url`.                                                                                                                                       |
+| `.uuid(opts?)`               | same                                               | Format `uuid`.                                                                                                                                      |
+| `.startsWith(prefix, opts?)` | `(prefix: string, opts?) => StringField`           | Error code `starts_with`.                                                                                                                           |
+| `.endsWith(suffix, opts?)`   | `(suffix: string, opts?) => StringField`           | Error code `ends_with`.                                                                                                                             |
+| `.trim()`                    | `() => StringField`                                | Transform — runs after coerce, before rule checks.                                                                                                  |
+| `.toLowerCase()`             | `() => StringField`                                | Transform.                                                                                                                                          |
+| `.toUpperCase()`             | `() => StringField`                                | Transform.                                                                                                                                          |
+| `.coerce()`                  | `() => StringField`                                | `String(value)` if input is not a string (skipped for `null`/`undefined` — those go through the required/nullable check). Runs first (see pitfall). |
 
 Example:
 
@@ -127,17 +127,17 @@ Heterogeneous, fixed-length. See [Tuples vs arrays](./tuples-vs-arrays.md) for t
 
 These are available on every field. (`unique`, `index`, and the schema-level `name`/`timestamps` are not strictly universal — see the per-field tables — but follow the same chainable convention.)
 
-| Modifier               | Signature                                        | Notes                                                                                 |
-| ---------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `.optional()`          | `() => Field<T \| undefined>`                    | Removes the required flag. `_output` and `_input` both become `T \| undefined`.       |
-| `.required()`          | `() => Field<Exclude<T, undefined>>`             | Inverse of `.optional()`. Useful inside generic composition.                          |
-| `.nullable()`          | `() => Field<T \| null>`                         | Distinct from optional. See [Nullable vs optional](./nullable-vs-optional.md).        |
-| `.default(value)`      | `(value: TOut) => Field<TOut, TIn \| undefined>` | When input is `undefined`, the default fills in. `_input` widens to `T \| undefined`. |
-| `.describe(text)`      | `(text: string) => Field`                        | Free-form description; adapters surface it (Mongo `meta`, JSON Schema `description`). |
-| `.adapter(name, opts)` | `(name: string, opts: unknown) => Field`         | Per-adapter escape hatch — opts are merged into the adapter's output for this field.  |
-| `.message(msg)`        | `(msg: string \| FieldMessages) => Field`        | Field-level message override (one of five levels in the resolution hierarchy).        |
-| `.unique()`            | `() => Field`                                    | Marks the field as unique in the index sense. String/number/date only.                |
-| `.index(opts?)`        | `(opts?: { unique?: boolean }) => Field`         | Marks the field as indexed. String/number/boolean/date.                               |
+| Modifier               | Signature                                        | Notes                                                                                                                                                                    |
+| ---------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.optional()`          | `() => Field<T \| undefined>`                    | Removes the required flag. `_output` and `_input` both become `T \| undefined`.                                                                                          |
+| `.required()`          | `() => Field<Exclude<T, undefined>>`             | Inverse of `.optional()`. Useful inside generic composition.                                                                                                             |
+| `.nullable()`          | `() => Field<T \| null>`                         | Distinct from optional. See [Nullable vs optional](./nullable-vs-optional.md).                                                                                           |
+| `.default(value)`      | `(value: TOut) => Field<TOut, TIn \| undefined>` | When input is `undefined`, the default fills in. `_input` widens to `T \| undefined`.                                                                                    |
+| `.describe(text)`      | `(text: string) => Field`                        | Free-form description; adapters surface it (Mongo `meta`, JSON Schema `description`).                                                                                    |
+| `.adapter(name, opts)` | `(name: string, opts: unknown) => Field`         | Per-adapter escape hatch — opts are merged into the adapter's output for this field.                                                                                     |
+| `.message(msg)`        | `(msg: string \| FieldMessages) => Field`        | Field-level message override (one of five levels in the resolution hierarchy).                                                                                           |
+| `.unique()`            | `() => Field`                                    | Marks the field as unique in the index sense. String/number/date only. For composite uniqueness across multiple keys, use `ObjectField.index([keys], { unique: true })`. |
+| `.index(opts?)`        | `(opts?: { unique?: boolean }) => Field`         | Marks the field as indexed. String/number/boolean/date.                                                                                                                  |
 
 Example:
 

@@ -56,10 +56,10 @@ For multi-table emission with cross-table refs, share a single `DrizzleTableRegi
 
 ## Adapter signature
 
-```ts
-toDrizzleSchema(node, { dialect: 'pg', ... }):    PgTableWithColumns<...>   // typed as any
-toDrizzleSchema(node, { dialect: 'mysql', ... }): MySqlTableWithColumns<...> // typed as any
-toDrizzleSchema(node, { dialect: 'sqlite', ... }):SQLiteTableWithColumns<...>// typed as any
+```text
+toDrizzleSchema(node, { dialect: 'pg',     ... }) → PgTableWithColumns<...>      (declared as any)
+toDrizzleSchema(node, { dialect: 'mysql',  ... }) → MySqlTableWithColumns<...>   (declared as any)
+toDrizzleSchema(node, { dialect: 'sqlite', ... }) → SQLiteTableWithColumns<...>  (declared as any)
 ```
 
 Three overloads, each returning `any`. The actual runtime table is genuine — only the **declared TS type** is widened. The reason: Drizzle's column-builder generics aren't reliably exported across the supported peer range, and pinning a single signature would silently break for users on the other minor. Pass the returned table into `drizzle(conn, { schema: { users } })` and use the connection-level types for queries.

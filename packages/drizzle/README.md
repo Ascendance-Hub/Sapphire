@@ -149,7 +149,7 @@ Argument handling:
 
 - **No runtime validation in Drizzle.** Drizzle is a query builder, not a validator. Sapphire keeps validation in `safeParse`; the Drizzle adapter only shapes the table.
 - **Composite kinds collapse to JSON columns.** `array`, `tuple`, `union`, `record`, and nested `object` all map to `jsonb` (pg) / `json` (mysql) / `text({ mode: 'json' })` (sqlite). DB-level validation of the composite shape is lost — keep it in `safeParse`.
-- **`enum` is `text`/`varchar` by default.** `pgEnum` requires a separately-declared type with a unique name and is opt-in via `.adapter('drizzle', { pg: { ... } })` (recipe coming in F15).
+- **`enum` is `text`/`varchar` by default.** `pgEnum` requires a separately-declared type with a unique name and is opt-in via `.adapter('drizzle', { pg: { ... } })`.
 - **String validators are runtime-only.** `minLength`, `regex`, `format` (`email`/`url`/`uuid`), `startsWith`, `endsWith` are not enforced at the DB level. The single exception is MySQL: `node.maxLength` sizes `varchar(N)`.
 - **SQLite `uuid` is `text`.** SQLite has no native UUID type. The adapter emits `text(name)` and relies on `safeParse` for format checking.
 - **Boolean and date in SQLite are emulated** as `integer({ mode: 'boolean' })` / `integer({ mode: 'timestamp' })`. Drizzle handles serialisation transparently.

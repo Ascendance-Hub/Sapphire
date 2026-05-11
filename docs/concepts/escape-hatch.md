@@ -70,13 +70,13 @@ const out = toJsonSchema(name.toSchema()) as Record<string, unknown>
 
 ### Drizzle — chained methods, optionally per-dialect
 
-`meta.drizzle` keys are interpreted as **method names to call on the column builder**, in declaration order. Values control how the method is invoked:
+`meta.drizzle` keys are interpreted as **method names to call on the column builder**, in declaration order. Values control how the method is invoked (mirrors the behavior in `packages/drizzle/src/shared/common.ts`):
 
 - `true` → call with no arguments (`col.unique()`).
 - An array → spread as arguments (`col.references(...args)`).
 - Anything else → pass as the single argument (`col.default('x')`).
 
-A method that doesn't exist on the column type is **silently skipped** — this is intentional (some methods exist only on certain column types or dialects). The flip side is that typos go undetected.
+A method that doesn't exist on the column type is **silently skipped** — this is intentional (some methods exist only on certain column types or dialects). The flip side is that typos go undetected; see the pitfall at the bottom of this page.
 
 ```ts
 const user = a.object({

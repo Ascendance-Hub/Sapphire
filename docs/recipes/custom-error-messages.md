@@ -23,7 +23,6 @@ const ptBR: Partial<Record<IssueCode, string | ((ctx: MessageContext) => string)
   min: (ctx) => `Valor mínimo: ${ctx.min}.`,
   max: (ctx) => `Valor máximo: ${ctx.max}.`,
   format: (ctx) => `Formato inválido (${ctx.format}).`,
-  invalid_format: 'Formato inválido.',
   unknown_key: (ctx) => `Chave desconhecida: ${ctx.path.join('.')}.`,
 }
 

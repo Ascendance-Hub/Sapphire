@@ -79,10 +79,12 @@ See [Concepts → Escape hatch](../concepts/escape-hatch.md) for the full per-ad
 import { toDrizzleSchema } from '@ascendance-hub/sapphire-drizzle'
 registerAdapter('drizzle', toDrizzleSchema)
 
-const productPgTable = Product.getSchema('drizzle') as unknown as Record<string, unknown>
+// Drizzle requires a `dialect` option — call the adapter directly instead of
+// going through `getSchema()` (which only accepts an adapter name, no options).
+const productPgTable = toDrizzleSchema(Product.toSchema(), { dialect: 'pg' })
 ```
 
-The same `Product` field now backs Mongo + JSON Schema + Drizzle Postgres. The Drizzle adapter sees the same IR; what doesn't map cleanly (e.g. `regex` for `sku`) lands as a CHECK-style hint or no-op depending on the dialect — see [Adapters → Drizzle](../adapters/drizzle.md).
+The same `Product` field now backs Mongo + JSON Schema + Drizzle Postgres. The Drizzle adapter sees the same IR; what doesn't map cleanly (e.g. `regex` for `sku`) is a no-op at the DB level — the constraint stays in `safeParse` only. See [Adapters → Drizzle](../adapters/drizzle.md).
 
 ### When NOT to share a schema
 

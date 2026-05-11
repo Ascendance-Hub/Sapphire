@@ -134,12 +134,12 @@ Cycles (e.g. User ↔ Post) work because `$ref` is just a string — no recursio
 
 The second argument to `toJsonSchema(node, options?)`:
 
-| Option                 | Default | Effect                                                                                                                                                    |
-| ---------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `additionalProperties` | omitted | Default emitted on every object schema. Spec default is `true`; set to `false` for strict mode. Per-object overrides still possible via the escape hatch. |
-| `$id`                  | omitted | Top-level `$id` URL.                                                                                                                                      |
-| `defs`                 | `{}`    | Extra named schemas appended to `$defs` beyond what the walker auto-collects.                                                                             |
-| `emitSchemaUri`        | `true`  | Whether to emit `$schema: 'https://json-schema.org/draft/2020-12/schema'`. Turn off when embedding into a wrapper that already declares the dialect.      |
+| Option                 | Default | Effect                                                                                                                                                                                                         |
+| ---------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `additionalProperties` | omitted | When set, emitted on every object schema. JSON Schema's spec default is `true` (permissive); pass `false` for strict mode that rejects unknown keys. Per-object overrides still possible via the escape hatch. |
+| `$id`                  | omitted | Top-level `$id` URL.                                                                                                                                                                                           |
+| `defs`                 | `{}`    | Extra named schemas appended to `$defs` beyond what the walker auto-collects.                                                                                                                                  |
+| `emitSchemaUri`        | `true`  | Whether to emit `$schema: 'https://json-schema.org/draft/2020-12/schema'`. Turn off when embedding into a wrapper that already declares the dialect.                                                           |
 
 ## `.adapter('json-schema', opts)` escape hatch
 

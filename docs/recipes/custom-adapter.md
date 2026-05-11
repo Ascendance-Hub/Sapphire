@@ -82,7 +82,7 @@ const a = new Sapphire()
 
 const User = a
   .object({
-    id: a.string().format('uuid' as never),
+    id: a.string().uuid(),
     name: a.string().min(1),
     age: a.number().int().min(0).optional(),
     role: a.type().enum(['admin', 'user'] as const),

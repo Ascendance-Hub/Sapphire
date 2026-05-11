@@ -61,10 +61,11 @@ The same `userSchema` would emit a Drizzle table via the Drizzle adapter, or a J
 
 ## Docs
 
+- [Docs index](./docs/README.md) — browseable table of contents.
 - [Getting Started](./docs/getting-started.md) — install, your first schema, parsing, and plugging in an adapter.
 - [Concepts](./docs/concepts/) — fields, modifiers, validation, inference, refs, composition.
-- [Adapters](./docs/adapters/) — Mongo, JSON Schema, Drizzle (coming in F15).
-- [Recipes](./docs/recipes/) — form validation, MCP tools, custom adapters (coming in F15).
+- [Adapters](./docs/adapters/) — Mongo, JSON Schema, Drizzle.
+- [Recipes](./docs/recipes/) — form validation, share-types-with-frontend, custom adapters, error messages, Zod migration.
 
 ## Packages
 
