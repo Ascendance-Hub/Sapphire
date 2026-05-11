@@ -73,7 +73,23 @@ function pgColumn(name: string, node: SapphireSchemaNode, ctx: Ctx): any {
       break
     }
     case 'ref': {
-      throw new Error('drizzle adapter: refs not implemented yet — dispatch D')
+      const targetName = (node as any).target as string
+      const pkName =
+        ctx.options.primaryKey === false
+          ? 'id'
+          : typeof ctx.options.primaryKey === 'string'
+            ? ctx.options.primaryKey
+            : 'id'
+      col = integer(name).references((): any => {
+        const target = ctx.tables.get(targetName)
+        if (!target) {
+          throw new Error(
+            `drizzle adapter: ref target table "${targetName}" not registered. Emit it before invoking queries that traverse this reference.`,
+          )
+        }
+        return (target as any)[pkName]
+      })
+      break
     }
     default: {
       // Exhaustiveness guard.
