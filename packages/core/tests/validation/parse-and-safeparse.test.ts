@@ -40,8 +40,8 @@ describe('parse / safeParse — superfície pública', () => {
     }
   })
 
-  it('Date string é convertida no .data', () => {
-    const f = a.date()
+  it('Date string é convertida no .data quando .coerce() está ativo (B4: strict by default)', () => {
+    const f = a.date().coerce()
     const r = f.safeParse('2024-01-01')
     expect(r.success).toBe(true)
     if (r.success) expect(r.data).toBeInstanceOf(Date)

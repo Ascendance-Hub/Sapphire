@@ -6,6 +6,7 @@ import type {
   FieldMessages,
   InstanceOptions,
   InternalParseResult,
+  MessageValue,
   ParseContext,
   ParseOptions,
 } from '../lib/types'
@@ -21,6 +22,8 @@ type LiteralConfig = {
   description?: string
   meta?: Record<string, unknown>
   fieldMessage?: FieldMessages | string
+  // I1: per-rule message for the `literal` issue code (set via `t.literal(value, opts)`).
+  ruleMessages?: { literal?: MessageValue }
 }
 
 export class LiteralField<V extends LiteralValue, TOut = V, TIn = V>
@@ -48,8 +51,8 @@ export class LiteralField<V extends LiteralValue, TOut = V, TIn = V>
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   optional(): LiteralField<V, TOut | undefined, TIn | undefined> {
@@ -143,6 +146,7 @@ export class LiteralField<V extends LiteralValue, TOut = V, TIn = V>
             ctx,
             { expected: this.value, got: value },
             this.config.fieldMessage,
+            this.config.ruleMessages?.literal,
           ),
         ],
       }

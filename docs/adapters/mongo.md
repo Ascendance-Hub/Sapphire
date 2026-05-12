@@ -166,6 +166,9 @@ toMongoSchema(node, { subdocId: true })
 > **`nullable()` is a no-op.** Mongoose has no dedicated nullable flag; non-required fields accept `null` implicitly. If you need strict `null` rejection, validate via `safeParse`.
 
 > [!WARNING]
+> **`nullable() + required` differs across Sapphire and Mongoose.** Sapphire treats `null` as a valid value when `nullable: true` is set. Mongoose, by default, treats `null` as missing for the `required` check. Result: a field declared as `a.string().nullable()` (with the default `required: true`) will pass `Sapphire.safeParse(null)` but Mongoose `.validate()` will reject `null` on the same path. If you want Mongoose to also accept `null` without filling, pass an explicit `default: null` via the escape hatch (`.adapter('mongo', { default: null })`), or drop `nullable()` and validate elsewhere.
+
+> [!WARNING]
 > **`coerce()` is dropped.** Use `safeParse` before handing values to Mongoose if you want Sapphire's coercion semantics.
 
 > [!WARNING]

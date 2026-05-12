@@ -136,6 +136,30 @@ describe('NumberField', () => {
       if (!r.success) expect(r.error.issues.some((i) => i.code === 'multiple_of')).toBe(true)
     })
 
+    // B3: multipleOf is float-tolerant. `0.3 % 0.1` is not exactly 0 in IEEE-754;
+    // accept when remainder is within EPSILON of 0 or of |m|.
+    it('multipleOf: float-tolerant — 0.3 against 0.1 passes', () => {
+      const field = a.number().multipleOf(0.1)
+      expect(field.safeParse(0.3).success).toBe(true)
+      expect(field.safeParse(0.6).success).toBe(true)
+    })
+
+    it('multipleOf: float — clearly off still fails', () => {
+      const field = a.number().multipleOf(0.1)
+      const r = field.safeParse(0.35)
+      expect(r.success).toBe(false)
+      if (!r.success) expect(r.error.issues.some((i) => i.code === 'multiple_of')).toBe(true)
+    })
+
+    it('multipleOf(0): builder throws', () => {
+      expect(() => a.number().multipleOf(0)).toThrow(/non-zero/)
+    })
+
+    it('multipleOf(NaN/Infinity): builder throws', () => {
+      expect(() => a.number().multipleOf(Number.NaN)).toThrow()
+      expect(() => a.number().multipleOf(Number.POSITIVE_INFINITY)).toThrow()
+    })
+
     it('finite: rejects Infinity', () => {
       const field = a.number().finite()
       expect(field.safeParse(1).success).toBe(true)

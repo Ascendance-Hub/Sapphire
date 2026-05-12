@@ -57,7 +57,18 @@ const mongoSchema = userSchema.getSchema() as mongoose.Schema
 const UserModel = mongoose.model('User', mongoSchema)
 ```
 
-The same `userSchema` would emit a Drizzle table via the Drizzle adapter, or a JSON Schema 2020-12 document via the JSON Schema adapter — one definition, three outputs.
+The same `userSchema` powers three outputs from one definition:
+
+```ts
+// Mongo (no adapter options needed):
+userSchema.getSchema('mongo')
+
+// JSON Schema 2020-12 (no adapter options needed):
+userSchema.getSchema('json-schema')
+
+// Drizzle requires a dialect — pass adapter options as the second arg:
+userSchema.getSchema('drizzle', { dialect: 'pg' })
+```
 
 ## Docs
 

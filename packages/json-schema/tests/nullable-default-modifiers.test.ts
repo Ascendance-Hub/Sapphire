@@ -42,11 +42,15 @@ describe('toJsonSchema — nullable/default/description', () => {
     })
   })
 
-  it('nullable em string com enum usa oneOf (pra não quebrar enum)', () => {
+  // I4 removed the dead `NodeBase.enum` field from the IR. The path is now
+  // through proper `kind: 'enum'` / `kind: 'literal'` nodes (see
+  // union-literal-enum.test.ts). This test was the only place that exercised
+  // the legacy bypass and is intentionally gone.
+  it('nullable em enum usa oneOf (pra não quebrar enum)', () => {
     const node: SapphireSchemaNode = {
-      kind: 'string',
+      kind: 'enum',
       required: true,
-      enum: ['a', 'b'],
+      values: ['a', 'b'],
       nullable: true,
     }
     const out = toJsonSchema(node, { emitSchemaUri: false }) as any

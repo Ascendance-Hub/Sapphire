@@ -83,8 +83,8 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   private clone(patch: Partial<StringConfig>): StringField<TOut, TIn> {
@@ -327,6 +327,8 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
       }
     }
     const issues: ValidationIssue[] = []
+    // I2: abortEarly bails after the first rule failure within this leaf field.
+    const bail = () => ctx.abortEarly && issues.length > 0
     if (this.config.length !== undefined && str.length !== this.config.length) {
       issues.push(
         buildIssue(
@@ -337,6 +339,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
           this.config.ruleMessages?.length,
         ),
       )
+      if (bail()) return { value: str, issues }
     }
     if (this.config.minLength !== undefined && str.length < this.config.minLength) {
       issues.push(
@@ -348,6 +351,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
           this.config.ruleMessages?.min_length,
         ),
       )
+      if (bail()) return { value: str, issues }
     }
     if (this.config.maxLength !== undefined && str.length > this.config.maxLength) {
       issues.push(
@@ -359,6 +363,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
           this.config.ruleMessages?.max_length,
         ),
       )
+      if (bail()) return { value: str, issues }
     }
     if (this.config.regex !== undefined) {
       const re = new RegExp(this.config.regex.source, this.config.regex.flags)
@@ -372,6 +377,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
             this.config.ruleMessages?.regex,
           ),
         )
+        if (bail()) return { value: str, issues }
       }
     }
     if (this.config.format !== undefined) {
@@ -386,6 +392,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
             this.config.ruleMessages?.format,
           ),
         )
+        if (bail()) return { value: str, issues }
       }
     }
     if (this.config.startsWith !== undefined && !str.startsWith(this.config.startsWith)) {
@@ -398,6 +405,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
           this.config.ruleMessages?.starts_with,
         ),
       )
+      if (bail()) return { value: str, issues }
     }
     if (this.config.endsWith !== undefined && !str.endsWith(this.config.endsWith)) {
       issues.push(
@@ -409,6 +417,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
           this.config.ruleMessages?.ends_with,
         ),
       )
+      if (bail()) return { value: str, issues }
     }
     return { value: str, issues }
   }

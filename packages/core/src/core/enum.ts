@@ -6,6 +6,7 @@ import type {
   FieldMessages,
   InstanceOptions,
   InternalParseResult,
+  MessageValue,
   ParseContext,
   ParseOptions,
 } from '../lib/types'
@@ -21,6 +22,8 @@ type EnumConfig = {
   description?: string
   meta?: Record<string, unknown>
   fieldMessage?: FieldMessages | string
+  // I1: per-rule message for the `enum` issue code (set via `t.enum(values, opts)`).
+  ruleMessages?: { enum?: MessageValue }
 }
 
 /**
@@ -67,8 +70,8 @@ export class EnumField<V extends EnumValue, TOut = V, TIn = V>
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   optional(): EnumField<V, TOut | undefined, TIn | undefined> {
@@ -162,6 +165,7 @@ export class EnumField<V extends EnumValue, TOut = V, TIn = V>
             ctx,
             { values: this.values as readonly unknown[], got: value },
             this.config.fieldMessage,
+            this.config.ruleMessages?.enum,
           ),
         ],
       }

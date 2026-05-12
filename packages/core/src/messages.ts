@@ -76,7 +76,6 @@ export const defaultMessages: FieldMessages = {
     const length = (ctx as unknown as { length?: number }).length
     return `Must have exactly ${length} items`
   },
-  nonempty: 'Must not be empty',
   enum: (ctx) => {
     const values = (ctx as unknown as { values?: unknown[] }).values ?? []
     return `Must be one of: ${values.join(', ')}`

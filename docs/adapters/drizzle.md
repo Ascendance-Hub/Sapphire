@@ -222,7 +222,12 @@ To swap the column constructor itself (e.g. force `text` instead of `varchar` in
 > **No runtime validation in Drizzle.** Drizzle is a query builder, not a validator. Sapphire keeps validation in `safeParse`; the Drizzle adapter only shapes the table.
 
 > [!WARNING]
-> **Composite kinds collapse to JSON columns.** `array`, `tuple`, `union`, `record`, and nested `object` all map to `jsonb` (pg) / `json` (mysql) / `text({ mode: 'json' })` (sqlite). DB-level validation of the composite shape is lost — keep it in `safeParse`.
+> **Composite kinds collapse to JSON columns.** `array`, `tuple`, `union`, `record`, and nested `object` all map to `jsonb` (pg) / `json` (mysql) / `text({ mode: 'json' })` (sqlite). DB-level validation of the composite shape is lost — keep it in `safeParse`. Specific consequences:
+>
+> - **`union`** — branches are opaque to the database; you cannot filter by which branch a row matched, nor enforce mutual exclusion at the DB level.
+> - **`record`** — `keyField` constraints (`.uuid()`, `.regex(...)`) run only in `safeParse`; the DB accepts any string key.
+> - **`tuple`** — fixed length is not DB-enforced; the column accepts any JSON array shape.
+> - In all cases: call `safeParse` before `insert` / `update` to keep DB rows consistent with the schema's intent.
 
 > [!WARNING]
 > **`enum` is `text`/`varchar` by default.** `pgEnum` / `mysqlEnum` require a separately-declared type with a unique name and are opt-in via `.adapter('drizzle', { pg: { ... } })`.
@@ -247,6 +252,9 @@ To swap the column constructor itself (e.g. force `text` instead of `varchar` in
 
 > [!WARNING]
 > **`ObjectField.timestamps()` is a no-op** in this adapter. The Mongoose-flavoured concept doesn't translate to Drizzle directly — declare `createdAt`/`updatedAt` explicitly with `a.date().default(() => new Date())` if you want them.
+
+> [!WARNING]
+> **`primaryKey: false` disables refs into that table.** The adapter resolves refs by reading the target's actual PK from the `DrizzleTableRegistry` (column name registered at emit time). If a target was emitted with `primaryKey: false`, the registry holds `pkName: null` and the `references(...)` callback throws at first query traversal with a clear message. To use refs into a custom-PK table: emit the target with `primaryKey: 'yourColumn'` (named PK) so the registry records the right column. A per-ref column override (`a.ref('User', { column: 'uuid' })`) is on the V1_FUTURE list.
 
 ## Related
 

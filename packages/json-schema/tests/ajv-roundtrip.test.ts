@@ -63,12 +63,13 @@ describe('ajv-roundtrip — composites', () => {
     expect(v({ age: 1 })).toBe(false)
   })
 
-  it('array nonempty', () => {
+  // I3: `nonempty` flag dropped from IR; use minItems: 1 directly.
+  it('array nonempty (minItems: 1)', () => {
     const v = compile({
       kind: 'array',
       required: true,
       items: { kind: 'string', required: true },
-      nonempty: true,
+      minItems: 1,
     })
     expect(v(['a'])).toBe(true)
     expect(v([])).toBe(false)

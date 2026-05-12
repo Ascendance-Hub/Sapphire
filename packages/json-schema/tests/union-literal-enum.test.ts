@@ -53,15 +53,20 @@ describe('toJsonSchema — union/literal/enum', () => {
     })
   })
 
-  it('NodeBase.enum (universal) em string aparece direto', () => {
-    const node: SapphireSchemaNode = {
+  // I4: NodeBase.enum was removed (it was dead — no field class ever wrote
+  // to it). The proper path for enum-like constraints is the dedicated
+  // `kind: 'enum'` node — covered by tests above. This negative test confirms
+  // that even if user-built IR smuggles an `enum` field through casting, the
+  // adapter doesn't honor it.
+  it('I4: NodeBase.enum (legado) não é mais propagado pelo adapter', () => {
+    // Cast through unknown — IR type no longer declares `enum` on string.
+    const node = {
       kind: 'string',
       required: true,
       enum: ['x', 'y'],
-    }
+    } as unknown as SapphireSchemaNode
     expect(toJsonSchema(node, { emitSchemaUri: false })).toEqual({
       type: 'string',
-      enum: ['x', 'y'],
     })
   })
 })

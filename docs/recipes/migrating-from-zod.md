@@ -137,6 +137,7 @@ Sapphire v1 has **no general-purpose `.refine()` / `.superRefine()`** equivalent
 - **Branded primitive types.** `z.string().brand<'UserId'>()` is a Zod-specific TS trick for nominal typing. Sapphire has no equivalent — use `as unknown as Brand<'UserId'>` at the use site if you need it.
 - **Discriminated unions with TS-level narrowing.** Zod's `z.discriminatedUnion('kind', [...])` gives you a `kind`-narrowed output type. Sapphire's `a.type().union([...])` is structural — narrow yourself in user code.
 - **Mature plugin and recipe ecosystem.** Zod has years of community packages, codemods, and StackOverflow answers. Sapphire is v1.
+- **`error.flatten()` / `error.format()` helpers.** Zod exposes `flatten()` (field-keyed string arrays for form rendering) and `format()` (nested error tree matching the schema shape). `SapphireValidationError` ships only the raw `error.issues: ValidationIssue[]` array in V1.0 — you can derive both shapes manually, but they aren't built in. Tracking item for V1.1.
 
 ## Recommended migration paths
 

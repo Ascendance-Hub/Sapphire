@@ -6,6 +6,7 @@ import type {
   FieldMessages,
   InstanceOptions,
   InternalParseResult,
+  MessageValue,
   ParseContext,
   ParseOptions,
   ValidationIssue,
@@ -20,6 +21,9 @@ type TupleConfig = {
   description?: string
   meta?: Record<string, unknown>
   fieldMessage?: FieldMessages | string
+  // I1: per-rule message for the `tuple_length` issue code
+  // (set via `a.tuple(items, opts)`).
+  ruleMessages?: { tuple_length?: MessageValue }
 }
 
 export type TupleOutputs<T extends ReadonlyArray<Field>> = {
@@ -58,8 +62,8 @@ export class TupleField<
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   optional(): TupleField<T, TOut | undefined, TIn | undefined> {
@@ -170,6 +174,7 @@ export class TupleField<
           ctx,
           { expected: this.items.length, got: value.length },
           this.config.fieldMessage,
+          this.config.ruleMessages?.tuple_length,
         ),
       )
       if (ctx.abortEarly) return { value, issues }

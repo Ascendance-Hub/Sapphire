@@ -21,7 +21,6 @@ export type IssueCode =
   | 'min_items'
   | 'max_items'
   | 'items_length'
-  | 'nonempty'
   | 'enum'
   | 'literal'
   | 'tuple_length'

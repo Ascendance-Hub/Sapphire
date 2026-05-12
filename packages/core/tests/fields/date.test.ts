@@ -9,16 +9,31 @@ describe('DateField', () => {
     expect(field.safeParse(new Date()).success).toBe(true)
   })
 
-  it('aceita string ISO válida e converte para Date', () => {
+  // B4 clean break: strict by default — strings require `.coerce()`.
+  it('rejeita string ISO sem coerce (B4: strict by default)', () => {
     const field = a.date()
+    const r = field.safeParse('2024-01-01')
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('invalid_type')
+  })
+
+  it('com coerce() aceita string ISO válida e converte para Date', () => {
+    const field = a.date().coerce()
     const r = field.safeParse('2024-01-01')
     expect(r.success).toBe(true)
     if (r.success) expect(r.data).toBeInstanceOf(Date)
   })
 
-  it('falha para string inválida', () => {
-    const field = a.date()
+  it('com coerce() falha para string inválida', () => {
+    const field = a.date().coerce()
     const r = field.safeParse('not a date')
+    expect(r.success).toBe(false)
+    if (!r.success) expect(r.error.issues[0].code).toBe('invalid_type')
+  })
+
+  it('rejeita number sem coerce (B4)', () => {
+    const field = a.date()
+    const r = field.safeParse(1700000000000)
     expect(r.success).toBe(false)
     if (!r.success) expect(r.error.issues[0].code).toBe('invalid_type')
   })

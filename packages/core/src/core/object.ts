@@ -6,6 +6,7 @@ import type {
   FieldMessages,
   InstanceOptions,
   InternalParseResult,
+  MessageValue,
   ParseContext,
   ParseOptions,
   ValidationIssue,
@@ -37,6 +38,9 @@ type ObjectConfig = {
   name?: string
   timestamps?: boolean
   indexes?: { keys: string[]; unique?: boolean }[]
+  // I1: per-rule message for the `unknown_key` issue code
+  // (set via `a.object(shape, opts)`).
+  ruleMessages?: { unknown_key?: MessageValue }
 }
 
 export class ObjectField<
@@ -81,8 +85,8 @@ export class ObjectField<
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   optional(): ObjectField<T, TOut | undefined, TIn | undefined> {
@@ -392,7 +396,15 @@ export class ObjectField<
       for (const key of Object.keys(v)) {
         if (!(key in this.obj)) {
           const keyCtx: ParseContext = { ...ctx, path: [...ctx.path, key] }
-          issues.push(buildIssue('unknown_key', keyCtx, { key }, this.config.fieldMessage))
+          issues.push(
+            buildIssue(
+              'unknown_key',
+              keyCtx,
+              { key },
+              this.config.fieldMessage,
+              this.config.ruleMessages?.unknown_key,
+            ),
+          )
           if (ctx.abortEarly) break
         }
       }

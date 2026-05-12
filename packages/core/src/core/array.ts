@@ -17,7 +17,6 @@ type ArrayRuleMessages = {
   min_items?: MessageValue
   max_items?: MessageValue
   items_length?: MessageValue
-  nonempty?: MessageValue
 }
 
 type ArrayConfig = {
@@ -30,7 +29,6 @@ type ArrayConfig = {
   minItems?: number
   maxItems?: number
   length?: number
-  nonempty?: boolean
   fieldMessage?: FieldMessages | string
   ruleMessages?: ArrayRuleMessages
 }
@@ -59,13 +57,12 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
       ...(this.config.minItems !== undefined ? { minItems: this.config.minItems } : {}),
       ...(this.config.maxItems !== undefined ? { maxItems: this.config.maxItems } : {}),
       ...(this.config.length !== undefined ? { length: this.config.length } : {}),
-      ...(this.config.nonempty ? { nonempty: true } : {}),
       items: this.item.toSchema(),
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   optional(): ArrayField<F, TOut | undefined, TIn | undefined> {
@@ -167,15 +164,13 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
     })
   }
 
+  /**
+   * I3: sugar for `.min(1, opts)`. Issue code is `min_items` (no dedicated
+   * `nonempty` code anymore — the flag was previously dropped from the IR when
+   * combined with `.min(n)` where n > 1, which made the issue code arbitrary).
+   */
   nonempty(opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
-    return this.clone({
-      nonempty: true,
-      minItems: Math.max(this.config.minItems ?? 0, 1),
-      ruleMessages: {
-        ...this.config.ruleMessages,
-        ...(opts?.message !== undefined ? { nonempty: opts.message } : {}),
-      },
-    })
+    return this.min(1, opts)
   }
 
   message(msg: string | FieldMessages): ArrayField<F, TOut, TIn> {
@@ -232,14 +227,13 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
       )
     }
     if (this.config.minItems !== undefined && value.length < this.config.minItems) {
-      const isNonempty = this.config.nonempty && this.config.minItems === 1
       issues.push(
         buildIssue(
-          isNonempty ? 'nonempty' : 'min_items',
+          'min_items',
           ctx,
-          isNonempty ? { got: value.length } : { min: this.config.minItems, got: value.length },
+          { min: this.config.minItems, got: value.length },
           this.config.fieldMessage,
-          isNonempty ? this.config.ruleMessages?.nonempty : this.config.ruleMessages?.min_items,
+          this.config.ruleMessages?.min_items,
         ),
       )
     }

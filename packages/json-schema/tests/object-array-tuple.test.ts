@@ -52,7 +52,8 @@ describe('toJsonSchema — object/array/tuple', () => {
     })
   })
 
-  it('array com min/max/length/nonempty', () => {
+  // I3: `nonempty` flag dropped from IR; non-emptiness is just minItems: 1.
+  it('array com min/max/length (nonempty é minItems: 1)', () => {
     const node: SapphireSchemaNode = {
       kind: 'array',
       required: true,
@@ -78,20 +79,10 @@ describe('toJsonSchema — object/array/tuple', () => {
       kind: 'array',
       required: true,
       items: { kind: 'string', required: true },
-      nonempty: true,
+      minItems: 1,
     }
     const neOut = toJsonSchema(ne, { emitSchemaUri: false }) as any
     expect(neOut.minItems).toBe(1)
-
-    const both: SapphireSchemaNode = {
-      kind: 'array',
-      required: true,
-      items: { kind: 'string', required: true },
-      minItems: 0,
-      nonempty: true,
-    }
-    const bothOut = toJsonSchema(both, { emitSchemaUri: false }) as any
-    expect(bothOut.minItems).toBe(1)
   })
 
   it('tuple emite prefixItems + items:false + min/max iguais ao length', () => {

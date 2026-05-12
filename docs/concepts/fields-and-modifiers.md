@@ -90,7 +90,7 @@ Boolean has no rule modifiers — just universal ones and `.coerce()`. With coer
 | `.max(d, opts?)` | same                            | Error code `max`.                                      |
 | `.coerce()`      | `() => DateField`               | `new Date(value)` for number/string before validation. |
 
-Without `.coerce()`, string inputs parseable to `Date` are accepted for back-compat (Mongoose-style).
+Strict by default — only `Date` instances are accepted. Call `.coerce()` to also accept strings or numbers (form payloads, URL params, JSON-deserialized timestamps); the adapter IR (`coerce: false` vs `coerce: true`) honestly reflects what runtime will accept.
 
 ## Composites
 

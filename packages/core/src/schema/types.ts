@@ -7,7 +7,6 @@ export interface NodeBase {
   description?: string
   unique?: boolean
   index?: boolean | { unique?: boolean }
-  enum?: readonly unknown[]
   meta?: Record<string, unknown>
   message?: FieldMessages
 }
@@ -52,7 +51,6 @@ export type SapphireSchemaNode =
       minItems?: number
       maxItems?: number
       length?: number
-      nonempty?: boolean
     })
   | (NodeBase & { kind: 'tuple'; items: SapphireSchemaNode[] })
   | (NodeBase & { kind: 'union'; options: SapphireSchemaNode[] })
