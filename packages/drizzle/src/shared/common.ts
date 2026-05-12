@@ -6,7 +6,13 @@ import type { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
  * precisely (drizzle-orm's column builder generics are notoriously complex).
  */
 export interface ApplyCtx {
-  options: { dialect: 'pg' | 'mysql' | 'sqlite'; primaryKey?: string | false }
+  options: {
+    dialect: 'pg' | 'mysql' | 'sqlite'
+    primaryKey?: string | false
+    /** S2: when true, missing methods invoked by meta keys throw instead of
+     *  being silently skipped. Useful as a typo guard in dev / CI. */
+    strict?: boolean
+  }
 }
 
 /**
@@ -14,12 +20,42 @@ export interface ApplyCtx {
  * not exist (e.g. `.references()` on a `text` column built without the FK
  * helper, or a dialect-specific method missing on another dialect), silently
  * skip — meta is best-effort.
+ *
+ * This variant is for **internal** Sapphire-controlled calls (default, notNull,
+ * unique). For user-supplied `meta.drizzle.*` keys, use `callChainFromMeta`.
  */
 function callChain(col: any, method: string, args: unknown): any {
   if (typeof col[method] !== 'function') return col
   if (args === true) return col[method]()
   if (Array.isArray(args)) return col[method](...args)
   return col[method](args)
+}
+
+/**
+ * S2: invoked for user-supplied `meta.drizzle.*` keys. Adds a warning when the
+ * method is missing on the column builder (typo guard) and an opt-in throw via
+ * `ctx.options.strict`. Production stays silent unless strict is set.
+ */
+function callChainFromMeta(
+  col: any,
+  method: string,
+  args: unknown,
+  ctx: ApplyCtx,
+  scope: 'top-level' | 'dialect',
+): any {
+  if (typeof col[method] !== 'function') {
+    const where = scope === 'top-level' ? 'meta.drizzle' : `meta.drizzle.${ctx.options.dialect}`
+    const msg = `drizzle adapter: method "${method}" is not available on this column type (${where}). Meta key silently dropped — verify the spelling and that the method exists on the column builder for this dialect.`
+    if (ctx.options.strict) {
+      throw new Error(msg)
+    }
+    // Avoid spamming production logs; warn in everything else.
+    if (typeof process === 'undefined' || process.env?.NODE_ENV !== 'production') {
+      console.warn(msg)
+    }
+    return col
+  }
+  return callChain(col, method, args)
 }
 
 /**
@@ -35,7 +71,8 @@ function callChain(col: any, method: string, args: unknown): any {
  *
  * Meta values may be `true` (call with no args), an array (spread as args), or
  * any other value (passed as the single argument). Methods missing on the
- * column type are silently skipped.
+ * column type are warned about (typo guard) and skipped — or, with
+ * `strict: true`, thrown.
  */
 export function applyCommon(col: any, node: SapphireSchemaNode, ctx: ApplyCtx): any {
   let out = col
@@ -54,12 +91,12 @@ export function applyCommon(col: any, node: SapphireSchemaNode, ctx: ApplyCtx): 
     for (const [k, v] of Object.entries(metaDz)) {
       // Dialect sub-keys are handled below; skip them here.
       if (k === 'pg' || k === 'mysql' || k === 'sqlite') continue
-      out = callChain(out, k, v)
+      out = callChainFromMeta(out, k, v, ctx, 'top-level')
     }
     const dialectMeta = metaDz[ctx.options.dialect]
     if (dialectMeta && typeof dialectMeta === 'object' && !Array.isArray(dialectMeta)) {
       for (const [k, v] of Object.entries(dialectMeta as Record<string, unknown>)) {
-        out = callChain(out, k, v)
+        out = callChainFromMeta(out, k, v, ctx, 'dialect')
       }
     }
   }

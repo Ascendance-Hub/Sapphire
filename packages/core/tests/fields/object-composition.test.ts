@@ -94,6 +94,70 @@ describe('pick/omit immutability', () => {
   })
 })
 
+// S7: pick/omit drop schema-level config (name/timestamps/indexes/meta/
+// description/message) by design — they yield conceptually new schemas.
+// extend/merge preserve config because they are the same conceptual schema
+// just wider. This test pins the asymmetry so a future "consistency cleanup"
+// doesn't quietly change behaviour.
+describe('S7 — pick/omit vs extend/merge config preservation asymmetry', () => {
+  it('pick drops name/timestamps/indexes; extend preserves them', () => {
+    const User = a
+      .object({ email: a.string(), age: a.number(), createdAt: a.date() })
+      .name('User_S7Asymmetry')
+      .timestamps()
+      .index(['email'], { unique: true })
+
+    // pick → fresh config.
+    const Picked = User.pick(['email'] as const)
+    expect(Picked.getName()).toBeUndefined()
+    const pickedIR = Picked.toSchema()
+    expect(pickedIR.kind).toBe('object')
+    if (pickedIR.kind === 'object') {
+      expect(pickedIR.timestamps).toBeUndefined()
+      expect(pickedIR.indexes).toBeUndefined()
+    }
+
+    // omit → same fresh-config rule.
+    const a2 = new Sapphire()
+    const User2 = a2
+      .object({ email: a.string(), createdAt: a.date() })
+      .name('User_S7Asymmetry_b')
+      .timestamps()
+    const Omitted = User2.omit(['createdAt'] as const)
+    expect(Omitted.getName()).toBeUndefined()
+    const omittedIR = Omitted.toSchema()
+    if (omittedIR.kind === 'object') {
+      expect(omittedIR.timestamps).toBeUndefined()
+    }
+
+    // extend → config preserved (same conceptual schema, wider).
+    const a3 = new Sapphire()
+    const User3 = a3
+      .object({ email: a.string() })
+      .name('User_S7Asymmetry_c')
+      .timestamps()
+      .index(['email'], { unique: true })
+    const Extended = User3.extend({ age: a.number() })
+    expect(Extended.getName()).toBe('User_S7Asymmetry_c')
+    const extIR = Extended.toSchema()
+    if (extIR.kind === 'object') {
+      expect(extIR.timestamps).toBe(true)
+      expect(extIR.indexes?.length).toBe(1)
+    }
+
+    // merge → same preserve-config rule as extend (it delegates to extend).
+    const a4 = new Sapphire()
+    const Base = a4.object({ email: a.string() }).name('User_S7Asymmetry_d').timestamps()
+    const Audit = a4.object({ createdAt: a.date() })
+    const Merged = Base.merge(Audit)
+    expect(Merged.getName()).toBe('User_S7Asymmetry_d')
+    const mergedIR = Merged.toSchema()
+    if (mergedIR.kind === 'object') {
+      expect(mergedIR.timestamps).toBe(true)
+    }
+  })
+})
+
 describe('ObjectField.partial', () => {
   it('makes every key optional at runtime (parse with empty object passes)', () => {
     const User = a.object({ name: a.string(), age: a.number() })

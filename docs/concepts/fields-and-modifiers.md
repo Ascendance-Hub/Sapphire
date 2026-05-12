@@ -32,9 +32,9 @@ type User = Infer<typeof user>
 | `.max(n, opts?)`             | same                                               | Maximum length. Error code `max_length`.                                                                                                            |
 | `.length(n, opts?)`          | same                                               | Exact length. Error code `length`.                                                                                                                  |
 | `.regex(re, opts?)`          | `(re: RegExp, opts?: { message? }) => StringField` | Tests with `re.test(str)`. Error code `regex`.                                                                                                      |
-| `.email(opts?)`              | `(opts?: { message? }) => StringField`             | Built-in format check. Error code `format`.                                                                                                         |
-| `.url(opts?)`                | same                                               | Format `url`.                                                                                                                                       |
-| `.uuid(opts?)`               | same                                               | Format `uuid`.                                                                                                                                      |
+| `.email(opts?)`              | `(opts?: { message? }) => StringField`             | Built-in format check (see note). Error code `format`.                                                                                              |
+| `.url(opts?)`                | same                                               | Format `url` — uses the platform `URL` constructor; accepts anything `new URL(value)` parses.                                                       |
+| `.uuid(opts?)`               | same                                               | Format `uuid` — RFC 4122 v1–v8 with valid variant nibble (`8`/`9`/`a`/`b`).                                                                          |
 | `.startsWith(prefix, opts?)` | `(prefix: string, opts?) => StringField`           | Error code `starts_with`.                                                                                                                           |
 | `.endsWith(suffix, opts?)`   | `(suffix: string, opts?) => StringField`           | Error code `ends_with`.                                                                                                                             |
 | `.trim()`                    | `() => StringField`                                | Transform — runs after coerce, before rule checks.                                                                                                  |
@@ -49,6 +49,9 @@ Example:
 ```ts
 const email = a.string().min(3).max(254).email()
 ```
+
+> [!NOTE]
+> **`.email()` is pragmatic, not RFC 5322 complete.** The built-in regex covers ~99% of practical addresses — it rejects obvious junk (`a@b..c`, leading/trailing dots, missing TLD) but does not accept exotic-but-RFC-legal forms like quoted local parts (`"foo bar"@example.com`). If you need full RFC compliance, plug a third-party validator via `.regex(yourRegex)` or post-`safeParse` checks.
 
 ### `a.number()`
 

@@ -121,6 +121,53 @@ describe('StringField', () => {
       if (!r.success) expect(r.error.issues[0].message).toBe('bad uuid')
     })
 
+    // S5: tightened regexes — these used to slip through the loose patterns.
+    describe('S5 — tighter email regex catches obvious junk', () => {
+      const field = a.string().email()
+      const cases: Array<[string, boolean]> = [
+        ['ada@example.com', true],
+        ['user.name+tag@sub.example.co.uk', true],
+        ['a@b.co', true],
+        ['a@b..c', false], // consecutive dots in domain
+        ['a@.b.com', false], // leading dot in domain
+        ['a@b.', false], // trailing dot in domain
+        ['a@b', false], // no TLD
+        ['@b.com', false], // empty local part
+        ['a@', false],
+        ['plainstring', false],
+      ]
+      for (const [input, expected] of cases) {
+        it(`"${input}" → ${expected ? 'valid' : 'invalid'}`, () => {
+          expect(field.safeParse(input).success).toBe(expected)
+        })
+      }
+    })
+
+    describe('S5 — UUID regex checks version + variant bits', () => {
+      const field = a.string().uuid()
+      const cases: Array<[string, boolean]> = [
+        // v1 (timestamp-based), variant nibble = 8/9/a/b
+        ['123e4567-e89b-12d3-a456-426614174000', true],
+        // v4 (random), variant nibble = a
+        ['550e8400-e29b-41d4-a716-446655440000', true],
+        // version nibble = 0 (invalid — must be 1–8)
+        ['550e8400-e29b-01d4-a716-446655440000', false],
+        // version nibble = 9 (invalid — must be 1–8)
+        ['550e8400-e29b-91d4-a716-446655440000', false],
+        // variant nibble = c (invalid — must be 8/9/a/b)
+        ['550e8400-e29b-41d4-c716-446655440000', false],
+        // wrong shape entirely
+        ['not-a-uuid', false],
+        // RFC 4122 nil uuid: version=0 → invalid by version bits
+        ['00000000-0000-0000-0000-000000000000', false],
+      ]
+      for (const [input, expected] of cases) {
+        it(`"${input}" → ${expected ? 'valid' : 'invalid'}`, () => {
+          expect(field.safeParse(input).success).toBe(expected)
+        })
+      }
+    })
+
     it('startsWith: valid and invalid', () => {
       const field = a.string().startsWith('foo')
       expect(field.safeParse('foobar').success).toBe(true)

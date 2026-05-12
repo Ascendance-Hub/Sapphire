@@ -136,6 +136,12 @@ const result = user.safeParse({ name: '', age: -1 }, { abortEarly: true })
 // result.error.issues.length === 1
 ```
 
+`abortEarly: true` bails on the first rule failure both **between** fields (object key, array item, tuple slot, record entry) and **within** a single leaf field (`string`/`number`/`date` rule chain). So `a.string().min(10).regex(/^x/)` against `'a'` emits one issue when abortEarly is on, both when it's off.
+
+### Why the default is to accumulate
+
+`safeParse` keeps every rule failure on every field by design — the **"tell the user everything wrong at once"** model fits forms and API validation, where surfacing partial errors leads to whack-a-mole correction loops. A single string field with `.length(5).min(7)` against `'abc'` will report **both** `length` and `min_length` so the UI can highlight both constraints at once. Flip `abortEarly` only on hot boundaries (e.g. server entrypoints) where you want to fail fast and don't care about completeness.
+
 ## `stripUnknown`
 
 `false` by default. With the default, unknown keys on an object yield a `code: 'unknown_key'` issue per offending key (one per key, walked left-to-right). With `stripUnknown: true`, unknown keys are silently dropped from the output and no issues are emitted.

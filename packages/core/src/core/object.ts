@@ -14,6 +14,38 @@ import type {
 import { SapphireSchemaNode } from '../schema/types'
 import { ObjectInput, ObjectOutput } from '../types/infer'
 
+/**
+ * S10: plain-object guard for `_parse`. We reject Date/Map/Set/RegExp/Promise/
+ * class instances because their `Object.entries` is empty (or surprising), so
+ * iterating them against schema keys would silently produce `{}` shaped output
+ * with `required` violations for every key — a confusing failure mode that
+ * usually masks a caller bug.
+ *
+ * `Object.create(null)` is allowed (proto is `null`); literal `{...}` objects
+ * have `Object.prototype` as proto.
+ */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object') return false
+  const proto = Object.getPrototypeOf(value)
+  return proto === Object.prototype || proto === null
+}
+
+/** Human-readable tag for an invalid_type issue payload. */
+function describeNonObject(value: unknown): string {
+  if (Array.isArray(value)) return 'array'
+  if (value === null) return 'null'
+  if (value instanceof Date) return 'date'
+  if (value instanceof Map) return 'map'
+  if (value instanceof Set) return 'set'
+  if (value instanceof RegExp) return 'regexp'
+  if (value instanceof Promise) return 'promise'
+  if (typeof value === 'object') {
+    const ctor = (value as object).constructor
+    return ctor && ctor !== Object ? `instance of ${ctor.name}` : typeof value
+  }
+  return typeof value
+}
+
 /** Structural lookup of a field's `.required()` / `.optional()` return type.
  *  Used by `ObjectField.required()` / `partial()` to map each child without
  *  forcing those methods into the `Field` interface contract. */
@@ -364,14 +396,18 @@ export class ObjectField<
       }
       return { value, issues: [] }
     }
-    if (typeof value !== 'object' || Array.isArray(value)) {
+    // S10: reject non-plain objects (Date, Map, Set, RegExp, Promise, class
+    // instances, etc.). Previously `typeof value !== 'object' || Array.isArray`
+    // let them through and they parsed as empty objects, which was bizarre
+    // behavior masking caller bugs.
+    if (typeof value !== 'object' || Array.isArray(value) || !isPlainObject(value)) {
       return {
         value,
         issues: [
           buildIssue(
             'invalid_type',
             ctx,
-            { expected: 'object', got: Array.isArray(value) ? 'array' : typeof value },
+            { expected: 'object', got: describeNonObject(value) },
             this.config.fieldMessage,
           ),
         ],

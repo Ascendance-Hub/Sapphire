@@ -24,6 +24,13 @@ export interface DrizzleAdapterOptions<D extends DrizzleDialect = DrizzleDialect
    * schemas.
    */
   tables?: DrizzleTableRegistry
+  /**
+   * S2: when true, `meta.drizzle.*` keys that name a method missing on the
+   * resolved column builder will **throw** instead of being silently dropped.
+   * Use this in dev / CI as a typo guard. In non-strict mode (default), a
+   * warning is logged outside production (`NODE_ENV !== 'production'`).
+   */
+  strict?: boolean
 }
 
 // Overloads — return type is conditional on the dialect literal. The exact

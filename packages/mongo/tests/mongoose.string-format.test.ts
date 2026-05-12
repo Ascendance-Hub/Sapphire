@@ -27,8 +27,11 @@ describe('Mongo adapter — string formats / startsWith / endsWith / transforms'
   it('uuid format: rejeita inválido, aceita válido', () => {
     const Model = makeModel(a.string().uuid())
     expect(new Model({ value: '123' }).validateSync()?.errors.value).toBeDefined()
+    // S5: regex tightened — RFC 4122 variant nibble must be 8/9/a/b. The
+    // previous sample (`...-3333-...`) had an invalid variant and is no
+    // longer accepted; swap to a valid v4 with variant `a`.
     expect(
-      new Model({ value: 'a1b2c3d4-1111-2222-3333-444455556666' }).validateSync(),
+      new Model({ value: 'a1b2c3d4-1111-4222-a333-444455556666' }).validateSync(),
     ).toBeUndefined()
   })
 

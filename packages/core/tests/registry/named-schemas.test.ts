@@ -38,4 +38,23 @@ describe('Named-schema registry', () => {
     expect(base.toSchema()).not.toHaveProperty('name')
     expect((named.toSchema() as any).name).toBe('Foo')
   })
+
+  // S3: registry is idempotent for re-registration of the same field instance.
+  it('S3 — re-registering the same instance under the same name is a no-op (not a throw)', () => {
+    const a = new Sapphire()
+    const named = a.object({ x: a.string() }).name('Same')
+    // Re-register via the internal registry directly with the same instance.
+    expect(() =>
+      (a as unknown as { namedSchemas: { register: (n: string, s: unknown) => void } }).namedSchemas?.register(
+        'Same',
+        named,
+      ),
+    ).not.toThrow()
+  })
+
+  it('S3 — different instance under same name still throws', () => {
+    const a = new Sapphire()
+    a.object({ x: a.string() }).name('Same')
+    expect(() => a.object({ y: a.string() }).name('Same')).toThrow(/different field instance/)
+  })
 })
