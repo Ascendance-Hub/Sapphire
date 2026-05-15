@@ -15,14 +15,19 @@ export function rewriteDocLink(url: string, fromSlug: string, base: string): str
   // resolve `path` relative to the directory of `fromSlug`
   const fromDir = fromSlug.includes('/') ? fromSlug.slice(0, fromSlug.lastIndexOf('/')) : ''
   const segments = fromDir ? fromDir.split('/') : []
+  let escaped = false
   for (const seg of path.split('/')) {
     if (seg === '.' || seg === '') continue
     if (seg === '..') {
       if (segments.length > 0) segments.pop()
+      else escaped = true
     } else {
       segments.push(seg)
     }
   }
+  // A link that traverses above the docs/ root is not a doc-collection page —
+  // leave it untouched rather than fabricate a /docs/... route that 404s.
+  if (escaped) return url
 
   let slug = segments.join('/').replace(/\.md$/, '')
   // README.md is the docs index

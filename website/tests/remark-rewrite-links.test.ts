@@ -50,4 +50,10 @@ describe('rewriteDocLink', () => {
   it('resolves a sibling link from a top-level doc (slug has no slash)', () => {
     expect(rewriteDocLink('./other.md', 'getting-started', base)).toBe('/Sapphire/docs/other')
   })
+
+  it('leaves a link that escapes the docs root untouched', () => {
+    expect(rewriteDocLink('../../specs/V1_DESIGN.md', 'meta/design-decisions', base)).toBe(
+      '../../specs/V1_DESIGN.md',
+    )
+  })
 })
