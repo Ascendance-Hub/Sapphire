@@ -17,22 +17,14 @@ export class TypeField {
     private readonly instanceOpts?: InstanceOptions,
   ) {}
 
-  union<Fields extends Field[]>(
-    fields: Fields,
-    opts?: TerminalRuleOptions,
-  ): UnionField<Fields> {
+  union<Fields extends Field[]>(fields: Fields, opts?: TerminalRuleOptions): UnionField<Fields> {
     return new UnionField(fields, this.defaultAdapter, this.instanceOpts, {
       required: true,
-      ...(opts?.message !== undefined
-        ? { ruleMessages: { union_no_match: opts.message } }
-        : {}),
+      ...(opts?.message !== undefined ? { ruleMessages: { union_no_match: opts.message } } : {}),
     })
   }
 
-  literal<V extends LiteralValue>(
-    value: V,
-    opts?: TerminalRuleOptions,
-  ): LiteralField<V> {
+  literal<V extends LiteralValue>(value: V, opts?: TerminalRuleOptions): LiteralField<V> {
     return new LiteralField<V>(value, this.defaultAdapter, this.instanceOpts, {
       required: true,
       ...(opts?.message !== undefined ? { ruleMessages: { literal: opts.message } } : {}),

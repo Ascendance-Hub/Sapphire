@@ -62,9 +62,7 @@ export function toDrizzleSchema(
     )
   }
   if (!('dialect' in options) || !options.dialect) {
-    throw new Error(
-      "toDrizzleSchema: options.dialect is required ('pg' | 'mysql' | 'sqlite').",
-    )
+    throw new Error("toDrizzleSchema: options.dialect is required ('pg' | 'mysql' | 'sqlite').")
   }
   if (node.kind !== 'object') {
     throw new Error(

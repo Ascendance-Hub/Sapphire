@@ -62,9 +62,7 @@ export class Sapphire {
   ): TupleField<T> {
     return new TupleField<T>(items, this.defaultAdapter, this.instanceOpts, {
       required: true,
-      ...(opts?.message !== undefined
-        ? { ruleMessages: { tuple_length: opts.message } }
-        : {}),
+      ...(opts?.message !== undefined ? { ruleMessages: { tuple_length: opts.message } } : {}),
     })
   }
 
@@ -74,9 +72,7 @@ export class Sapphire {
   ): ObjectField<Obj> {
     return new ObjectField<Obj>(obj, this.defaultAdapter, this.instanceOpts, {
       required: true,
-      ...(opts?.message !== undefined
-        ? { ruleMessages: { unknown_key: opts.message } }
-        : {}),
+      ...(opts?.message !== undefined ? { ruleMessages: { unknown_key: opts.message } } : {}),
     })
   }
 

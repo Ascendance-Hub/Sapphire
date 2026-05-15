@@ -78,13 +78,15 @@ describe('parse: array(1000) objects', () => {
 })
 
 // ── Scenario 5: union of 5 branches ───────────────────────────────────────
-const u5 = a.type().union([
-  a.object({ kind: a.type().literal('a'), v: a.string() }),
-  a.object({ kind: a.type().literal('b'), v: a.number() }),
-  a.object({ kind: a.type().literal('c'), v: a.boolean() }),
-  a.object({ kind: a.type().literal('d'), v: a.string().email() }),
-  a.object({ kind: a.type().literal('e'), v: a.string().uuid() }),
-])
+const u5 = a
+  .type()
+  .union([
+    a.object({ kind: a.type().literal('a'), v: a.string() }),
+    a.object({ kind: a.type().literal('b'), v: a.number() }),
+    a.object({ kind: a.type().literal('c'), v: a.boolean() }),
+    a.object({ kind: a.type().literal('d'), v: a.string().email() }),
+    a.object({ kind: a.type().literal('e'), v: a.string().uuid() }),
+  ])
 
 describe('parse: union of 5 object branches', () => {
   const last = { kind: 'e' as const, v: '550e8400-e29b-41d4-a716-446655440000' }
@@ -95,15 +97,11 @@ describe('parse: union of 5 object branches', () => {
 
 // ── Scenario 6: safeParse with many issues ────────────────────────────────
 const wide = a.object(
-  Object.fromEntries(
-    Array.from({ length: 50 }, (_, i) => [`f${i}`, a.string().min(5).email()]),
-  ),
+  Object.fromEntries(Array.from({ length: 50 }, (_, i) => [`f${i}`, a.string().min(5).email()])),
 )
 
 describe('parse: safeParse with 50 simultaneous failures', () => {
-  const allInvalid = Object.fromEntries(
-    Array.from({ length: 50 }, (_, i) => [`f${i}`, 'x']),
-  )
+  const allInvalid = Object.fromEntries(Array.from({ length: 50 }, (_, i) => [`f${i}`, 'x']))
   bench('safeParse — every key fails twice', () => {
     wide.safeParse(allInvalid)
   })

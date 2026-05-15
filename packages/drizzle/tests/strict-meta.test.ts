@@ -42,9 +42,7 @@ describe('S2 — meta typo guard via strict mode', () => {
     const t = a.object({
       name: a.string().adapter('drizzle', { uniqe: true }),
     })
-    expect(() =>
-      toDrizzleSchema(t.toSchema(), { dialect: 'pg', tableName: 'warns' }),
-    ).not.toThrow()
+    expect(() => toDrizzleSchema(t.toSchema(), { dialect: 'pg', tableName: 'warns' })).not.toThrow()
     expect(warnSpy).toHaveBeenCalled()
     const msg = warnSpy.mock.calls.map((c) => String(c[0])).join('\n')
     expect(msg).toContain('uniqe')

@@ -12,8 +12,7 @@ export const EMAIL_RE =
 // UUID: validates RFC 4122 version + variant bits.
 //   - version nibble: position 14 (the '4xxx' segment, here we accept 1–8)
 //   - variant nibble: position 19 must be 8/9/a/b (binary 10xx)
-export const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 export const formatValidators = {
   email: (v: string): boolean => EMAIL_RE.test(v),

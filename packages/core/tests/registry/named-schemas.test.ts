@@ -45,10 +45,9 @@ describe('Named-schema registry', () => {
     const named = a.object({ x: a.string() }).name('Same')
     // Re-register via the internal registry directly with the same instance.
     expect(() =>
-      (a as unknown as { namedSchemas: { register: (n: string, s: unknown) => void } }).namedSchemas?.register(
-        'Same',
-        named,
-      ),
+      (
+        a as unknown as { namedSchemas: { register: (n: string, s: unknown) => void } }
+      ).namedSchemas?.register('Same', named),
     ).not.toThrow()
   })
 
