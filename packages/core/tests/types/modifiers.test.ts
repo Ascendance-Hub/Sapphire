@@ -34,4 +34,21 @@ describe('Modifiers — type-level', () => {
     expectTypeOf<Infer<typeof f>>().toEqualTypeOf<string>()
     expectTypeOf<InferInput<typeof f>>().toEqualTypeOf<string>()
   })
+
+  // Pin `.default(x).optional()` and `.optional().default(x)` semantics.
+  // Current behaviour: type-level, `.optional()` after `.default()` widens TOut
+  // with `| undefined` (the default no longer "fills" at the type level).
+  // Runtime still substitutes the default when input is undefined.
+  // Documenting this so a future change is a deliberate decision, not a silent drift.
+  it('default(x).optional(): TOut widens to include undefined', () => {
+    const f = a.string().default('x').optional()
+    expectTypeOf<Infer<typeof f>>().toEqualTypeOf<string | undefined>()
+    expectTypeOf<InferInput<typeof f>>().toEqualTypeOf<string | undefined>()
+  })
+
+  it('optional().default(x): TOut widens to include undefined (same as the reverse order)', () => {
+    const f = a.string().optional().default('x')
+    expectTypeOf<Infer<typeof f>>().toEqualTypeOf<string | undefined>()
+    expectTypeOf<InferInput<typeof f>>().toEqualTypeOf<string | undefined>()
+  })
 })

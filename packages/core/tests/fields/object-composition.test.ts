@@ -228,6 +228,54 @@ describe('ObjectField.required', () => {
     // original still expects name to be required
     expect(User.safeParse({}).success).toBe(false)
   })
+
+  it('partial() is shallow: nested objects become optional as a whole but their inner keys stay required', () => {
+    const Inner = a.object({ city: a.string(), zip: a.string() })
+    const User = a.object({ name: a.string(), address: Inner })
+    const Patch = User.partial()
+
+    // both top-level keys are optional now — empty object passes
+    expect(Patch.safeParse({}).success).toBe(true)
+
+    // when `address` IS provided, its inner shape is still strict (city/zip required)
+    expect(Patch.safeParse({ address: {} }).success).toBe(false)
+    expect(Patch.safeParse({ address: { city: 'SP', zip: '01000' } }).success).toBe(true)
+  })
+
+  it('partial().required() round-trip on a nested object restores top-level required, inner unchanged', () => {
+    const Inner = a.object({ city: a.string() })
+    const User = a.object({ name: a.string(), address: Inner })
+    const Round = User.partial().required()
+
+    // both top-level keys required again
+    expect(Round.safeParse({}).success).toBe(false)
+    expect(Round.safeParse({ name: 'A', address: { city: 'SP' } }).success).toBe(true)
+    // inner field still required (round-trip didn't widen it)
+    expect(Round.safeParse({ name: 'A', address: {} }).success).toBe(false)
+  })
+
+  it('partial() does not recurse into already-optional inner fields', () => {
+    const Inner = a.object({ city: a.string().optional() })
+    const User = a.object({ address: Inner })
+    const Patch = User.partial()
+    // address itself is optional now
+    expect(Patch.safeParse({}).success).toBe(true)
+    // address provided as empty object still parses (city was optional in the source)
+    expect(Patch.safeParse({ address: {} }).success).toBe(true)
+  })
+
+  it('required() walks one level: nested object children become required too (via their own .required())', () => {
+    // `address` is an ObjectField whose own `.required()` re-flips its inner keys.
+    // So calling required() at the top transitively re-tightens nested object children.
+    const Inner = a.object({ city: a.string() }).partial()
+    const Wrapped = a.object({ address: Inner })
+    const Tight = Wrapped.required()
+    // address itself is required again
+    expect(Tight.safeParse({}).success).toBe(false)
+    // and city is required again too (nested .required() ran)
+    expect(Tight.safeParse({ address: {} }).success).toBe(false)
+    expect(Tight.safeParse({ address: { city: 'SP' } }).success).toBe(true)
+  })
 })
 
 describe('ObjectField.extend', () => {
