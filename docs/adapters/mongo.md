@@ -9,6 +9,8 @@ This is the adapter for users on the plain `mongodb` driver — no Mongoose. If
 you use Mongoose, reach for [`@ascendance-hub/sapphire-mongoose`](./mongoose.md)
 instead.
 
+> **Unofficial.** A community adapter — not affiliated with, sponsored, or endorsed by MongoDB, Inc.
+
 ## Install
 
 ```bash

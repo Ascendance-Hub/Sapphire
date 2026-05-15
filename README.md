@@ -97,6 +97,8 @@ userSchema.getSchema('drizzle', { dialect: 'pg' })
 | `@ascendance-hub/sapphire-drizzle`     | Drizzle adapter — emits `pgTable` / `mysqlTable` / `sqliteTable`.                          |
 | `@ascendance-hub/sapphire-json-schema` | JSON Schema 2020-12 adapter — for AJV, MCP tools, form generators.                         |
 
+The adapter packages are **unofficial, community-maintained** integrations — not affiliated with, sponsored, or endorsed by MongoDB, Inc., the Mongoose project / Automattic, or the Drizzle Team.
+
 ## License
 
 BSD-3-Clause. © Alexandre Damas Murata.

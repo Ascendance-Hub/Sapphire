@@ -2,6 +2,8 @@
 
 The Mongoose adapter converts a Sapphire IR (`SapphireSchemaNode`) into a `mongoose.Schema` (when the root node is an object) or a `SchemaTypeDefinition` (anywhere else). It is the closest match for Sapphire's modeling style — Mongoose has a similar "schema-as-definition" surface — and is the adapter where the most modifiers survive at the DB level.
 
+> **Unofficial.** A community adapter — not affiliated with, sponsored, or endorsed by the Mongoose project or Automattic, Inc.
+
 ## Install
 
 ```bash

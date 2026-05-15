@@ -2,6 +2,8 @@
 
 The Drizzle adapter converts a Sapphire IR (`SapphireSchemaNode`) into a Drizzle table definition — `pgTable`, `mysqlTable`, or `sqliteTable`, depending on the chosen dialect — ready to pass into `drizzle(connection, { schema: { ... } })`. Three dialects are first-class; everything else (D1, Neon HTTP, Bun's `bun:sqlite`) layers on top because Drizzle's own driver split is orthogonal to the column-builder shape.
 
+> **Unofficial.** A community adapter — not affiliated with, sponsored, or endorsed by the Drizzle Team.
+
 ## Install
 
 ```bash
