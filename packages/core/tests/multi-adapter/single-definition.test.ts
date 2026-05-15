@@ -10,6 +10,7 @@ import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
 import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
+import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
 import { toDrizzleSchema } from '@ascendance-hub/sapphire-drizzle'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 import { getTableConfig } from 'drizzle-orm/pg-core'
@@ -83,6 +84,18 @@ describe('S1 — single definition, every adapter', () => {
     expect(body.properties.email.type).toBe('string')
     expect(body.required.sort()).toEqual(['age', 'email', 'name'])
 
+    // --- Mongo (native driver $jsonSchema validator) ---
+    const validator = toMongoValidator(ir).$jsonSchema as {
+      bsonType: string
+      properties: Record<string, { bsonType: string }>
+      required: string[]
+    }
+    expect(validator.bsonType).toBe('object')
+    expect(validator.properties.name.bsonType).toBe('string')
+    expect(validator.properties.age.bsonType).toBe('int')
+    expect(validator.properties.email.bsonType).toBe('string')
+    expect(validator.required.sort()).toEqual(['age', 'email', 'name'])
+
     // the IR did not mutate while being consumed three times
     expect(JSON.stringify(User.toSchema())).toBe(JSON.stringify(ir))
   })
@@ -113,6 +126,10 @@ describe('S1 — single definition, every adapter', () => {
     // JSON Schema: required array (named object → body under $defs)
     const json = toJsonSchema(ir) as { $defs: Record<string, { required?: string[] }> }
     expect(json.$defs.Profile.required).toEqual(['handle'])
+
+    // Mongo validator: required array (named object is inlined — no $ref)
+    const validator = toMongoValidator(ir).$jsonSchema as { required?: string[] }
+    expect(validator.required).toEqual(['handle'])
   })
 
   it('coerce/transform modifiers reach the Mongo adapter (parse-side is core)', () => {

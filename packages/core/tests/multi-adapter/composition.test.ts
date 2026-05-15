@@ -11,8 +11,9 @@
  */
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
-import { Sapphire } from '@ascendance-hub/sapphire-core'
+import { Sapphire, type SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
+import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
 import { toDrizzleSchema } from '@ascendance-hub/sapphire-drizzle'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 
@@ -24,6 +25,11 @@ function mongoKeys(schema: mongoose.Schema): string[] {
 
 function drizzleColumns(table: unknown): string[] {
   return Object.keys(table as Record<string, unknown>)
+}
+
+function validatorKeys(ir: SapphireSchemaNode): string[] {
+  const schema = toMongoValidator(ir).$jsonSchema as { properties?: Record<string, unknown> }
+  return Object.keys(schema.properties ?? {})
 }
 
 describe('S2 — composition across adapters', () => {
@@ -55,6 +61,11 @@ describe('S2 — composition across adapters', () => {
       const json = toJsonSchema(ir) as { properties: Record<string, unknown> }
       expect(Object.keys(json.properties)).toEqual(['name'])
     })
+
+    it('Mongo validator: picked schema validator has only the picked properties', () => {
+      const ir = User.pick(['name', 'age']).toSchema()
+      expect(validatorKeys(ir).sort()).toEqual(['age', 'name'])
+    })
   })
 
   describe('omit', () => {
@@ -74,6 +85,11 @@ describe('S2 — composition across adapters', () => {
       const ir = User.omit(['secret']).toSchema()
       const json = toJsonSchema(ir) as { properties: Record<string, unknown> }
       expect(Object.keys(json.properties).sort()).toEqual(['age', 'name'])
+    })
+
+    it('Mongo validator: omitted property is gone from the validator', () => {
+      const ir = User.omit(['secret']).toSchema()
+      expect(validatorKeys(ir)).not.toContain('secret')
     })
   })
 
@@ -101,6 +117,12 @@ describe('S2 — composition across adapters', () => {
       const ir = User.partial().toSchema()
       const json = toJsonSchema(ir) as { required?: string[] }
       expect(json.required).toBeUndefined()
+    })
+
+    it('Mongo validator: no required array after partial()', () => {
+      const ir = User.partial().toSchema()
+      const schema = toMongoValidator(ir).$jsonSchema as { required?: string[] }
+      expect(schema.required).toBeUndefined()
     })
   })
 
