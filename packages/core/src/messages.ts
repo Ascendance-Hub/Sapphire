@@ -94,6 +94,10 @@ export const defaultMessages: FieldMessages = {
     const key = (ctx as { key?: string | number }).key
     return `Unknown key: ${String(key)}`
   },
+  ref_target_missing: (ctx) => {
+    const target = (ctx as unknown as { target?: string }).target
+    return `Reference target "${String(target)}" is not registered on this Sapphire instance`
+  },
 }
 
 export function fallbackMessage(code: IssueCode): string {

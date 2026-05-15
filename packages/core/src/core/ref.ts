@@ -156,6 +156,23 @@ export class RefField<TOut = unknown, TIn = unknown> implements Field<TOut, TIn>
       }
       return { value, issues: [] }
     }
+    // season-three B1: validate the named target exists on the Sapphire
+    // instance. Only checked when the registry is reachable through ctx —
+    // a standalone field constructed without an instance skips this (no
+    // registry to consult, behaviour stays open).
+    if (ctx.namedSchemas && !ctx.namedSchemas.has(this.targetName)) {
+      return {
+        value,
+        issues: [
+          buildIssue(
+            'ref_target_missing',
+            ctx,
+            { target: this.targetName },
+            this.config.fieldMessage,
+          ),
+        ],
+      }
+    }
     return { value, issues: [] }
   }
 

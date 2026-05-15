@@ -14,6 +14,7 @@ export function runSafeParse<T>(
     stripUnknown: opts?.stripUnknown ?? instance?.stripUnknown ?? false,
     perCall: opts?.messages,
     instance: instance?.messages,
+    namedSchemas: instance?.namedSchemas,
   }
   const result = field._parse(value, ctx)
   if (result.issues.length > 0) {

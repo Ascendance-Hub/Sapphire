@@ -26,4 +26,5 @@ export type IssueCode =
   | 'tuple_length'
   | 'union_no_match'
   | 'unknown_key'
+  | 'ref_target_missing'
   | (string & {})

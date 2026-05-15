@@ -143,13 +143,37 @@ Any other key Mongoose accepts on a `SchemaTypeDefinition` is honored verbatim �
 
 The second argument to `toMongoSchema(node, options?)`:
 
-| Option     | Default | Effect                                                                                                                              |
-| ---------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `subdocId` | `false` | Whether nested object Schemas auto-add `_id`. Default deviates from Mongoose's `true` — most apps don't need `_id` on subdocuments. |
+| Option     | Default  | Effect                                                                                                                              |
+| ---------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `subdocId` | `false`  | Whether nested object Schemas auto-add `_id`. Default deviates from Mongoose's `true` — most apps don't need `_id` on subdocuments. |
+| `rootId`   | `'auto'` | Root document `_id` strategy. `'auto'` = Mongoose default (auto ObjectId unless you declare `_id`). `'none'` = emit `{ _id: false }`. |
 
 ```ts
 toMongoSchema(node, { subdocId: true })
 ```
+
+### Custom root `_id`
+
+To use a custom identity (string UUID, number, etc.) instead of the
+auto-generated `ObjectId`, declare a field literally named `_id` in the
+object. Mongoose honors a declared `_id` path and skips the auto ObjectId:
+
+```ts
+const User = a.object({
+  _id: a.string(), // custom string id — you supply it on every insert
+  name: a.string(),
+})
+toMongoSchema(User.toSchema()) // → Schema with a String _id, no auto ObjectId
+```
+
+To strip the root `_id` entirely (rare — capped logs, views):
+
+```ts
+toMongoSchema(User.toSchema(), { rootId: 'none' }) // → Schema with { _id: false }
+```
+
+`rootId: 'none'` is ignored when the schema already declares its own `_id`
+field — a field you explicitly asked for is never stripped.
 
 ## Limitations
 
