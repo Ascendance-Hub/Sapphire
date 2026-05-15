@@ -37,7 +37,7 @@ describe('Object operations — type-level', () => {
 
     it('omitting all keys yields an empty object type', () => {
       const Empty = User.omit(['name', 'age', 'email'] as const)
-      expectTypeOf<Infer<typeof Empty>>().toEqualTypeOf<{}>()
+      expectTypeOf<Infer<typeof Empty>>().toEqualTypeOf<Record<string, never>>()
     })
   })
 
