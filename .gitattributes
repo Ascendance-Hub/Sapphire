@@ -1,0 +1,3 @@
+# Normalize line endings: the repo stores LF and every checkout (including
+# Windows) gets LF, so prettier/eslint don't report false positives.
+* text=auto eol=lf

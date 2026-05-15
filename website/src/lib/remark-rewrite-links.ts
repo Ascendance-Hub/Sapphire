@@ -44,10 +44,7 @@ export function rewriteDocLink(url: string, fromSlug: string, base: string): str
  * link resolves relative to its own document.
  */
 export function remarkRewriteLinks(options: { base: string }) {
-  return function transformer(
-    tree: unknown,
-    file: { path?: string },
-  ): void {
+  return function transformer(tree: unknown, file: { path?: string }): void {
     let fromSlug = ''
     if (typeof file.path === 'string') {
       const m = file.path.replace(/\\/g, '/').match(/\/docs\/(.+)\.md$/i)
