@@ -2,6 +2,8 @@
 
 Mongoose adapter for [Sapphire](https://github.com/Ascendance-Hub/Sapphire). Converts a Sapphire IR (`SapphireSchemaNode`) into a `mongoose.Schema` (top-level) or a `SchemaTypeDefinition` (nested).
 
+> **Unofficial.** A community adapter — not affiliated with, sponsored, or endorsed by the Mongoose project or Automattic, Inc.
+
 > Using the native MongoDB driver instead of Mongoose? See [`@ascendance-hub/sapphire-mongo`](https://www.npmjs.com/package/@ascendance-hub/sapphire-mongo), which emits `$jsonSchema` collection validators.
 
 ## Install

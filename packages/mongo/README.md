@@ -2,6 +2,8 @@
 
 Native MongoDB driver adapter for [Sapphire](https://github.com/Ascendance-Hub/Sapphire). Converts a Sapphire IR (`SapphireSchemaNode`) into a MongoDB **collection validator** — a `{ $jsonSchema: ... }` document you hand to the driver so the database itself rejects malformed inserts.
 
+> **Unofficial.** A community adapter — not affiliated with, sponsored, or endorsed by MongoDB, Inc.
+
 > Using Mongoose? See [`@ascendance-hub/sapphire-mongoose`](https://www.npmjs.com/package/@ascendance-hub/sapphire-mongoose) instead.
 
 ## Install
