@@ -1,210 +1,179 @@
 # Mongo adapter — `@ascendance-hub/sapphire-mongo`
 
-The Mongo adapter converts a Sapphire IR (`SapphireSchemaNode`) into a `mongoose.Schema` (when the root node is an object) or a `SchemaTypeDefinition` (anywhere else). It is the closest match for Sapphire's modeling style — Mongoose has a similar "schema-as-definition" surface — and is the adapter where the most modifiers survive at the DB level.
+The Mongo adapter converts a Sapphire IR (`SapphireSchemaNode`) into a MongoDB
+**collection validator** — a `{ $jsonSchema: ... }` document you hand to the
+native driver when creating or modifying a collection. The database itself then
+rejects documents that do not match.
+
+This is the adapter for users on the plain `mongodb` driver — no Mongoose. If
+you use Mongoose, reach for [`@ascendance-hub/sapphire-mongoose`](./mongoose.md)
+instead.
 
 ## Install
 
 ```bash
-npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-mongo mongoose
+npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-mongo
 ```
 
-Both `@ascendance-hub/sapphire-core` and `mongoose` are **peer dependencies**. The package will not pull them in transitively — install them alongside.
+`@ascendance-hub/sapphire-core` is a peer dependency. `mongodb` is an **optional**
+peer dependency — `toMongoValidator` emits a plain object and never imports the
+driver, so you only need `mongodb` installed to actually create the collection.
 
 ## Register the adapter
 
-The adapter is **not auto-registered**. Call `registerAdapter` once in your application entry point — typically the same module that constructs your `Sapphire` instance:
+The adapter is **not auto-registered**. Call `registerAdapter` once in your
+application entry point:
 
 ```ts
 import { Sapphire, registerAdapter } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
 
-registerAdapter('mongo', toMongoSchema)
+registerAdapter('mongo', toMongoValidator)
 
 export const a = new Sapphire({ defaultAdapter: 'mongo' })
 ```
 
-`registerAdapter` is process-global. Calling it twice with the same name throws; calling it from a library is discouraged — leave it to the consuming application.
+`registerAdapter` is process-global. The Mongoose adapter registers under the
+separate name `'mongoose'`, so both can coexist in one process.
 
 ## Quickstart
 
 ```ts
-import mongoose from 'mongoose'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { MongoClient } from 'mongodb'
+import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
 import { a } from './sapphire'
 
-const User = a
-  .object({
-    name: a.string().min(1),
-    email: a.string().email().unique(),
-    age: a.number().int().min(0).optional(),
-  })
-  .name('User')
-  .timestamps()
-  .index(['email'], { unique: true })
+const User = a.object({
+  name: a.string().min(1),
+  email: a.string().email(),
+  age: a.number().int().min(0).optional(),
+})
 
-const UserSchema = User.getSchema('mongo') as mongoose.Schema
-const UserModel = mongoose.model('User', UserSchema)
+const validator = toMongoValidator(User.toSchema())
+// → { $jsonSchema: { bsonType: 'object', required: [...], properties: {...} } }
+
+const client = new MongoClient(process.env.MONGO_URL!)
+await client.connect()
+const db = client.db('app')
+
+await db.createCollection('users', { validator })
+// or, on an existing collection:
+await db.command({ collMod: 'users', validator })
 ```
 
-`field.getSchema('mongo')` is sugar for `toMongoSchema(field.toSchema())` once the adapter is registered — the latter is the explicit form when you want to skip the registry.
+`field.getSchema('mongo')` is sugar for `toMongoValidator(field.toSchema())` once
+the adapter is registered.
 
-## IR → Mongoose mapping
+## IR → `$jsonSchema` mapping
 
-Every Sapphire IR `kind` lands somewhere in Mongoose's `SchemaTypeDefinition`. The table below is exhaustive — what isn't covered here is not part of the adapter's surface.
+`toMongoValidator` walks the IR and emits MongoDB's flavor of JSON Schema —
+`bsonType` instead of `type`, BSON type names, everything inlined (no `$ref`).
 
-| IR `kind`               | Mongoose output                                      | Notes                                                                                                                                                                                                               |
-| ----------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `string`                | `{ type: String, ... }`                              | `minLength`/`maxLength`/`length` → `minlength`/`maxlength`. `regex` → `match`. `format` (`email`/`url`/`uuid`)/`startsWith`/`endsWith` → custom `validate`. `transforms` → `trim`/`lowercase`/`uppercase` directly. |
-| `number`                | `{ type: Number, ... }`                              | `min`/`max` direct. `exclusiveMin`/`exclusiveMax`/`int`/`multipleOf`/`finite`/`safe` → custom `validate`.                                                                                                           |
-| `boolean`               | `{ type: Boolean, ... }`                             | Universal modifiers only.                                                                                                                                                                                           |
-| `date`                  | `{ type: Date, min, max }`                           | `min`/`max` accept `Date` instances.                                                                                                                                                                                |
-| `object` (root)         | `mongoose.Schema`                                    | Top-level — pass directly to `mongoose.model(name, schema)`.                                                                                                                                                        |
-| `object` (nested)       | sub-`Schema` wrapped as `{ type: schema, required }` | Subdocs default to `_id: false`. Pass `{ subdocId: true }` to opt back in.                                                                                                                                          |
-| `array`                 | `{ type: [item], required }`                         | `item` is `buildField` applied recursively.                                                                                                                                                                         |
-| `tuple`                 | `{ type: [Mixed], validate }`                        | Custom validator enforces **length only**. Per-position type-checking lives in core.                                                                                                                                |
-| `union`                 | `{ type: Mixed, required }`                          | No DB-level checks — use `safeParse` for the canonical validation.                                                                                                                                                  |
-| `literal`               | `{ type: <ctor>, enum: [value] }`                    | Constructor inferred: `Number` for numeric, `Boolean` for boolean, otherwise `String`.                                                                                                                              |
-| `enum`                  | `{ type: <ctor>, enum: [...values] }`                | Constructor is `Number` when the first value is numeric, otherwise `String`.                                                                                                                                        |
-| `record` (string-keyed) | `{ type: Map, of: <values>, required }`              | When `keys.kind` is `string`, `enum`, or `literal`.                                                                                                                                                                 |
-| `record` (other)        | `{ type: Mixed, required }`                          | Mongoose `Map` keys are strings under the hood; non-string keys lose typing.                                                                                                                                        |
-| `ref`                   | `{ type: ObjectId, ref: <target>, required }`        | `<target>` is the string passed to the named object's `.name(...)`.                                                                                                                                                 |
+| IR `kind` | `$jsonSchema` output | Notes |
+| --------- | -------------------- | ----- |
+| `string`  | `{ bsonType: 'string' }` | `minLength`/`maxLength`/`length` direct. `regex`/`startsWith`/`endsWith` → `pattern` (multiple → `allOf`). `format: email`/`uuid` → `pattern`. `format: url` is dropped (see Limitations). |
+| `number`  | `{ bsonType: 'number' }` or `{ bsonType: 'int' }` | `.int()` → `bsonType: 'int'`; otherwise `'number'` (matches int/long/double/decimal). `min`/`max`/`exclusiveMin`/`exclusiveMax`/`multipleOf` → `minimum`/`maximum`/`exclusiveMinimum`/`exclusiveMaximum`/`multipleOf`. |
+| `boolean` | `{ bsonType: 'bool' }` | |
+| `date`    | `{ bsonType: 'date' }` | |
+| `object`  | `{ bsonType: 'object', properties, required }` | `required` lists every required key; omitted when empty. Named objects (`.name(...)`) are inlined — there is no `$ref`. |
+| `array`   | `{ bsonType: 'array', items }` | `minItems`/`maxItems`/`length` direct. |
+| `tuple`   | `{ bsonType: 'array', items: [...], additionalItems: false }` | `items` is an array of per-position schemas; `minItems`/`maxItems` pinned to the tuple length. |
+| `union`   | `{ anyOf: [...] }` | Requires MongoDB 5.0+ (when `$jsonSchema` gained `anyOf`). |
+| `literal` | `{ enum: [value] }` | |
+| `enum`    | `{ enum: [...values] }` | |
+| `record`  | `{ bsonType: 'object', additionalProperties: <values schema> }` | |
+| `ref`     | `{ bsonType: 'objectId' }` | A reference is stored as an ObjectId — server-side validators are self-contained, so there is no `$ref`. |
 
-### Universal modifiers
+### Nullable
 
-These apply to **every** node kind unless noted:
+`a.string().nullable()` lifts the type into a `bsonType` array —
+`{ bsonType: ['string', 'null'] }`. A nullable `union`/`literal`/`enum` (which
+has no plain `bsonType`) wraps in `anyOf` with an explicit `{ bsonType: 'null' }`
+branch instead.
 
-| Modifier      | Effect on Mongoose definition                                                                                |
-| ------------- | ------------------------------------------------------------------------------------------------------------ |
-| `required`    | Always set on the definition (Sapphire owns it — `required: true/false`).                                    |
-| `unique`      | `def.unique = true`.                                                                                         |
-| `index`       | `def.index = true`. If passed `{ unique: true }`, also sets `def.unique = true`.                             |
-| `default(v)`  | `def.default = v`.                                                                                           |
-| `describe(s)` | `def.description = s` (introspection only — Mongoose ignores it at validation time).                         |
-| `enum([...])` | `def.enum = [...]` (clones the array).                                                                       |
-| `nullable()`  | **No-op.** Mongoose accepts `null` on non-required fields implicitly; there is no dedicated `nullable` flag. |
+### `description`
 
-> [!WARNING]
-> **`coerce()` is silently dropped.** Mongoose has its own cast layer that handles coercion universally (e.g. `"42"` → `42` for `Number` fields). If you need Sapphire-level coercion to run, pipe the input through `safeParse` before assigning to a Mongoose document.
+`describe(text)` becomes the `$jsonSchema` `description` keyword.
 
-### Schema-level options
+## `_id`
 
-The root-level `ObjectField` carries schema-wide flags that translate to Mongoose `SchemaOptions`:
+There is no special handling — an `_id` is just another property:
 
-| Sapphire call                                                | Mongoose effect                                                                                                           |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `.name('User')`                                              | Used by `mongoose.model(name, schema)` — the adapter does not call `mongoose.model` itself, it returns the bare `Schema`. |
-| `.timestamps()`                                              | `new Schema(def, { timestamps: true })` — Mongoose then auto-fills `createdAt`/`updatedAt`.                               |
-| `.index(['email', 'name'], { unique: true })`                | Each call accumulates: `schema.index({ email: 1, name: 1 }, { unique: true })`. Multiple invocations stack.               |
-| `.adapter('mongo', { collection: 'people' })` (object-level) | `new Schema(def, { collection: 'people' })`.                                                                              |
-
-## Refs
-
-Sapphire refs resolve **lazily by name**:
-
-```ts
-const Post = a
-  .object({
-    title: a.string(),
-    author: a.ref('User'),
-  })
-  .name('Post')
-```
-
-Emits `{ type: ObjectId, ref: 'User', required: true }`. The string lands directly in Mongoose's `ref` slot — Mongoose's `populate('author')` then handles the lookup at query time. The adapter does **not** verify that a model named `'User'` exists; that resolution happens when Mongoose runs the query. If you want a typed ref, use `a.ref(SchemaObj)` instead of the string form — the IR is identical, but the call site is typesafe against your `name(...)` registry.
-
-See [refs-and-relations.md](../concepts/refs-and-relations.md) for the full ref lifecycle.
+- **Declare an `_id` field** and it emits like any other property (and lands in
+  `required` if required): `a.object({ _id: a.string(), ... })`.
+- **Declare no `_id`** and the validator says nothing about it — MongoDB injects
+  an `ObjectId` `_id` server-side as usual.
+- An `_id` of `a.ref('User')` emits `{ bsonType: 'objectId' }`.
 
 ## `.adapter('mongo', opts)` escape hatch
 
-Values from `.adapter('mongo', { ... })` are read from `node.meta.mongo` and merged into the field's Mongoose definition **last** (after Sapphire-derived keys). They win on conflicts, with one exception — the blacklist:
+Values from `.adapter('mongo', { ... })` are read from `node.meta.mongo` and
+merged into the emitted node, with a blacklist of keys the adapter computes
+itself:
 
 ```ts
-const META_BLACKLIST = new Set(['type', 'required'])
+const META_BLACKLIST = new Set(['bsonType', 'type', 'required', 'enum', 'properties', 'items'])
 ```
 
-`type` and `required` are always Sapphire-controlled; trying to override them via the escape hatch is a no-op.
+> [!WARNING]
+> **MongoDB rejects unknown `$jsonSchema` keywords.** `db.createCollection` throws
+> if the validator contains a keyword it does not recognize. Only pass keys that
+> are valid `$jsonSchema` keywords (`title`, `minProperties`, `maxProperties`,
+> `patternProperties`, …) through the escape hatch.
 
-Common keys:
+## `MongoValidatorOptions`
 
-| Key                              | Effect                                                                                    |
-| -------------------------------- | ----------------------------------------------------------------------------------------- |
-| `sparse`                         | Mongoose-native `sparse: true` (sparse index).                                            |
-| `collation`                      | Mongoose-native `collation: { locale: ... }`.                                             |
-| `validate`                       | Adds a custom Mongoose validator. Merged with Sapphire-derived ones if you pass an array. |
-| `select`                         | `select: false` to omit the field by default in query results.                            |
-| `immutable`                      | Lock the field after creation.                                                            |
-| `alias`                          | Mongoose alias path.                                                                      |
-| `description`                    | Mongoose `SchemaType.options.description` — surfaces in introspection.                    |
-| `collection` (object-level only) | `Schema.options.collection`.                                                              |
+The second argument to `toMongoValidator(node, options?)`:
 
-Any other key Mongoose accepts on a `SchemaTypeDefinition` is honored verbatim — the adapter simply copies the entries onto the definition object.
-
-## `MongoAdapterOptions`
-
-The second argument to `toMongoSchema(node, options?)`:
-
-| Option     | Default  | Effect                                                                                                                                |
-| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `subdocId` | `false`  | Whether nested object Schemas auto-add `_id`. Default deviates from Mongoose's `true` — most apps don't need `_id` on subdocuments.   |
-| `rootId`   | `'auto'` | Root document `_id` strategy. `'auto'` = Mongoose default (auto ObjectId unless you declare `_id`). `'none'` = emit `{ _id: false }`. |
+| Option | Default | Effect |
+| ------ | ------- | ------ |
+| `additionalProperties` | _(omitted)_ | When set, emits `additionalProperties` on every object schema. Set `false` for a strict, closed-shape validator. |
 
 ```ts
-toMongoSchema(node, { subdocId: true })
+toMongoValidator(User.toSchema(), { additionalProperties: false })
 ```
 
-### Custom root `_id`
+## Typed documents — `MongoDoc`
 
-To use a custom identity (string UUID, number, etc.) instead of the
-auto-generated `ObjectId`, declare a field literally named `_id` in the
-object. Mongoose honors a declared `_id` path and skips the auto ObjectId:
+`MongoDoc<F>` is a type-only helper for the native driver's
+`Collection<TSchema>`:
 
 ```ts
-const User = a.object({
-  _id: a.string(), // custom string id — you supply it on every insert
-  name: a.string(),
-})
-toMongoSchema(User.toSchema()) // → Schema with a String _id, no auto ObjectId
+import type { Collection } from 'mongodb'
+import type { MongoDoc } from '@ascendance-hub/sapphire-mongo'
+
+const users: Collection<MongoDoc<typeof User>> = db.collection('users')
 ```
 
-To strip the root `_id` entirely (rare — capped logs, views):
-
-```ts
-toMongoSchema(User.toSchema(), { rootId: 'none' }) // → Schema with { _id: false }
-```
-
-`rootId: 'none'` is ignored when the schema already declares its own `_id`
-field — a field you explicitly asked for is never stripped.
+It is a thin alias over core's `Infer` — the document shape is a purely
+type-level concern, so there is no runtime helper.
 
 ## Limitations
 
 > [!WARNING]
-> **Tuples enforce length only at the DB level.** Per-position type checking lives in `safeParse` — Mongoose receives `[Mixed]` plus a length validator. If you need per-position checks before persistence, run `safeParse` on the value first.
+> **A collection validator only validates.** It does not transform input or fill
+> defaults. `transforms` (`trim`/`toLowerCase`/`toUpperCase`), `default(v)`,
+> `coerce()`, and the numeric `finite`/`safe` checks have no `$jsonSchema`
+> equivalent and are **not** emitted. Run them client-side via `parse()` /
+> `safeParse()` before inserting.
 
 > [!WARNING]
-> **Unions degrade to `Mixed`.** No Mongoose-level validation. Pair with `safeParse` to get the discriminated-union check.
+> **`format('url')` is not enforced server-side.** There is no exported URL
+> regex; email and uuid become `pattern`, but `url` is dropped from the
+> validator. Validate URLs client-side via `parse()`.
 
 > [!WARNING]
-> **`record` with non-string keys falls back to `Mixed`.** Mongoose's `Map` keys are always strings — `a.record(a.number(), ...)` loses key typing in the DB. The `keys.kind ∈ { string, enum, literal }` path uses `Map` correctly.
+> **`unique`/`index` are not part of the validator.** A `$jsonSchema` validator
+> cannot declare indexes — create them with `db.collection.createIndex(...)`.
 
 > [!WARNING]
-> **`nullable()` is a no-op.** Mongoose has no dedicated nullable flag; non-required fields accept `null` implicitly. If you need strict `null` rejection, validate via `safeParse`.
-
-> [!WARNING]
-> **`nullable() + required` differs across Sapphire and Mongoose.** Sapphire treats `null` as a valid value when `nullable: true` is set. Mongoose, by default, treats `null` as missing for the `required` check. Result: a field declared as `a.string().nullable()` (with the default `required: true`) will pass `Sapphire.safeParse(null)` but Mongoose `.validate()` will reject `null` on the same path. If you want Mongoose to also accept `null` without filling, pass an explicit `default: null` via the escape hatch (`.adapter('mongo', { default: null })`), or drop `nullable()` and validate elsewhere.
-
-> [!WARNING]
-> **`coerce()` is dropped.** Use `safeParse` before handing values to Mongoose if you want Sapphire's coercion semantics.
-
-> [!WARNING]
-> **Subdocument `_id: false` is the default.** Mongoose's own default is `true`. Set `subdocId: true` on `toMongoSchema` to opt back in.
-
-> [!WARNING]
-> **No discriminator / plugin / hook support.** Sapphire emits a bare `Schema`. Mongoose's discriminators, plugins, and middleware are deferred to V1_FUTURE — wire them on the returned `Schema` yourself if you need them now.
+> **`union` needs MongoDB 5.0+.** `anyOf` in `$jsonSchema` is unavailable on
+> MongoDB 4.x.
 
 ## Related
 
+- [Mongoose adapter](./mongoose.md) — the Mongoose-based sibling package.
 - [Fields and modifiers](../concepts/fields-and-modifiers.md) — what each IR kind models.
 - [Refs and relations](../concepts/refs-and-relations.md) — ref lifecycle across adapters.
 - [Escape hatch](../concepts/escape-hatch.md) — universal `.adapter(name, opts)` contract.
 - [Recipes → One schema, many adapters](../recipes/one-schema-many-adapters.md).
-- [Recipes → Custom error messages](../recipes/custom-error-messages.md).
