@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
 import { toMongoSchema } from '../src'
+import { uniqueModelName } from './_setup'
 
 describe('Integração com Mongoose', () => {
   const a = new Sapphire({ defaultAdapter: 'mongo' })
@@ -47,7 +48,7 @@ describe('Integração com Mongoose', () => {
       name: a.string(),
     })
     const schema = toMongoSchema(userField.toSchema()) as mongoose.Schema
-    const Model = mongoose.model('TestUser_' + Date.now(), schema)
+    const Model = mongoose.model(uniqueModelName('TestUser'), schema)
     const doc = new Model({})
     const err = doc.validateSync()
     expect(err).toBeDefined()

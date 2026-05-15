@@ -90,4 +90,42 @@ describe('pg indexes & uniques', () => {
     const cfg = getTableConfig(t)
     expect(cfg.indexes).toHaveLength(0)
   })
+
+  // season-three: field-level .index() was silently dropped by every Drizzle
+  // dialect before this fix.
+  it('field-level .index() → a single-column non-unique index', () => {
+    const t = emit(a.object({ email: a.string().index() }).name('FieldIdx'))
+    const cfg = getTableConfig(t)
+    expect(cfg.indexes).toHaveLength(1)
+    const idx = cfg.indexes[0]!
+    expect(idx.config.name).toBe('users_email_idx')
+    expect(idx.config.unique).toBe(false)
+    expect(idx.config.columns.map((c: any) => c.name)).toEqual(['email'])
+  })
+
+  it('field-level .index({ unique: true }) → a single-column unique index', () => {
+    const t = emit(a.object({ email: a.string().index({ unique: true }) }).name('FieldUniqIdx'))
+    const cfg = getTableConfig(t)
+    expect(cfg.indexes).toHaveLength(1)
+    const idx = cfg.indexes[0]!
+    expect(idx.config.name).toBe('users_email_idx')
+    expect(idx.config.unique).toBe(true)
+  })
+
+  it('field-level and composite indexes coexist', () => {
+    const t = emit(
+      a
+        .object({
+          firstName: a.string(),
+          lastName: a.string(),
+          email: a.string().index({ unique: true }),
+        })
+        .name('MixedIdx')
+        .index(['firstName', 'lastName']),
+    )
+    const cfg = getTableConfig(t)
+    expect(cfg.indexes).toHaveLength(2)
+    const names = cfg.indexes.map((i: any) => i.config.name).sort()
+    expect(names).toEqual(['users_email_idx', 'users_idx_0'])
+  })
 })

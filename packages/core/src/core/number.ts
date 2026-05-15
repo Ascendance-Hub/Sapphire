@@ -13,6 +13,18 @@ import type {
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 
+/**
+ * Guards the bound argument of `.min()` / `.max()` / `.gt()` / `.gte()` /
+ * `.lt()` / `.lte()`. A non-finite bound (`NaN`, `Infinity`) is always a caller
+ * bug — throw at build time rather than emit a schema that can never be
+ * satisfied or never fails.
+ */
+function assertFinite(value: number, method: string): void {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new Error(`${method} must be a finite number`)
+  }
+}
+
 type NumberRuleMessages = {
   min?: MessageValue
   max?: MessageValue
@@ -160,6 +172,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   min(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    assertFinite(value, 'min')
     return this.clone({
       min: value,
       minCode: 'min',
@@ -171,6 +184,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   max(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    assertFinite(value, 'max')
     return this.clone({
       max: value,
       maxCode: 'max',
@@ -182,6 +196,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   gt(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    assertFinite(value, 'gt')
     return this.clone({
       exclusiveMin: value,
       exclusiveMinCode: 'gt',
@@ -193,6 +208,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   gte(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    assertFinite(value, 'gte')
     return this.clone({
       min: value,
       minCode: 'gte',
@@ -204,6 +220,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   lt(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    assertFinite(value, 'lt')
     return this.clone({
       exclusiveMax: value,
       exclusiveMaxCode: 'lt',
@@ -215,6 +232,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   lte(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    assertFinite(value, 'lte')
     return this.clone({
       max: value,
       maxCode: 'lte',

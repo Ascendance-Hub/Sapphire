@@ -32,10 +32,35 @@ class SapphireValidationError extends Error {
   readonly name: 'SapphireValidationError'
   readonly message: string // 'Validation failed (N issue[s])'
   readonly issues: ValidationIssue[]
+
+  flatten(): { formErrors: string[]; fieldErrors: Record<string, string[]> }
+  format(): FormattedError // recursive tree, `_errors` at every node
+  toJSON(): { name: string; message: string; issues: ValidationIssue[] }
 }
 ```
 
-It's a normal `Error` subclass — `instanceof SapphireValidationError` works, and `JSON.stringify({ issues: err.issues })` survives the wire (assuming none of your message values are functions; see pitfalls).
+It's a normal `Error` subclass — `instanceof SapphireValidationError` works, and `JSON.stringify(err)` survives the wire (it routes through `toJSON()`; assuming none of your message values are functions, see pitfalls).
+
+### Surfacing issues — `flatten()` / `format()`
+
+`issues` is the raw list. For DTO / form work the two helpers below save you the pivot:
+
+- **`flatten()`** — buckets messages by the **top-level** field name. Issues with an empty path go to `formErrors`; everything else lands in `fieldErrors[firstPathSegment]`. Ideal for flat forms.
+
+  ```ts
+  const r = UserSchema.safeParse(input)
+  if (!r.success) {
+    const { fieldErrors, formErrors } = r.error.flatten()
+    // fieldErrors: { email: ['Invalid email'], age: ['Must be an integer'] }
+  }
+  ```
+
+- **`format()`** — builds a tree mirroring the input shape, with an `_errors: string[]` array at every node. Ideal for nested DTOs where a flat key isn't enough.
+
+  ```ts
+  const tree = r.error.format()
+  // tree.address.zip._errors → ['Must be exactly 5 characters']
+  ```
 
 ## `ValidationIssue`
 
@@ -55,29 +80,30 @@ interface ValidationIssue {
 
 ## `IssueCode` — built-in codes
 
-| Code                                                    | Where it fires                                                                 |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `required`                                              | Required field is `undefined` (or `null` when not nullable)                    |
-| `invalid_type`                                          | Wrong runtime type (e.g. `null` for a string, array for object)                |
-| `min_length`                                            | String shorter than `.min(n)`                                                  |
-| `max_length`                                            | String longer than `.max(n)`                                                   |
-| `length`                                                | String length not equal to `.length(n)`                                        |
-| `regex`                                                 | `.regex(...)` didn't match                                                     |
-| `format`                                                | `.email()` / `.url()` / `.uuid()` didn't match                                 |
-| `starts_with`                                           | `.startsWith(...)` failed                                                      |
-| `ends_with`                                             | `.endsWith(...)` failed                                                        |
-| `min` / `max`                                           | Number below `.min(n)` / above `.max(n)`                                       |
-| `gt` / `gte` / `lt` / `lte`                             | Numeric strict / inclusive bound failed                                        |
-| `int`                                                   | `.int()` got a non-integer                                                     |
-| `multiple_of`                                           | `.multipleOf(n)` failed                                                        |
-| `finite`                                                | `.finite()` got `±Infinity` (NaN is caught earlier by `invalid_type`)          |
-| `safe`                                                  | `.safe()` got an unsafe integer                                                |
-| `min_items` / `max_items` / `items_length` / `nonempty` | Array constraints                                                              |
-| `enum`                                                  | Value not in `enum(...)` set                                                   |
-| `literal`                                               | Literal mismatch                                                               |
-| `tuple_length`                                          | Tuple's array length didn't match its shape                                    |
-| `union_no_match`                                        | No `union(...)` branch accepted the value                                      |
-| `unknown_key`                                           | Object received a key not declared in the schema (and `stripUnknown` is false) |
+| Code                                       | Where it fires                                                                 |
+| ------------------------------------------ | ------------------------------------------------------------------------------ |
+| `required`                                 | Required field is `undefined` (or `null` when not nullable)                    |
+| `invalid_type`                             | Wrong runtime type (e.g. `null` for a string, array for object)                |
+| `min_length`                               | String shorter than `.min(n)`                                                  |
+| `max_length`                               | String longer than `.max(n)`                                                   |
+| `length`                                   | String length not equal to `.length(n)`                                        |
+| `regex`                                    | `.regex(...)` didn't match                                                     |
+| `format`                                   | `.email()` / `.url()` / `.uuid()` didn't match                                 |
+| `starts_with`                              | `.startsWith(...)` failed                                                      |
+| `ends_with`                                | `.endsWith(...)` failed                                                        |
+| `min` / `max`                              | Number below `.min(n)` / above `.max(n)`                                       |
+| `gt` / `gte` / `lt` / `lte`                | Numeric strict / inclusive bound failed                                        |
+| `int`                                      | `.int()` got a non-integer                                                     |
+| `multiple_of`                              | `.multipleOf(n)` failed                                                        |
+| `finite`                                   | `.finite()` got `±Infinity` (NaN is caught earlier by `invalid_type`)          |
+| `safe`                                     | `.safe()` got an unsafe integer                                                |
+| `min_items` / `max_items` / `items_length` | Array constraints (`.nonempty()` is sugar for `.min(1)` → `min_items`)         |
+| `enum`                                     | Value not in `enum(...)` set                                                   |
+| `literal`                                  | Literal mismatch                                                               |
+| `tuple_length`                             | Tuple's array length didn't match its shape                                    |
+| `union_no_match`                           | No `union(...)` branch accepted the value                                      |
+| `unknown_key`                              | Object received a key not declared in the schema (and `stripUnknown` is false) |
+| `ref_target_missing`                       | `a.ref(name)` target not registered on the Sapphire instance                   |
 
 Third-party adapters and future refine APIs can attach their own codes; `IssueCode` is `... | (string & {})` so custom codes type-check while built-ins still autocomplete.
 
@@ -137,6 +163,8 @@ const result = user.safeParse({ name: '', age: -1 }, { abortEarly: true })
 ```
 
 `abortEarly: true` bails on the first rule failure both **between** fields (object key, array item, tuple slot, record entry) and **within** a single leaf field (`string`/`number`/`date` rule chain). So `a.string().min(10).regex(/^x/)` against `'a'` emits one issue when abortEarly is on, both when it's off.
+
+The bail is uniform across composite fields: an array's length/`minItems`/`maxItems` checks, a tuple's length check, and an object's per-key checks all stop at the **first** issue when `abortEarly` is on. An array that violates both `.length(4)` and `.min(3)` reports just one issue under `abortEarly`, never starting per-item validation.
 
 ### Why the default is to accumulate
 

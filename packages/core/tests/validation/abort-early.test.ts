@@ -89,4 +89,63 @@ describe('Validation — abortEarly', () => {
       if (!r.success) expect(r.error.issues.length).toBe(2)
     })
   })
+
+  // season-three B3 + I1: composite fields bail uniformly. After a length-style
+  // preflight block, abortEarly stops before per-item validation runs.
+  describe('B3 — array length checks respect abortEarly', () => {
+    it('abortEarly true → array stops at the first length issue, no item checks', () => {
+      const a = new Sapphire({ abortEarly: true })
+      // [] violates length(4) and min(3); items would also fail if reached.
+      const f = a.array(a.string()).min(3).max(5).length(4)
+      const r = f.safeParse([])
+      expect(r.success).toBe(false)
+      if (!r.success) expect(r.error.issues.length).toBe(1)
+    })
+
+    it('abortEarly false → array reports every length issue', () => {
+      const a = new Sapphire({ abortEarly: false })
+      const f = a.array(a.string()).min(3).length(4)
+      const r = f.safeParse([])
+      expect(r.success).toBe(false)
+      // items_length + min_items both fire (empty array)
+      if (!r.success) {
+        const codes = r.error.issues.map((i) => i.code)
+        expect(codes).toContain('items_length')
+        expect(codes).toContain('min_items')
+      }
+    })
+
+    it('abortEarly true → bad length short-circuits before bad items are checked', () => {
+      const a = new Sapphire({ abortEarly: true })
+      // length wrong AND items are wrong type — only the length issue surfaces.
+      const f = a.array(a.number()).length(2)
+      const r = f.safeParse(['not', 'a', 'number'])
+      expect(r.success).toBe(false)
+      if (!r.success) {
+        expect(r.error.issues.length).toBe(1)
+        expect(r.error.issues[0].code).toBe('items_length')
+      }
+    })
+  })
+
+  describe('I1 — composite fields bail consistently', () => {
+    it('tuple: abortEarly true stops at tuple_length', () => {
+      const a = new Sapphire({ abortEarly: true })
+      const f = a.tuple([a.string(), a.number()])
+      const r = f.safeParse([1])
+      expect(r.success).toBe(false)
+      if (!r.success) {
+        expect(r.error.issues.length).toBe(1)
+        expect(r.error.issues[0].code).toBe('tuple_length')
+      }
+    })
+
+    it('object: abortEarly true stops at first bad key', () => {
+      const a = new Sapphire({ abortEarly: true })
+      const f = a.object({ a: a.string(), b: a.number() })
+      const r = f.safeParse({ a: 1, b: 'x' })
+      expect(r.success).toBe(false)
+      if (!r.success) expect(r.error.issues.length).toBe(1)
+    })
+  })
 })

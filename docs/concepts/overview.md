@@ -6,8 +6,7 @@ Sapphire is a TypeScript schema definition library. You describe your data shape
 
 ## What it is NOT
 
-- **Not a Zod replacement.** Zod is excellent at validation-first workflows and has a much wider ecosystem. Sapphire's value-add is multi-output emission; if you only need TS validation, Zod is probably the better fit.
-- **Not a validator-first library.** Validation exists (`parse`, `safeParse`), but the design centre is the intermediate representation (IR) and the adapters that consume it.
+- **Not a validator-first library.** Validation exists (`parse`, `safeParse`), but the design centre is the intermediate representation (IR) and the adapters that consume it. If runtime validation is your _only_ need, a dedicated validation library is a lighter fit.
 - **Not an ORM.** Sapphire produces schemas; it does not run queries, manage connections, or own a transaction model.
 - **Not a migrations tool.** Schema diffing and migration generation live in your ORM of choice (Drizzle Kit, Mongoose's runtime, Prisma Migrate).
 
@@ -21,17 +20,11 @@ Three layers, in order:
 
 The flow for any field is always the same: **DSL → IR → adapter → output**. Adapters are pure functions over the IR; you can write your own without modifying Sapphire.
 
-## Comparison
+## Where Sapphire fits
 
-| Capability                 | Sapphire                                  | Zod                               | Yup           | raw Mongoose          |
-| -------------------------- | ----------------------------------------- | --------------------------------- | ------------- | --------------------- |
-| Schema definition (fluent) | yes                                       | yes                               | yes           | partial (object only) |
-| TypeScript type inference  | `Infer<>`                                 | `z.infer<>`                       | `InferType<>` | none — separate type  |
-| Validation (parse)         | yes                                       | yes (primary use case)            | yes           | runtime only          |
-| Multi-output emission      | yes (Mongo, Drizzle, JSON Schema, custom) | no (third-party converters exist) | no            | Mongo only            |
-| Maturity / ecosystem       | v1 (small, new)                           | mature, large ecosystem           | mature        | mature                |
+Sapphire earns its place when the **same** schema needs to land in multiple places — your Mongoose model, your frontend form generator, your MCP tool's `inputSchema`, your Drizzle Postgres table. One definition, kept in lockstep, instead of a hand-maintained copy per target.
 
-Where Sapphire wins: when the **same** schema needs to land in multiple places — your Mongoose model, your frontend form generator, your MCP tool's `inputSchema`, your Drizzle Postgres table. Where Zod wins: pure validation, plugins, community recipes.
+If you are coming from another schema library and want a feature-by-feature mapping, see [Migrating from Zod](../recipes/migrating-from-zod.md).
 
 ## When to use Sapphire
 
@@ -42,9 +35,8 @@ Where Sapphire wins: when the **same** schema needs to land in multiple places �
 
 ## When NOT to use Sapphire
 
-- Zod already covers your use case and you don't need multi-output emission. Use Zod.
-- You only target a single SQL database and want the deepest possible ORM integration. Use Drizzle (or Prisma) directly.
-- You need a small, dependency-free standalone validator (Sapphire's core is small but layered).
+- You only need runtime validation and never emit a database schema — a dedicated validation library is a lighter fit.
+- You target a single SQL database and want the deepest possible ORM integration — use that ORM directly.
 - You need a mature plugin ecosystem today — Sapphire is a v1 library.
 
 ## Links

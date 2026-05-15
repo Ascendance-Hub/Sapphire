@@ -137,7 +137,10 @@ Sapphire v1 has **no general-purpose `.refine()` / `.superRefine()`** equivalent
 - **Branded primitive types.** `z.string().brand<'UserId'>()` is a Zod-specific TS trick for nominal typing. Sapphire has no equivalent — use `as unknown as Brand<'UserId'>` at the use site if you need it.
 - **Discriminated unions with TS-level narrowing.** Zod's `z.discriminatedUnion('kind', [...])` gives you a `kind`-narrowed output type. Sapphire's `a.type().union([...])` is structural — narrow yourself in user code.
 - **Mature plugin and recipe ecosystem.** Zod has years of community packages, codemods, and StackOverflow answers. Sapphire is v1.
-- **`error.flatten()` / `error.format()` helpers.** Zod exposes `flatten()` (field-keyed string arrays for form rendering) and `format()` (nested error tree matching the schema shape). `SapphireValidationError` ships only the raw `error.issues: ValidationIssue[]` array in V1.0 — you can derive both shapes manually, but they aren't built in. Tracking item for V1.1.
+
+### Parity Sapphire has
+
+- **`error.flatten()` / `error.format()` helpers.** Like Zod, `SapphireValidationError` ships `flatten()` (field-keyed string arrays for form rendering), `format()` (nested error tree matching the schema shape), and `toJSON()` (serialization-safe shape). See [`validation.md`](../concepts/validation.md).
 
 ## Recommended migration paths
 
@@ -153,7 +156,7 @@ Sapphire v1 has **no general-purpose `.refine()` / `.superRefine()`** equivalent
 
 ## See also
 
-- [Concepts → Overview](../concepts/overview.md) — comparison table with Zod / Yup / raw Mongoose.
+- [Concepts → Overview](../concepts/overview.md) — the mental model and where Sapphire fits.
 - [Concepts → Composition](../concepts/composition.md) — `pick` / `omit` / `partial` / `extend` / `merge` reference.
 - [Concepts → Validation](../concepts/validation.md) — issue shape, `IssueCode` table, message hierarchy.
 - [Recipes → One schema, many adapters](./one-schema-many-adapters.md) — the multi-output use case in detail.

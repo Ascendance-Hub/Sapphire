@@ -19,6 +19,7 @@ type BooleanConfig = {
   default?: unknown
   description?: string
   meta?: Record<string, unknown>
+  unique?: boolean
   index?: boolean | { unique?: boolean }
   coerce?: boolean
   fieldMessage?: FieldMessages | string
@@ -44,6 +45,7 @@ export class BooleanField<TOut = boolean, TIn = boolean>
       ...(this.config.hasDefault ? { default: this.config.default } : {}),
       ...(this.config.description !== undefined ? { description: this.config.description } : {}),
       ...(this.config.meta ? { meta: this.config.meta } : {}),
+      ...(this.config.unique ? { unique: true } : {}),
       ...(this.config.index !== undefined ? { index: this.config.index } : {}),
       ...(this.config.coerce ? { coerce: true } : {}),
     }
@@ -109,6 +111,15 @@ export class BooleanField<TOut = boolean, TIn = boolean>
       ...this.config,
       meta: { ...(this.config.meta ?? {}), [name]: opts },
     })
+  }
+
+  unique(): this {
+    const Ctor = this.constructor as new (
+      a?: string,
+      b?: InstanceOptions,
+      c?: BooleanConfig,
+    ) => this
+    return new Ctor(this.defaultAdapter, this.instanceOpts, { ...this.config, unique: true })
   }
 
   index(opts?: { unique?: boolean }): this {

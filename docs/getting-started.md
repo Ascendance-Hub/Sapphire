@@ -149,6 +149,6 @@ const usersTable = userSchema.getSchema('drizzle', { dialect: 'pg' })
 
 ## Next steps
 
-- [Concepts → Overview](./concepts/overview.md) — the mental model and where Sapphire fits versus Zod / Yup / raw Mongoose.
+- [Concepts → Overview](./concepts/overview.md) — the mental model and where Sapphire fits.
 - [Concepts → Fields and modifiers](./concepts/fields-and-modifiers.md) — full reference for every field and the modifiers it supports.
 - [Adapters → Mongo](./adapters/mongo.md) — deep-dive on the Mongoose adapter, including escape hatches and IR mapping.

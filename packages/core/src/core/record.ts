@@ -11,6 +11,7 @@ import type {
   ValidationIssue,
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
+import { isPlainObject, describeNonObject } from '../lib/object-guards'
 
 type RecordConfig = {
   required: boolean
@@ -152,14 +153,17 @@ export class RecordField<
       }
       return { value, issues: [] }
     }
-    if (typeof value !== 'object' || Array.isArray(value)) {
+    // Reject arrays and exotic objects (Date/Map/Set/class instances) — without
+    // this guard they slip past `typeof value === 'object'` and parse to `{}`,
+    // the same confusing failure mode `ObjectField` fixed in S10.
+    if (!isPlainObject(value)) {
       return {
         value,
         issues: [
           buildIssue(
             'invalid_type',
             ctx,
-            { expected: 'object', got: Array.isArray(value) ? 'array' : typeof value },
+            { expected: 'object', got: describeNonObject(value) },
             this.config.fieldMessage,
           ),
         ],

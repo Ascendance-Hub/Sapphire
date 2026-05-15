@@ -57,3 +57,18 @@ describe('toJsonSchema — escape hatch via meta["json-schema"]', () => {
     expect(out.$ref).toBe('#/$defs/X')
   })
 })
+
+describe('toJsonSchema — options', () => {
+  it('options.$id is emitted on the root', () => {
+    const node: SapphireSchemaNode = { kind: 'string', required: true }
+    const out = toJsonSchema(node, { $id: 'https://example.com/s.json' }) as { $id?: string }
+    expect(out.$id).toBe('https://example.com/s.json')
+  })
+
+  it('options.defs with an invalid key name throws', () => {
+    const node: SapphireSchemaNode = { kind: 'string', required: true }
+    expect(() =>
+      toJsonSchema(node, { defs: { 'bad key!': { kind: 'string', required: true } } }),
+    ).toThrow(/not allowed in a \$defs key/)
+  })
+})

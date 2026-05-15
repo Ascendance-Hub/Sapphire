@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { toMongoSchema } from '../src'
 import type { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
+import { uniqueModelName } from './_setup'
 
 describe('Mongo adapter — literal', () => {
   it('literal string → { type: String, enum: [value], required }', () => {
@@ -40,7 +41,7 @@ describe('Mongo adapter — literal', () => {
       },
     }
     const schema = toMongoSchema(node) as mongoose.Schema
-    const Model = mongoose.model('TestLiteral_' + Date.now(), schema)
+    const Model = mongoose.model(uniqueModelName('TestLiteral'), schema)
     const ok = new Model({ role: 'admin' })
     expect(ok.validateSync()).toBeUndefined()
     const bad = new Model({ role: 'user' })

@@ -37,6 +37,7 @@ export interface ParseContext {
   stripUnknown: boolean
   perCall: FieldMessages | undefined
   instance: FieldMessages | undefined
+  namedSchemas?: NamedSchemaRegistry
 }
 
 export interface InternalParseResult {

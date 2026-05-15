@@ -157,4 +157,83 @@ describe('docs/concepts/validation.md — snippet pinning', () => {
       expect(result.error.issues[0].message).toBe('[] code=min_length min=3')
     }
   })
+
+  it('error.flatten() — field-keyed string arrays', () => {
+    const a = new Sapphire()
+    const UserSchema = a.object({ email: a.string().email(), age: a.number().int() })
+
+    // --- snippet: flatten ---
+    const r = UserSchema.safeParse({ email: 'bad', age: 1.5 })
+    if (!r.success) {
+      const { fieldErrors } = r.error.flatten()
+      // fieldErrors: { email: [...], age: [...] }
+      void fieldErrors
+    }
+    // --- end snippet ---
+
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      const flat = r.error.flatten()
+      expect(Object.keys(flat.fieldErrors).sort()).toEqual(['age', 'email'])
+      expect(flat.formErrors).toEqual([])
+    }
+  })
+
+  it('error.format() — nested error tree', () => {
+    const a = new Sapphire()
+    const Schema = a.object({ address: a.object({ zip: a.string().length(5) }) })
+
+    // --- snippet: format ---
+    const r = Schema.safeParse({ address: { zip: '1' } })
+    if (!r.success) {
+      const tree = r.error.format()
+      // tree.address.zip._errors → ['...']
+      void tree
+    }
+    // --- end snippet ---
+
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      const tree = r.error.format()
+      const address = tree.address as { zip: { _errors: string[] } }
+      expect(address.zip._errors.length).toBe(1)
+    }
+  })
+
+  it('error.toJSON() — serialization-safe shape', () => {
+    const a = new Sapphire()
+    const r = a.object({ name: a.string().min(3) }).safeParse({ name: 'x' })
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      const json = r.error.toJSON()
+      expect(json.name).toBe('SapphireValidationError')
+      expect(Array.isArray(json.issues)).toBe(true)
+    }
+  })
+
+  it('ref_target_missing — unregistered ref target fails safeParse', () => {
+    const a = new Sapphire()
+
+    // --- snippet: ref target validation ---
+    const Post = a.object({ author: a.ref('User') }) // 'User' never registered
+    const r = Post.safeParse({ author: 'some-id' })
+    // r.success === false; issues[0].code === 'ref_target_missing'
+    // --- end snippet ---
+
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      expect(r.error.issues[0].code).toBe('ref_target_missing')
+    }
+  })
+
+  // SapphireValidationError is imported in the snippet pinning above so the
+  // doc's class-shape reference stays honest.
+  it('SapphireValidationError is the thrown error type', () => {
+    const a = new Sapphire()
+    try {
+      a.string().min(3).parse('x')
+    } catch (e) {
+      expect(e).toBeInstanceOf(SapphireValidationError)
+    }
+  })
 })

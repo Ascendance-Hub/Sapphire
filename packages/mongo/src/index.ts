@@ -12,6 +12,17 @@ export interface MongoAdapterOptions {
    * Set to `true` to opt back in to Mongoose's behavior.
    */
   subdocId?: boolean
+  /**
+   * Controls the root document's `_id`:
+   * - `'auto'` (default): Mongoose's behavior — an `ObjectId` `_id` is
+   *   auto-added UNLESS the schema declares its own `_id` field.
+   * - `'none'`: emit `{ _id: false }` — the root document has no `_id`.
+   *
+   * To use a custom `_id` (e.g. a string UUID), declare a field literally
+   * named `_id` in the object: `a.object({ _id: a.string(), ... })`. Mongoose
+   * honors an explicitly-declared `_id` path and skips the auto ObjectId.
+   */
+  rootId?: 'auto' | 'none'
 }
 
 type ObjectNode = Extract<SapphireSchemaNode, { kind: 'object' }>
@@ -252,6 +263,12 @@ function buildSchema(node: ObjectNode, options: MongoAdapterOptions): mongoose.S
   }
   const schemaOptions: mongoose.SchemaOptions = {}
   if (node.timestamps) schemaOptions.timestamps = true
+  // season-three I2: explicit `_id: false` when the caller asks for no root
+  // identity. When the schema declares its own `_id` field we leave the
+  // option unset — Mongoose honors a declared `_id` path on its own.
+  if (options.rootId === 'none' && !('_id' in definition)) {
+    schemaOptions._id = false
+  }
   const meta = node.meta?.mongo as Record<string, any> | undefined
   if (meta?.collection) schemaOptions.collection = String(meta.collection)
   const schema = new mongoose.Schema(definition, schemaOptions)

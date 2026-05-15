@@ -47,11 +47,16 @@ export default defineConfig({
       // sustained lift. Function coverage trails because the duplicated
       // modifier methods across fields (vide S1 / SPEC_FIX_SMELLS) are
       // exercised on a few fields and just inherited on the rest.
+      // season-three review pass lifted these again. Regression guards kept
+      // just under the measured values (≈99.0 / 93.7 / 99.7 / 99.0). The
+      // exhaustiveness `default: throw` guards are excluded via `/* v8 ignore */`
+      // comments; the remaining ~6% branch gap is defensive short-circuits
+      // (`?.` / `??`) not worth contrived runtime tests.
       thresholds: {
-        lines: 85,
-        branches: 82,
-        functions: 75,
-        statements: 85,
+        lines: 98,
+        branches: 92,
+        functions: 99,
+        statements: 98,
       },
     },
     // Benchmarks live under packages/*/bench/. Use `npm run bench`.

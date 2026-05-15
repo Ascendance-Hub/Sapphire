@@ -13,6 +13,18 @@ import type {
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 
+/**
+ * Guards the count argument of `.min()` / `.max()` / `.length()`. Counts must
+ * be non-negative integers — a negative or fractional bound is always a caller
+ * bug, so we throw at build time rather than emit a nonsensical schema. Mirrors
+ * the argument guards on `StringField`.
+ */
+function assertCount(value: number, method: string): void {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw new Error(`${method} must be a non-negative integer`)
+  }
+}
+
 type ArrayRuleMessages = {
   min_items?: MessageValue
   max_items?: MessageValue
@@ -135,6 +147,7 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
   }
 
   min(value: number, opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
+    assertCount(value, 'min')
     return this.clone({
       minItems: value,
       ruleMessages: {
@@ -145,6 +158,7 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
   }
 
   max(value: number, opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
+    assertCount(value, 'max')
     return this.clone({
       maxItems: value,
       ruleMessages: {
@@ -155,6 +169,7 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
   }
 
   length(value: number, opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
+    assertCount(value, 'length')
     return this.clone({
       length: value,
       ruleMessages: {
@@ -215,6 +230,11 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
     const out: unknown[] = []
     const issues: ValidationIssue[] = []
 
+    // season-three B3: length-style checks now respect abortEarly. With
+    // abortEarly the array stops at the first length issue — before any
+    // later length check and before per-item validation. This makes the
+    // composite fields uniform: abortEarly always means "exactly one issue"
+    // (cf. TupleField's tuple_length bail, ObjectField's per-key bail).
     if (this.config.length !== undefined && value.length !== this.config.length) {
       issues.push(
         buildIssue(
@@ -225,6 +245,7 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
           this.config.ruleMessages?.items_length,
         ),
       )
+      if (ctx.abortEarly) return { value: out, issues }
     }
     if (this.config.minItems !== undefined && value.length < this.config.minItems) {
       issues.push(
@@ -236,6 +257,7 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
           this.config.ruleMessages?.min_items,
         ),
       )
+      if (ctx.abortEarly) return { value: out, issues }
     }
     if (this.config.maxItems !== undefined && value.length > this.config.maxItems) {
       issues.push(
@@ -247,6 +269,7 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
           this.config.ruleMessages?.max_items,
         ),
       )
+      if (ctx.abortEarly) return { value: out, issues }
     }
 
     for (let i = 0; i < value.length; i++) {
