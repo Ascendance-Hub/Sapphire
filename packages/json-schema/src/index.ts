@@ -121,8 +121,7 @@ function hasStringConstraints(node: SapphireSchemaNode): boolean {
     node.regex ||
     node.format ||
     node.startsWith ||
-    node.endsWith ||
-    node.enum,
+    node.endsWith,
   )
 }
 
