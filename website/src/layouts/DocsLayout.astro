@@ -1,0 +1,23 @@
+---
+import BaseLayout from './BaseLayout.astro'
+import Sidebar from '../components/Sidebar.astro'
+interface Props {
+  title: string
+}
+const { title } = Astro.props
+---
+<BaseLayout title={title}>
+  <div class="docs-shell">
+    <Sidebar />
+    <article class="docs-body">
+      <slot />
+    </article>
+  </div>
+  <style>
+    .docs-shell { display: flex; max-width: var(--maxw); margin: 0 auto; align-items: flex-start; }
+    .docs-body { flex: 1; min-width: 0; padding: 28px 28px 40px; }
+    .docs-body :global(h1) { margin-top: 0; }
+    .docs-body :global(pre) { font-size: 13px; }
+    .docs-body :global(img) { max-width: 100%; }
+  </style>
+</BaseLayout>

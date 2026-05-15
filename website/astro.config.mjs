@@ -1,10 +1,15 @@
 import { defineConfig } from 'astro/config'
 import { fileURLToPath } from 'node:url'
+import { remarkRewriteLinks } from './src/lib/remark-rewrite-links.ts'
 
-// Project page: https://ascendance-hub.github.io/Sapphire
+const BASE = '/Sapphire'
+
 export default defineConfig({
   site: 'https://ascendance-hub.github.io',
-  base: '/Sapphire',
+  base: BASE,
+  markdown: {
+    remarkPlugins: [[remarkRewriteLinks, { base: BASE }]],
+  },
   vite: {
     resolve: {
       alias: {
