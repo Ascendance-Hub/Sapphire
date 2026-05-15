@@ -79,7 +79,7 @@ The cost is that named-schema collisions across modules become silent overwrites
 
 The reason is install footprint and version control. If a user is on the JSON Schema adapter only, they pay nothing for `mongoose`. If they're on a specific `drizzle-orm` version, the adapter respects their version through the peer-dep range rather than forcing a transitive install. Core stays a small, predictable bundle.
 
-The same argument applies to AJV, `zod`, anything else Sapphire could have leaned on for validation — none of them are runtime deps of core. The validators are hand-rolled and live entirely inside the package.
+The same argument applies to any third-party validation library Sapphire could have leaned on — none are runtime deps of core. The validators are hand-rolled and live entirely inside the package.
 
 ## Why the IR is a discriminated union
 

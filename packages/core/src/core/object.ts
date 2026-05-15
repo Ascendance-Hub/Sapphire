@@ -101,8 +101,8 @@ export class ObjectField<
 
   /**
    * Returns a new ObjectField where every child field has `.required()`
-   * applied (Zod-style "make all keys required"). The object itself is also
-   * marked required (`config.required = true`), matching the universal
+   * applied — "make all keys required". The object itself is also marked
+   * required (`config.required = true`), matching the universal
    * "remove `| undefined`" semantic.
    *
    * Config is preserved otherwise — name/timestamps/indexes/meta/description
@@ -121,8 +121,8 @@ export class ObjectField<
 
   /**
    * Returns a new ObjectField where every child field has `.optional()`
-   * applied (Zod-style "make all keys optional"). The object itself keeps its
-   * own `required`/`optional` flag — `partial()` is about children, not about
+   * applied — "make all keys optional". The object itself keeps its own
+   * `required`/`optional` flag — `partial()` is about children, not about
    * whether the object itself can be `undefined`.
    *
    * Config is preserved (same conceptual schema, just looser).
@@ -319,8 +319,7 @@ export class ObjectField<
    * Returns a new ObjectField with additional keys merged in.
    *
    * Conflict resolution: **last wins** — if a key in `shape` already exists
-   * in `T`, the incoming definition replaces the original. (Same convention
-   * as Zod's `.extend()`.)
+   * in `T`, the incoming definition replaces the original.
    *
    * Config of `this` is preserved (extend is a same-schema operation, just
    * wider). Config of incoming shape's fields lives at the field level and

@@ -156,7 +156,7 @@ Sapphire v1 has **no general-purpose `.refine()` / `.superRefine()`** equivalent
 
 ## See also
 
-- [Concepts → Overview](../concepts/overview.md) — comparison table with Zod / Yup / raw Mongoose.
+- [Concepts → Overview](../concepts/overview.md) — the mental model and where Sapphire fits.
 - [Concepts → Composition](../concepts/composition.md) — `pick` / `omit` / `partial` / `extend` / `merge` reference.
 - [Concepts → Validation](../concepts/validation.md) — issue shape, `IssueCode` table, message hierarchy.
 - [Recipes → One schema, many adapters](./one-schema-many-adapters.md) — the multi-output use case in detail.
