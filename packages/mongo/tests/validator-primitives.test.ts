@@ -71,15 +71,24 @@ describe('toMongoValidator — primitives', () => {
     expect(toMongoValidator(a.number().int().toSchema()).$jsonSchema).toEqual({ bsonType: 'int' })
   })
 
-  it('emits number range keywords', () => {
-    const node = a.number().min(0).max(10).gt(1).lt(9).multipleOf(2).toSchema()
+  it('emits inclusive number range keywords', () => {
+    const node = a.number().min(0).max(10).multipleOf(2).toSchema()
     expect(toMongoValidator(node).$jsonSchema).toEqual({
       bsonType: 'number',
       minimum: 0,
       maximum: 10,
-      exclusiveMinimum: 1,
-      exclusiveMaximum: 9,
       multipleOf: 2,
+    })
+  })
+
+  it('emits exclusive bounds as draft-4 boolean flags paired with minimum/maximum', () => {
+    const node = a.number().gt(1).lt(9).toSchema()
+    expect(toMongoValidator(node).$jsonSchema).toEqual({
+      bsonType: 'number',
+      minimum: 1,
+      maximum: 9,
+      exclusiveMinimum: true,
+      exclusiveMaximum: true,
     })
   })
 

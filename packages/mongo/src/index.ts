@@ -109,8 +109,17 @@ function emit(node: SapphireSchemaNode, options: MongoValidatorOptions): Record<
       const out: Record<string, any> = { bsonType: node.int ? 'int' : 'number' }
       if (node.min !== undefined) out.minimum = node.min
       if (node.max !== undefined) out.maximum = node.max
-      if (node.exclusiveMin !== undefined) out.exclusiveMinimum = node.exclusiveMin
-      if (node.exclusiveMax !== undefined) out.exclusiveMaximum = node.exclusiveMax
+      // MongoDB's $jsonSchema follows JSON Schema draft 4: `exclusiveMinimum`
+      // and `exclusiveMaximum` are booleans paired with `minimum`/`maximum`,
+      // not standalone numbers.
+      if (node.exclusiveMin !== undefined) {
+        out.minimum = node.exclusiveMin
+        out.exclusiveMinimum = true
+      }
+      if (node.exclusiveMax !== undefined) {
+        out.maximum = node.exclusiveMax
+        out.exclusiveMaximum = true
+      }
       if (node.multipleOf !== undefined) out.multipleOf = node.multipleOf
       // `finite` / `safe` have no $jsonSchema equivalent — enforced client-side.
       applyCommon(out, node)
@@ -192,5 +201,14 @@ export function toMongoValidator(
   node: SapphireSchemaNode,
   options: MongoValidatorOptions = {},
 ): MongoValidator {
-  return { $jsonSchema: emit(node, options) }
+  const root = emit(node, options)
+  // MongoDB injects an `_id` into every document. A closed-shape root
+  // (`additionalProperties: false`) must still permit that server-added `_id`
+  // when the schema does not declare one — otherwise the validator rejects
+  // every insert.
+  if (options.additionalProperties === false && node.kind === 'object') {
+    const props = root.properties as Record<string, unknown> | undefined
+    if (props && !('_id' in props)) props._id = {}
+  }
+  return { $jsonSchema: root }
 }
