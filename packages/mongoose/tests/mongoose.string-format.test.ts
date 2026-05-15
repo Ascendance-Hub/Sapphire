@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '../src'
+import { toMongooseSchema } from '../src'
 
-describe('Mongo adapter — string formats / startsWith / endsWith / transforms', () => {
-  const a = new Sapphire({ defaultAdapter: 'mongo' })
+describe('Mongoose adapter — string formats / startsWith / endsWith / transforms', () => {
+  const a = new Sapphire({ defaultAdapter: 'mongoose' })
 
   function makeModel(field: ReturnType<Sapphire['string']>) {
     const obj = a.object({ value: field })
-    const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(obj.toSchema()) as mongoose.Schema
     return mongoose.model('Test_' + Math.random().toString(36).slice(2), schema)
   }
 
@@ -55,21 +55,21 @@ describe('Mongo adapter — string formats / startsWith / endsWith / transforms'
 
   it('trim transform → schema.path tem trim: true', () => {
     const obj = a.object({ value: a.string().trim() })
-    const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(obj.toSchema()) as mongoose.Schema
     const path = schema.path('value') as any
     expect(path.options.trim).toBe(true)
   })
 
   it('toLowerCase transform → schema.path tem lowercase: true', () => {
     const obj = a.object({ value: a.string().toLowerCase() })
-    const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(obj.toSchema()) as mongoose.Schema
     const path = schema.path('value') as any
     expect(path.options.lowercase).toBe(true)
   })
 
   it('toUpperCase transform → schema.path tem uppercase: true', () => {
     const obj = a.object({ value: a.string().toUpperCase() })
-    const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(obj.toSchema()) as mongoose.Schema
     const path = schema.path('value') as any
     expect(path.options.uppercase).toBe(true)
   })

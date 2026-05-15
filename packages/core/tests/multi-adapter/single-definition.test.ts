@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
 import { toDrizzleSchema } from '@ascendance-hub/sapphire-drizzle'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 import { getTableConfig } from 'drizzle-orm/pg-core'
@@ -44,7 +44,7 @@ describe('S1 — single definition, every adapter', () => {
     const ir = User.toSchema()
 
     // --- Mongoose ---
-    const mongoSchema = toMongoSchema(ir) as mongoose.Schema
+    const mongoSchema = toMongooseSchema(ir) as mongoose.Schema
     expect(mongoSchema).toBeInstanceOf(mongoose.Schema)
     expect((mongoSchema.path('name') as unknown as { instance: string }).instance).toBe('String')
     expect((mongoSchema.path('age') as unknown as { instance: string }).instance).toBe('Number')
@@ -98,7 +98,7 @@ describe('S1 — single definition, every adapter', () => {
     const ir = Profile.toSchema()
 
     // Mongo: required flag on the path
-    const mongoSchema = toMongoSchema(ir) as mongoose.Schema
+    const mongoSchema = toMongooseSchema(ir) as mongoose.Schema
     expect((mongoSchema.path('handle') as unknown as { isRequired: boolean }).isRequired).toBe(true)
     expect((mongoSchema.path('bio') as unknown as { isRequired?: boolean }).isRequired).toBeFalsy()
 
@@ -128,7 +128,7 @@ describe('S1 — single definition, every adapter', () => {
     expect(Tagged.parse({ slug: '  HELLO ' })).toEqual({ slug: 'hello' })
 
     // Mongo adapter emits the matching schema-level options
-    const mongoSchema = toMongoSchema(ir) as mongoose.Schema
+    const mongoSchema = toMongooseSchema(ir) as mongoose.Schema
     const slugPath = mongoSchema.path('slug') as unknown as {
       options: { trim?: boolean; lowercase?: boolean }
     }

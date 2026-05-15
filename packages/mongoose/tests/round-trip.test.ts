@@ -10,7 +10,7 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '../src'
+import { toMongooseSchema } from '../src'
 
 let modelCounter = 0
 function modelFor(schema: mongoose.Schema): mongoose.Model<unknown> {
@@ -22,7 +22,7 @@ describe('S4 — modifier round-trip (core parse ⇄ Mongoose validation)', () =
 
   it('string length: core-valid value passes Mongoose, core-invalid fails it', () => {
     const Schema = a.object({ name: a.string().min(3).max(8) })
-    const Model = modelFor(toMongoSchema(Schema.toSchema()) as mongoose.Schema)
+    const Model = modelFor(toMongooseSchema(Schema.toSchema()) as mongoose.Schema)
 
     const ok = Schema.parse({ name: 'Alice' })
     expect(new Model(ok).validateSync()).toBeUndefined()
@@ -34,7 +34,7 @@ describe('S4 — modifier round-trip (core parse ⇄ Mongoose validation)', () =
 
   it('string email format: agreement on valid + invalid', () => {
     const Schema = a.object({ email: a.string().email() })
-    const Model = modelFor(toMongoSchema(Schema.toSchema()) as mongoose.Schema)
+    const Model = modelFor(toMongooseSchema(Schema.toSchema()) as mongoose.Schema)
 
     const ok = Schema.parse({ email: 'user@example.com' })
     expect(new Model(ok).validateSync()).toBeUndefined()
@@ -45,7 +45,7 @@ describe('S4 — modifier round-trip (core parse ⇄ Mongoose validation)', () =
 
   it('string regex: agreement on valid + invalid', () => {
     const Schema = a.object({ code: a.string().regex(/^[A-Z]{3}$/) })
-    const Model = modelFor(toMongoSchema(Schema.toSchema()) as mongoose.Schema)
+    const Model = modelFor(toMongooseSchema(Schema.toSchema()) as mongoose.Schema)
 
     const ok = Schema.parse({ code: 'ABC' })
     expect(new Model(ok).validateSync()).toBeUndefined()
@@ -56,7 +56,7 @@ describe('S4 — modifier round-trip (core parse ⇄ Mongoose validation)', () =
 
   it('string transforms: core trims, Mongoose schema also carries trim', () => {
     const Schema = a.object({ slug: a.string().trim().toLowerCase() })
-    const Model = modelFor(toMongoSchema(Schema.toSchema()) as mongoose.Schema)
+    const Model = modelFor(toMongooseSchema(Schema.toSchema()) as mongoose.Schema)
 
     // core parse already trimmed + lowercased
     const ok = Schema.parse({ slug: '  HELLO ' })
@@ -70,7 +70,7 @@ describe('S4 — modifier round-trip (core parse ⇄ Mongoose validation)', () =
 
   it('number int + min: agreement on valid + invalid', () => {
     const Schema = a.object({ qty: a.number().int().min(10) })
-    const Model = modelFor(toMongoSchema(Schema.toSchema()) as mongoose.Schema)
+    const Model = modelFor(toMongooseSchema(Schema.toSchema()) as mongoose.Schema)
 
     const ok = Schema.parse({ qty: 12 })
     expect(new Model(ok).validateSync()).toBeUndefined()
@@ -86,7 +86,7 @@ describe('S4 — modifier round-trip (core parse ⇄ Mongoose validation)', () =
 
   it('number multipleOf: agreement on valid + invalid', () => {
     const Schema = a.object({ step: a.number().multipleOf(5) })
-    const Model = modelFor(toMongoSchema(Schema.toSchema()) as mongoose.Schema)
+    const Model = modelFor(toMongooseSchema(Schema.toSchema()) as mongoose.Schema)
 
     const ok = Schema.parse({ step: 15 })
     expect(new Model(ok).validateSync()).toBeUndefined()
@@ -97,7 +97,7 @@ describe('S4 — modifier round-trip (core parse ⇄ Mongoose validation)', () =
 
   it('required field: core and Mongoose agree a missing value is invalid', () => {
     const Schema = a.object({ name: a.string() })
-    const Model = modelFor(toMongoSchema(Schema.toSchema()) as mongoose.Schema)
+    const Model = modelFor(toMongooseSchema(Schema.toSchema()) as mongoose.Schema)
 
     expect(Schema.safeParse({}).success).toBe(false)
     expect(new Model({}).validateSync()?.errors.name).toBeDefined()
@@ -105,7 +105,7 @@ describe('S4 — modifier round-trip (core parse ⇄ Mongoose validation)', () =
 
   it('string startsWith: core check has a Mongoose custom-validator counterpart', () => {
     const Schema = a.object({ ref: a.string().startsWith('SAP-') })
-    const Model = modelFor(toMongoSchema(Schema.toSchema()) as mongoose.Schema)
+    const Model = modelFor(toMongooseSchema(Schema.toSchema()) as mongoose.Schema)
 
     const ok = Schema.parse({ ref: 'SAP-001' })
     expect(new Model(ok).validateSync()).toBeUndefined()

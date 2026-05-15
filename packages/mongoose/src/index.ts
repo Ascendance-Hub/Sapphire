@@ -28,7 +28,7 @@ export interface MongooseAdapterOptions {
 type ObjectNode = Extract<SapphireSchemaNode, { kind: 'object' }>
 
 /**
- * Keys that `meta.mongo` cannot override on a Mongoose definition object.
+ * Keys that `meta.mongoose` cannot override on a Mongoose definition object.
  * These are computed by Sapphire and overriding them would break the adapter.
  */
 const META_BLACKLIST = new Set(['type', 'required'])
@@ -60,9 +60,9 @@ function applyCommon(
   if (node.default !== undefined) def.default = node.default
   if (node.description !== undefined) def.description = node.description
 
-  // Escape hatch: meta.mongo merges last (overrides core-derived options),
+  // Escape hatch: meta.mongoose merges last (overrides core-derived options),
   // EXCEPT for blacklisted keys (type/required) — those are always Sapphire-controlled.
-  const metaMongo = node.meta?.mongo as Record<string, any> | undefined
+  const metaMongo = node.meta?.mongoose as Record<string, any> | undefined
   if (metaMongo) {
     for (const [k, v] of Object.entries(metaMongo)) {
       if (META_BLACKLIST.has(k)) continue
@@ -269,7 +269,7 @@ function buildSchema(node: ObjectNode, options: MongooseAdapterOptions): mongoos
   if (options.rootId === 'none' && !('_id' in definition)) {
     schemaOptions._id = false
   }
-  const meta = node.meta?.mongo as Record<string, any> | undefined
+  const meta = node.meta?.mongoose as Record<string, any> | undefined
   if (meta?.collection) schemaOptions.collection = String(meta.collection)
   const schema = new mongoose.Schema(definition, schemaOptions)
   if (node.indexes && node.indexes.length > 0) {

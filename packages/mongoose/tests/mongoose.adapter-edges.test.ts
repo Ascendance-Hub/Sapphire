@@ -1,21 +1,21 @@
 /**
- * season-three coverage push — Mongo adapter branches the existing suite
+ * season-three coverage push — Mongoose adapter branches the existing suite
  * skipped: enum emission, and the `index` variants in applyCommon.
  */
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import type { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '../src'
+import { toMongooseSchema } from '../src'
 import { uniqueModelName } from './_setup'
 
-describe('Mongo adapter — enum', () => {
+describe('Mongoose adapter — enum', () => {
   it('string enum → { type: String, enum: [...] }', () => {
     const node: SapphireSchemaNode = {
       kind: 'enum',
       required: true,
       values: ['a', 'b', 'c'],
     }
-    expect(toMongoSchema(node)).toEqual({
+    expect(toMongooseSchema(node)).toEqual({
       type: String,
       required: true,
       enum: ['a', 'b', 'c'],
@@ -28,7 +28,7 @@ describe('Mongo adapter — enum', () => {
       required: false,
       values: [1, 2, 3],
     }
-    expect(toMongoSchema(node)).toEqual({
+    expect(toMongooseSchema(node)).toEqual({
       type: Number,
       required: false,
       enum: [1, 2, 3],
@@ -43,24 +43,24 @@ describe('Mongo adapter — enum', () => {
         role: { kind: 'enum', required: true, values: ['admin', 'user'] },
       },
     }
-    const schema = toMongoSchema(node) as mongoose.Schema
+    const schema = toMongooseSchema(node) as mongoose.Schema
     const Model = mongoose.model(uniqueModelName('EnumEdge'), schema)
     expect(new Model({ role: 'admin' }).validateSync()).toBeUndefined()
     expect(new Model({ role: 'ghost' }).validateSync()?.errors.role).toBeDefined()
   })
 })
 
-describe('Mongo adapter — string .length()', () => {
+describe('Mongoose adapter — string .length()', () => {
   it('exact length → minlength === maxlength', () => {
     const node: SapphireSchemaNode = { kind: 'string', required: true, length: 5 }
-    expect(toMongoSchema(node)).toMatchObject({ minlength: 5, maxlength: 5 })
+    expect(toMongooseSchema(node)).toMatchObject({ minlength: 5, maxlength: 5 })
   })
 })
 
-describe('Mongo adapter — applyCommon index variants', () => {
+describe('Mongoose adapter — applyCommon index variants', () => {
   it('index: true → def.index = true', () => {
     const node: SapphireSchemaNode = { kind: 'string', required: true, index: true }
-    expect(toMongoSchema(node)).toMatchObject({ index: true })
+    expect(toMongooseSchema(node)).toMatchObject({ index: true })
   })
 
   it('index: { unique: true } → def.index = true and def.unique = true', () => {
@@ -69,7 +69,7 @@ describe('Mongo adapter — applyCommon index variants', () => {
       required: true,
       index: { unique: true },
     }
-    expect(toMongoSchema(node)).toMatchObject({ index: true, unique: true })
+    expect(toMongooseSchema(node)).toMatchObject({ index: true, unique: true })
   })
 
   it('index: { unique: false } → def.index = true, no unique', () => {
@@ -78,7 +78,7 @@ describe('Mongo adapter — applyCommon index variants', () => {
       required: true,
       index: { unique: false },
     }
-    const out = toMongoSchema(node) as Record<string, unknown>
+    const out = toMongooseSchema(node) as Record<string, unknown>
     expect(out.index).toBe(true)
     expect(out.unique).toBeUndefined()
   })
