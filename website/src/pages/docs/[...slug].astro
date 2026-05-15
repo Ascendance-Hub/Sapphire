@@ -1,0 +1,25 @@
+---
+import { getCollection, render } from 'astro:content'
+import DocsLayout from '../../layouts/DocsLayout.astro'
+
+export async function getStaticPaths() {
+  const entries = await getCollection('docs')
+  return entries.map((entry) => {
+    const isIndex = /^readme$/i.test(entry.id)
+    return {
+      params: { slug: isIndex ? undefined : entry.id },
+      props: { entry },
+    }
+  })
+}
+
+const { entry } = Astro.props
+const { Content } = await render(entry)
+const docName = entry.id.split('/').pop()!.replace(/-/g, ' ')
+const title = /^readme$/i.test(entry.id)
+  ? 'Sapphire — documentation'
+  : `${docName.charAt(0).toUpperCase()}${docName.slice(1)} — Sapphire docs`
+---
+<DocsLayout title={title}>
+  <Content />
+</DocsLayout>

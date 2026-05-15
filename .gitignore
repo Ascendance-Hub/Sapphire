@@ -47,3 +47,7 @@ ehthumbs.db
 Desktop.ini
 
 /specs
+
+.superpowers/
+website/dist/
+website/.astro/

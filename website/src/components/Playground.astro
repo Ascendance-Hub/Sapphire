@@ -1,0 +1,150 @@
+---
+const DEFAULT_SCHEMA = `a.object({
+  name: a.string().min(2),
+  age: a.number().int().min(0),
+  email: a.string().email(),
+})`
+const DEFAULT_SAMPLE = `{ "name": "Ana", "age": 30, "email": "ana@example.com" }`
+---
+<div class="pg">
+  <div class="pg-head">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="pg-title">playground — edit the schema, watch it recompute</span>
+    <span class="pg-live">live</span>
+  </div>
+  <div class="pg-body">
+    <div class="pg-editor">
+      <div class="pane-label">schema</div>
+      <div id="pg-schema" data-default={DEFAULT_SCHEMA}></div>
+      <div class="pane-label">sample value (JSON)</div>
+      <div id="pg-sample" data-default={DEFAULT_SAMPLE}></div>
+    </div>
+    <div class="pg-output">
+      <div class="pg-tabs" role="tablist">
+        <button class="pg-tab active" data-tab="type">Type</button>
+        <button class="pg-tab" data-tab="ir">IR</button>
+        <button class="pg-tab" data-tab="json">JSON Schema</button>
+        <button class="pg-tab" data-tab="parse">Parse</button>
+      </div>
+      <pre id="pg-out" class="pg-out"></pre>
+    </div>
+  </div>
+</div>
+
+<style>
+  .pg { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; }
+  .pg-head {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 13px; background: var(--bg-soft); border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--ink-600);
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .dot.r { background: #e6685b; } .dot.y { background: #e8b13f; } .dot.g { background: #5fb86f; }
+  .pg-title { margin-left: 4px; }
+  .pg-live {
+    margin-left: auto; color: var(--green-600); font-size: 11px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .pg-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green-600); }
+  .pg-body { display: flex; flex-wrap: wrap; }
+  .pg-editor { flex: 1 1 320px; border-right: 1px solid var(--border); }
+  .pg-output { flex: 1 1 320px; }
+  .pane-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--ink-400); padding: 7px 12px 3px;
+  }
+  .pg-tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .pg-tab {
+    border: none; background: none; font-family: var(--font-sans); cursor: pointer;
+    padding: 9px 13px; font-size: 12px; color: var(--ink-400);
+  }
+  .pg-tab.active { color: var(--sapphire-600); border-bottom: 2px solid var(--sapphire-600); font-weight: 600; }
+  .pg-out {
+    margin: 0; border: none; border-radius: 0; background: #fff;
+    min-height: 200px; font-size: 12.5px; white-space: pre-wrap;
+  }
+  .pg-out.error { color: var(--red-600); }
+  :global(.cm-editor) { font-size: 12.5px; }
+  :global(.cm-editor.cm-focused) { outline: none; }
+</style>
+
+<script>
+  import { EditorView, basicSetup } from 'codemirror'
+  import { javascript } from '@codemirror/lang-javascript'
+  import { evaluatePlayground } from '../lib/playground-eval'
+
+  function makeEditor(id: string, onChange: () => void): EditorView {
+    const host = document.getElementById(id)!
+    const initial = host.dataset.default ?? ''
+    return new EditorView({
+      doc: initial,
+      extensions: [
+        basicSetup,
+        javascript(),
+        EditorView.updateListener.of((v) => {
+          if (v.docChanged) onChange()
+        }),
+      ],
+      parent: host,
+    })
+  }
+
+  const out = document.getElementById('pg-out') as HTMLPreElement
+  let activeTab = 'type'
+  let last: ReturnType<typeof evaluatePlayground> | null = null
+
+  function render(): void {
+    if (!last) return
+    out.classList.remove('error')
+    if (!last.ok) {
+      out.classList.add('error')
+      out.textContent = `Error: ${last.error}`
+      return
+    }
+    if (activeTab === 'type') {
+      out.textContent = last.typeString
+    } else if (activeTab === 'ir') {
+      out.textContent = JSON.stringify(last.ir, null, 2)
+    } else if (activeTab === 'json') {
+      out.textContent = JSON.stringify(last.jsonSchema, null, 2)
+    } else {
+      const p = last.parse
+      if (p.success) {
+        out.textContent = `✓ valid\n\n${JSON.stringify(p.data, null, 2)}`
+      } else if (p.sampleError) {
+        out.classList.add('error')
+        out.textContent = `Sample value is not valid JSON:\n${p.sampleError}`
+      } else {
+        out.classList.add('error')
+        out.textContent = `✗ ${p.issues.length} issue(s)\n\n${JSON.stringify(p.issues, null, 2)}`
+      }
+    }
+  }
+
+  let schemaView: EditorView
+  let sampleView: EditorView
+  let timer: number | undefined
+
+  function recompute(): void {
+    window.clearTimeout(timer)
+    timer = window.setTimeout(() => {
+      last = evaluatePlayground(schemaView.state.doc.toString(), sampleView.state.doc.toString())
+      render()
+    }, 200)
+  }
+
+  schemaView = makeEditor('pg-schema', recompute)
+  sampleView = makeEditor('pg-sample', recompute)
+
+  document.querySelectorAll<HTMLButtonElement>('.pg-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pg-tab').forEach((b) => b.classList.remove('active'))
+      btn.classList.add('active')
+      activeTab = btn.dataset.tab!
+      render()
+    })
+  })
+
+  last = evaluatePlayground(schemaView.state.doc.toString(), sampleView.state.doc.toString())
+  render()
+</script>

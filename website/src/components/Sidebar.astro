@@ -1,0 +1,47 @@
+---
+import { getCollection } from 'astro:content'
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+const entries = await getCollection('docs')
+
+// group by top-level folder; README is the index
+const groups: Record<string, { id: string; title: string }[]> = {}
+for (const entry of entries) {
+  const id = entry.id // e.g. 'concepts/fields-and-modifiers' or 'README'
+  if (/^readme$/i.test(id)) continue
+  const folder = id.includes('/') ? id.split('/')[0] : id
+  const title = id.split('/').pop()!.replace(/-/g, ' ')
+  ;(groups[folder] ??= []).push({ id, title })
+}
+for (const list of Object.values(groups)) list.sort((a, b) => a.title.localeCompare(b.title))
+const order = ['getting-started', 'concepts', 'adapters', 'recipes', 'meta', 'guides']
+const sortedFolders = Object.keys(groups).sort(
+  (a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99),
+)
+const current = Astro.url.pathname.replace(/\/$/, '')
+---
+<aside class="sidebar">
+  <a class="idx" href={`${base}/docs`}>Documentation</a>
+  {sortedFolders.map((folder) => (
+    <div class="group">
+      <div class="group-name">{folder.replace(/-/g, ' ')}</div>
+      {groups[folder].map((d) => {
+        const href = `${base}/docs/${d.id}`
+        return (
+          <a class:list={['link', { on: current === href }]} href={href}>{d.title}</a>
+        )
+      })}
+    </div>
+  ))}
+</aside>
+
+<style>
+  .sidebar { width: 220px; flex-shrink: 0; padding: 24px 14px; border-right: 1px solid var(--border); }
+  .idx { font-weight: 700; color: var(--ink-900); display: block; margin-bottom: 12px; }
+  .group { margin-bottom: 16px; }
+  .group-name {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--sapphire-600); font-weight: 700; margin-bottom: 5px;
+  }
+  .link { display: block; padding: 3px 0; color: var(--ink-600); font-size: 13.5px; text-transform: capitalize; }
+  .link.on { color: var(--sapphire-600); font-weight: 600; }
+</style>
