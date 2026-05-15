@@ -34,7 +34,6 @@ export function evaluatePlayground(schemaCode: string, sampleValueJson: string):
   let field: SchemaField
   try {
     const a = new Sapphire()
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
     const factory = new Function('a', `return (${schemaCode})`)
     const result = factory(a) as unknown
     if (!result || typeof (result as SchemaField).toSchema !== 'function') {
