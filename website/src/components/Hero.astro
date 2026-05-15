@@ -1,0 +1,40 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+---
+<section class="hero">
+  <h1>One schema. Every ORM.</h1>
+  <p>
+    Define your data shape once — Sapphire emits Mongoose, Drizzle, JSON Schema
+    and TypeScript types from a single source of truth.
+  </p>
+  <div class="cta">
+    <a class="btn primary" href={`${base}/docs`}>Get started →</a>
+    <a class="btn ghost" href={`${base}/playground`}>Open playground</a>
+  </div>
+</section>
+
+<style>
+  .hero {
+    background: var(--hero-gradient);
+    color: #fff;
+    text-align: center;
+    padding: 64px 24px 76px;
+  }
+  .hero h1 {
+    color: #fff;
+    font-size: clamp(30px, 5vw, 44px);
+    margin: 0 0 14px;
+    letter-spacing: -0.02em;
+  }
+  .hero p {
+    max-width: 480px;
+    margin: 0 auto 24px;
+    color: #cfe0f4;
+    font-size: 16px;
+  }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn { padding: 11px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; }
+  .btn:hover { text-decoration: none; }
+  .btn.primary { background: #fff; color: var(--sapphire-700); }
+  .btn.ghost { background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.35); }
+</style>
