@@ -154,9 +154,7 @@ describe('db-integration — Mongoose-specific behaviour', () => {
     const author = await new User({ name: 'Ana' }).save()
     const post = await new Post({ title: 'Hello', author: author._id }).save()
 
-    const populated = await Post.findById(post._id).populate<{ author: { name: string } }>(
-      'author',
-    )
+    const populated = await Post.findById(post._id).populate<{ author: { name: string } }>('author')
     expect(populated!.author.name).toBe('Ana')
   })
 })

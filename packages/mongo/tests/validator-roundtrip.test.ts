@@ -142,8 +142,7 @@ describe('integration — union / literal / enum', () => {
   it('literal', () =>
     check(a.type().literal('ACTIVE'), { accepts: ['ACTIVE'], rejects: ['INACTIVE'] }))
 
-  it('enum', () =>
-    check(a.type().enum(['a', 'b', 'c']), { accepts: ['b'], rejects: ['z'] }))
+  it('enum', () => check(a.type().enum(['a', 'b', 'c']), { accepts: ['b'], rejects: ['z'] }))
 })
 
 describe('integration — ref / nullable', () => {
@@ -171,9 +170,7 @@ describe('integration — object-level behaviour', () => {
   })
 
   it('a declared _id field is validated like any other property', async () => {
-    const validator = toMongoValidator(
-      a.object({ _id: a.string(), name: a.string() }).toSchema(),
-    )
+    const validator = toMongoValidator(a.object({ _id: a.string(), name: a.string() }).toSchema())
     const coll = await collectionFor(validator)
     await expect(coll.insertOne({ _id: 'user-1', name: 'Ana' })).resolves.toBeTruthy()
     await expect(coll.insertOne({ _id: 42, name: 'Ana' })).rejects.toThrow()
