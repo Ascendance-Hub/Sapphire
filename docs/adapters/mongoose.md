@@ -90,11 +90,11 @@ These apply to **every** node kind unless noted:
 
 The root-level `ObjectField` carries schema-wide flags that translate to Mongoose `SchemaOptions`:
 
-| Sapphire call                                                | Mongoose effect                                                                                                           |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `.name('User')`                                              | Used by `mongoose.model(name, schema)` — the adapter does not call `mongoose.model` itself, it returns the bare `Schema`. |
-| `.timestamps()`                                              | `new Schema(def, { timestamps: true })` — Mongoose then auto-fills `createdAt`/`updatedAt`.                               |
-| `.index(['email', 'name'], { unique: true })`                | Each call accumulates: `schema.index({ email: 1, name: 1 }, { unique: true })`. Multiple invocations stack.               |
+| Sapphire call                                                   | Mongoose effect                                                                                                           |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `.name('User')`                                                 | Used by `mongoose.model(name, schema)` — the adapter does not call `mongoose.model` itself, it returns the bare `Schema`. |
+| `.timestamps()`                                                 | `new Schema(def, { timestamps: true })` — Mongoose then auto-fills `createdAt`/`updatedAt`.                               |
+| `.index(['email', 'name'], { unique: true })`                   | Each call accumulates: `schema.index({ email: 1, name: 1 }, { unique: true })`. Multiple invocations stack.               |
 | `.adapter('mongoose', { collection: 'people' })` (object-level) | `new Schema(def, { collection: 'people' })`.                                                                              |
 
 ## Refs

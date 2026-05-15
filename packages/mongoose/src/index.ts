@@ -71,7 +71,10 @@ function applyCommon(
   }
 }
 
-function buildField(node: SapphireSchemaNode, options: MongooseAdapterOptions): Record<string, any> {
+function buildField(
+  node: SapphireSchemaNode,
+  options: MongooseAdapterOptions,
+): Record<string, any> {
   switch (node.kind) {
     case 'string': {
       const def: Record<string, any> = { type: String, required: node.required }

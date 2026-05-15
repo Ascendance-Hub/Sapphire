@@ -23,14 +23,17 @@
 ## File Structure
 
 **Created:**
+
 - `.github/workflows/release.yml` — the changesets release pipeline.
 - `.changeset/phase-16-v1-release.md` — the changeset that drives the `1.0.0` bump.
 
 **Modified:**
+
 - `.changeset/config.json` — `fixed` group must list all 5 packages (the season-four plan's Task C4 already adds `sapphire-mongoose`; this plan verifies it).
 - Each `packages/*/package.json` — only if the publish-readiness audit (Task 4) finds a gap.
 
 **External (USER ACTION — not files):**
+
 - npm: the `@ascendance-hub` organization/scope must exist.
 - npm: an automation access token.
 - GitHub repo: `NPM_TOKEN` secret.
@@ -75,6 +78,7 @@ Expected: `NPM_TOKEN` listed.
 ## Task 2: Verify the changesets `fixed` group
 
 **Files:**
+
 - Modify (if needed): `.changeset/config.json`
 
 - [ ] **Step 1: Inspect `.changeset/config.json`**
@@ -117,6 +121,7 @@ git commit -m "chore(release): include sapphire-mongoose in the changesets fixed
 ## Task 3: The `1.0.0` release changeset
 
 **Files:**
+
 - Create: `.changeset/phase-16-v1-release.md`
 - Inspect: existing `.changeset/phase-*.md`
 
@@ -177,11 +182,13 @@ git commit -m "chore(release): changeset for the v1.0.0 release"
 ## Task 4: Publish-readiness audit
 
 **Files:**
+
 - Inspect (modify only on a finding): every `packages/*/package.json`, `LICENSE`.
 
 - [ ] **Step 1: Audit each package.json**
 
 For each of the 5 packages, confirm:
+
 - No `"private": true` (must be publishable — the root `package.json` keeps `private: true`, packages must not).
 - `"files": ["dist"]` present.
 - `"exports"`, `"main"`, `"module"`, `"types"` point into `dist/`.
@@ -208,6 +215,7 @@ If Step 1 found a problem, fix that `package.json` and commit with `chore(releas
 ## Task 5: The release workflow
 
 **Files:**
+
 - Create: `.github/workflows/release.yml`
 
 - [ ] **Step 1: Create `.github/workflows/release.yml`**
@@ -248,6 +256,7 @@ jobs:
 ```
 
 Notes:
+
 - `id-token: write` + `NPM_CONFIG_PROVENANCE: true` make npm attach build provenance (the V1_PLAN "npm-provenance if desired" item). Provenance requires the publish to run from a public GitHub repo — it is.
 - `changesets/action@v1` decides automatically: if changesets are pending it opens/updates the "Version Packages" PR; if none are pending (the Version PR was merged) it runs `publish`.
 - Action major versions match the repo's modernized workflows (`checkout@v6`, `setup-node@v6`).

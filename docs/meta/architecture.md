@@ -18,7 +18,7 @@ flowchart LR
 | Package                                | Responsibility                                                                                                                                                 |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@ascendance-hub/sapphire-core`        | Field DSL, IR, validation (`parse`/`safeParse`), `Infer<>`/`InferInput<>` types, adapter registry, named-schema registry, message resolver. Zero runtime deps. |
-| `@ascendance-hub/sapphire-mongoose`       | Mongoose adapter. Walks the IR and emits a `mongoose.Schema`.                                                                                                  |
+| `@ascendance-hub/sapphire-mongoose`    | Mongoose adapter. Walks the IR and emits a `mongoose.Schema`.                                                                                                  |
 | `@ascendance-hub/sapphire-json-schema` | JSON Schema 2020-12 adapter. Emits a `$defs` collector with `$ref` cycles supported.                                                                           |
 | `@ascendance-hub/sapphire-drizzle`     | Drizzle adapter. Emits `pgTable` / `mysqlTable` / `sqliteTable` with lazy `references()` for refs.                                                             |
 

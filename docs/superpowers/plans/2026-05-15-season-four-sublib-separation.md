@@ -21,6 +21,7 @@ These resolve the four "Open questions" in the spec. Review these before approvi
 **D2 — `union` → `anyOf` (spec Q2).** Emit `anyOf`. MongoDB's `$jsonSchema` has supported `anyOf` since MongoDB 5.0. The package documents "MongoDB 5.0+" as the minimum. No 4.x fallback (a v1.0 library in 2026 can assume 5.0+).
 
 **D3 — modifiers with no `$jsonSchema` equivalent (spec Q3).** MongoDB's `$jsonSchema` has **no `format` keyword** and **rejects unknown keywords**. Therefore:
+
 - `string().format('email')` → `pattern` built from core's `EMAIL_RE`; `format('uuid')` → `pattern` from core's `UUID_RE`.
 - `string().format('url')` → **omitted** from the validator (no exported URL regex); enforced client-side via `parse()`. Documented as a known gap.
 - `string().startsWith/endsWith/regex` → `pattern` (already JSON-Schema-expressible). Multiple patterns combine via `allOf`.
@@ -34,7 +35,7 @@ These resolve the four "Open questions" in the spec. Review these before approvi
 
 **D6 — tuple emit.** MongoDB does not support JSON-Schema-2020-12 `prefixItems`. Use the draft-4 tuple form: `items` as an **array** of schemas + `additionalItems: false` + `minItems`/`maxItems` pinned to the tuple length.
 
-**D7 — `toMongoDocShape` (spec Output B).** The spec itself calls this "more documentation than code" and notes the real typing flows through `Infer<typeof X>`. To avoid shipping dead, uncovered runtime code (the package has a 98% coverage floor), Output B ships as a **type-only** export: `export type MongoDoc<F extends Field<any, any>> = Infer<F>`. No runtime function named `toMongoDocShape`. *If you want a runtime symbol instead, raise it at plan review.*
+**D7 — `toMongoDocShape` (spec Output B).** The spec itself calls this "more documentation than code" and notes the real typing flows through `Infer<typeof X>`. To avoid shipping dead, uncovered runtime code (the package has a 98% coverage floor), Output B ships as a **type-only** export: `export type MongoDoc<F extends Field<any, any>> = Infer<F>`. No runtime function named `toMongoDocShape`. _If you want a runtime symbol instead, raise it at plan review._
 
 **D8 — no deprecation shim.** The spec's migration story floats keeping `toMongoSchema` as a deprecated re-export. `V1_DESIGN.md §14` states the lib has no published consumers, so we make the break cleanly: `toMongoSchema` simply becomes `toMongooseSchema` with no alias.
 
@@ -43,6 +44,7 @@ These resolve the four "Open questions" in the spec. Review these before approvi
 ## File Structure
 
 **Renamed (Phase A) — `git mv packages/mongo packages/mongoose`:**
+
 - `packages/mongoose/package.json` — name → `@ascendance-hub/sapphire-mongoose`, description, keywords, `repository.directory`.
 - `packages/mongoose/src/index.ts` — `toMongoSchema`→`toMongooseSchema`, `MongoAdapterOptions`→`MongooseAdapterOptions`.
 - `packages/mongoose/tests/*.test.ts` + `tests/_setup.ts` — registry key `'mongo'`→`'mongoose'`, import-name updates.
@@ -50,6 +52,7 @@ These resolve the four "Open questions" in the spec. Review these before approvi
 - `packages/mongoose/README.md` — Mongoose-named.
 
 **Created (Phase B) — new `packages/mongo/`:**
+
 - `packages/mongo/package.json` — `@ascendance-hub/sapphire-mongo`, peerDep `mongodb` (not Mongoose).
 - `packages/mongo/tsup.config.ts`, `packages/mongo/tsconfig.json` — copied from json-schema package.
 - `packages/mongo/src/index.ts` — `toMongoValidator`, `MongoValidatorOptions`, `MongoValidator`, `MongoDoc<F>` type.
@@ -63,6 +66,7 @@ These resolve the four "Open questions" in the spec. Review these before approvi
 - `packages/mongo/README.md`
 
 **Modified (Phases A/C):**
+
 - `vitest.config.ts` — `setupFiles` array: `packages/mongo/tests/_setup.ts` → `packages/mongoose/tests/_setup.ts`, and add a new `packages/mongo/tests/_setup.ts` entry.
 - `examples/consumer/package.json` + `examples/consumer/index.ts` — depend on / import `sapphire-mongoose`.
 - `packages/core/tests/multi-adapter/{single-definition,refs,composition}.test.ts` — add a mongo-validator column.
@@ -81,6 +85,7 @@ Phase A produces working software: the Mongoose adapter, renamed, all existing t
 ### Task A1: Move the package directory and rewrite its `package.json`
 
 **Files:**
+
 - Move: `packages/mongo/` → `packages/mongoose/`
 - Modify: `packages/mongoose/package.json`
 
@@ -124,11 +129,13 @@ git commit -m "refactor(mongoose): rename sapphire-mongo package to sapphire-mon
 ### Task A2: Rename the public exports
 
 **Files:**
+
 - Modify: `packages/mongoose/src/index.ts`
 
 - [ ] **Step 1: Rename the options interface and the function**
 
 In `packages/mongoose/src/index.ts`:
+
 - Rename `export interface MongoAdapterOptions` → `export interface MongooseAdapterOptions`.
 - Update the two internal references (`function applyCommon(... _options: MongoAdapterOptions)` and `function buildField(node, options: MongoAdapterOptions)`, `buildSubdoc`, `buildSchema`, `toMongoSchema` signatures) to `MongooseAdapterOptions`.
 - Rename `export function toMongoSchema` → `export function toMongooseSchema`.
@@ -148,6 +155,7 @@ git commit -m "refactor(mongoose): rename toMongoSchema to toMongooseSchema"
 ### Task A3: Update the test suite (registry key + imports)
 
 **Files:**
+
 - Modify: `packages/mongoose/tests/_setup.ts`
 - Modify: every `packages/mongoose/tests/*.test.ts`
 
@@ -176,6 +184,7 @@ export function uniqueModelName(prefix: string): string {
 - [ ] **Step 2: Update every test file in `packages/mongoose/tests/`**
 
 Apply these substitutions across all `*.test.ts` files in the directory:
+
 - `toMongoSchema` → `toMongooseSchema`
 - `getSchema('mongo'` → `getSchema('mongoose'` (and any `getSchema("mongo"`)
 - `MongoAdapterOptions` → `MongooseAdapterOptions`
@@ -201,6 +210,7 @@ git commit -m "test(mongoose): update tests for the mongoose rename"
 ### Task A4: Update `vitest.config.ts` and the consumer example
 
 **Files:**
+
 - Modify: `vitest.config.ts:14-19` (the `setupFiles` array)
 - Modify: `examples/consumer/package.json`
 - Modify: `examples/consumer/index.ts`
@@ -218,7 +228,7 @@ The `setupFiles` array hard-codes package paths. Change the `mongo` entry to `mo
     ],
 ```
 
-(A second entry for the *new* `packages/mongo/tests/_setup.ts` is added in Task B1.)
+(A second entry for the _new_ `packages/mongo/tests/_setup.ts` is added in Task B1.)
 
 - [ ] **Step 2: Update `examples/consumer/package.json`**
 
@@ -266,6 +276,7 @@ Phase B produces working software: a new package emitting MongoDB `$jsonSchema` 
 ### Task B1: Scaffold the new package
 
 **Files:**
+
 - Create: `packages/mongo/package.json`
 - Create: `packages/mongo/tsup.config.ts`
 - Create: `packages/mongo/tsconfig.json`
@@ -418,6 +429,7 @@ git commit -m "feat(mongo): scaffold the native-driver sapphire-mongo package"
 ### Task B2: `toMongoValidator` — primitives (string, number, boolean, date)
 
 **Files:**
+
 - Create: `packages/mongo/tests/validator-primitives.test.ts`
 - Modify: `packages/mongo/src/index.ts`
 
@@ -462,12 +474,15 @@ describe('toMongoValidator — primitives', () => {
   })
 
   it('maps format email/uuid to a pattern and omits url', () => {
-    expect((toMongoValidator(a.string().email().toSchema()).$jsonSchema as any).pattern)
-      .toBeTypeOf('string')
-    expect((toMongoValidator(a.string().uuid().toSchema()).$jsonSchema as any).pattern)
-      .toBeTypeOf('string')
-    expect((toMongoValidator(a.string().url().toSchema()).$jsonSchema as any).pattern)
-      .toBeUndefined()
+    expect((toMongoValidator(a.string().email().toSchema()).$jsonSchema as any).pattern).toBeTypeOf(
+      'string',
+    )
+    expect((toMongoValidator(a.string().uuid().toSchema()).$jsonSchema as any).pattern).toBeTypeOf(
+      'string',
+    )
+    expect(
+      (toMongoValidator(a.string().url().toSchema()).$jsonSchema as any).pattern,
+    ).toBeUndefined()
   })
 
   it('maps plain number to bsonType number and int() to int', () => {
@@ -613,6 +628,7 @@ git commit -m "feat(mongo): toMongoValidator for primitive IR kinds"
 ### Task B3: `toMongoValidator` — composites (object, array, tuple, record)
 
 **Files:**
+
 - Create: `packages/mongo/tests/validator-composites.test.ts`
 - Modify: `packages/mongo/src/index.ts`
 
@@ -774,6 +790,7 @@ git commit -m "feat(mongo): toMongoValidator for object/array/tuple/record"
 ### Task B4: `toMongoValidator` — union, literal, enum, nullable, refs, meta
 
 **Files:**
+
 - Create: `packages/mongo/tests/validator-refs.test.ts`
 - Create: `packages/mongo/tests/validator-meta-nullable.test.ts`
 - Modify: `packages/mongo/src/index.ts`
@@ -907,6 +924,7 @@ git commit -m "feat(mongo): toMongoValidator for union/literal/enum/ref + nullab
 ### Task B5: `_id` story + `MongoDoc` type + barrel exports
 
 **Files:**
+
 - Create: `packages/mongo/tests/validator-id.test.ts`
 - Modify: `packages/mongo/src/index.ts`
 
@@ -953,7 +971,7 @@ Expected: PASS (no `_id` special-casing needed — this test documents and locks
 
 Append to `packages/mongo/src/index.ts`:
 
-```ts
+````ts
 import type { Field, Infer } from '@ascendance-hub/sapphire-core'
 
 /**
@@ -970,7 +988,7 @@ import type { Field, Infer } from '@ascendance-hub/sapphire-core'
  * since the document shape is a purely type-level concern.
  */
 export type MongoDoc<F extends Field<any, any>> = Infer<F>
-```
+````
 
 > Verify `Field`'s type parameters against `packages/core/src/interfaces/field.ts` — if `Field` takes a different arity, adjust `Field<any, any>` to match (or use `Field<any>`).
 
@@ -989,6 +1007,7 @@ git commit -m "feat(mongo): _id behaviour test + MongoDoc type export"
 ### Task B6: Round-trip test against an in-memory MongoDB
 
 **Files:**
+
 - Create: `packages/mongo/tests/validator-roundtrip.test.ts`
 
 - [ ] **Step 1: Write the round-trip test**
@@ -1062,6 +1081,7 @@ git commit -m "test(mongo): round-trip validator against in-memory MongoDB"
 ### Task B7: Phase B gate — coverage
 
 **Files:**
+
 - (no new files — verification only)
 
 - [ ] **Step 1: Run the mongo package with coverage**
@@ -1085,6 +1105,7 @@ Expected: `packages/mongo/dist/` contains `index.js`, `index.cjs`, `index.d.ts`.
 ### Task C1: Extend the multi-adapter tests
 
 **Files:**
+
 - Modify: `packages/core/tests/multi-adapter/single-definition.test.ts`
 - Modify: `packages/core/tests/multi-adapter/refs.test.ts`
 - Modify: `packages/core/tests/multi-adapter/composition.test.ts`
@@ -1114,6 +1135,7 @@ git commit -m "test(core): extend multi-adapter tests with the mongo validator"
 ### Task C2: Rewrite `docs/adapters/mongo.md` and create `mongoose.md`
 
 **Files:**
+
 - Create: `docs/adapters/mongoose.md`
 - Modify: `docs/adapters/mongo.md`
 
@@ -1140,6 +1162,7 @@ git commit -m "docs: split adapters/mongo into native-driver + mongoose pages"
 ### Task C3: Update remaining docs + website nav
 
 **Files:**
+
 - Modify: `docs/meta/design-decisions.md`
 - Modify: `README.md`
 - Modify: docs under `docs/**` that reference the `'mongo'` adapter
@@ -1182,6 +1205,7 @@ git commit -m "docs: retarget mongo references and add the mongoose adapter to n
 ### Task C4: Release config — changeset
 
 **Files:**
+
 - Modify: `.changeset/config.json`
 - Create: `.changeset/season-four-sublib-separation.md`
 
@@ -1234,6 +1258,7 @@ git commit -m "chore: changeset for the mongo/mongoose split"
 ### Task C5: Final verification gate
 
 **Files:**
+
 - (verification only)
 
 - [ ] **Step 1: Full local pipeline**
@@ -1263,7 +1288,7 @@ Confirm `gh auth status` shows the personal account active before creating the P
 
 ## Self-Review
 
-**Spec coverage:** Target package layout → Phase A + B1. `toMongoValidator` for all IR kinds → B2–B5. `toMongoDocShape` (Output B) → resolved as `MongoDoc` type, D7 + B5. `sapphire-mongoose` changes (name, export, registry key, paths, README) → Phase A. `_id` story → B5. Migration story → D8 (no shim, unpublished). Test plan (primitives, composites, refs, roundtrip, _id) → B2–B6. Cross-adapter reach → C1. Adapter registry strings → A3 + B1 `_setup.ts`. Build/publish changes (`tsup`, `tsconfig`, `peerDep`, changeset `linked`/`fixed`) → B1 + C4. Documentation changes → C2 + C3. Open questions 1–4 → D1–D4.
+**Spec coverage:** Target package layout → Phase A + B1. `toMongoValidator` for all IR kinds → B2–B5. `toMongoDocShape` (Output B) → resolved as `MongoDoc` type, D7 + B5. `sapphire-mongoose` changes (name, export, registry key, paths, README) → Phase A. `_id` story → B5. Migration story → D8 (no shim, unpublished). Test plan (primitives, composites, refs, roundtrip, \_id) → B2–B6. Cross-adapter reach → C1. Adapter registry strings → A3 + B1 `_setup.ts`. Build/publish changes (`tsup`, `tsconfig`, `peerDep`, changeset `linked`/`fixed`) → B1 + C4. Documentation changes → C2 + C3. Open questions 1–4 → D1–D4.
 
 **Placeholder scan:** No "TBD"/"implement later". Code steps carry full code. Three steps carry a `>` caveat to verify a core API name (`.optional()`/`.name()`/`.meta()`/`Field` arity) against `packages/core` before running — these are deliberate verification prompts, not placeholders, because the exact core modifier surface was not read during planning.
 
