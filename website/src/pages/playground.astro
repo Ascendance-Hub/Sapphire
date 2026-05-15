@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+import Playground from '../components/Playground.astro'
+---
+<BaseLayout title="Sapphire — playground">
+  <section class="pg-page">
+    <h1>Playground</h1>
+    <p>Edit the schema and the sample value — every panel recomputes live.</p>
+    <Playground />
+  </section>
+  <style>
+    .pg-page { max-width: var(--maxw); margin: 0 auto; padding: 36px 22px; }
+    .pg-page h1 { margin: 0 0 4px; }
+    .pg-page p { color: var(--ink-600); margin: 0 0 20px; }
+  </style>
+</BaseLayout>
