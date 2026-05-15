@@ -5,7 +5,7 @@ import {
   type StringFormat,
 } from '@ascendance-hub/sapphire-core'
 
-export interface MongoAdapterOptions {
+export interface MongooseAdapterOptions {
   /**
    * Default `_id` setting for nested subdoc schemas. When `false` (default), Sapphire
    * does NOT auto-add `_id` to subdocs (deviates from Mongoose's default `true`).
@@ -46,7 +46,7 @@ function stringFormatValidator(format: StringFormat): {
 function applyCommon(
   def: Record<string, any>,
   node: SapphireSchemaNode,
-  _options: MongoAdapterOptions,
+  _options: MongooseAdapterOptions,
 ): void {
   if (node.unique) def.unique = true
   if (node.index !== undefined) {
@@ -71,7 +71,7 @@ function applyCommon(
   }
 }
 
-function buildField(node: SapphireSchemaNode, options: MongoAdapterOptions): Record<string, any> {
+function buildField(node: SapphireSchemaNode, options: MongooseAdapterOptions): Record<string, any> {
   switch (node.kind) {
     case 'string': {
       const def: Record<string, any> = { type: String, required: node.required }
@@ -248,7 +248,7 @@ function buildField(node: SapphireSchemaNode, options: MongoAdapterOptions): Rec
   }
 }
 
-function buildSubdoc(node: ObjectNode, options: MongoAdapterOptions): mongoose.Schema {
+function buildSubdoc(node: ObjectNode, options: MongooseAdapterOptions): mongoose.Schema {
   const definition: Record<string, any> = {}
   for (const [key, child] of Object.entries(node.properties)) {
     definition[key] = buildField(child, options)
@@ -256,7 +256,7 @@ function buildSubdoc(node: ObjectNode, options: MongoAdapterOptions): mongoose.S
   return new mongoose.Schema(definition, { _id: options.subdocId ?? false })
 }
 
-function buildSchema(node: ObjectNode, options: MongoAdapterOptions): mongoose.Schema {
+function buildSchema(node: ObjectNode, options: MongooseAdapterOptions): mongoose.Schema {
   const definition: Record<string, any> = {}
   for (const [key, child] of Object.entries(node.properties)) {
     definition[key] = buildField(child, options)
@@ -282,9 +282,9 @@ function buildSchema(node: ObjectNode, options: MongoAdapterOptions): mongoose.S
   return schema
 }
 
-export function toMongoSchema(
+export function toMongooseSchema(
   node: SapphireSchemaNode,
-  options: MongoAdapterOptions = {},
+  options: MongooseAdapterOptions = {},
 ): mongoose.Schema | Record<string, any> {
   if (node.kind === 'object') {
     return buildSchema(node, options)
