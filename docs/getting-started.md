@@ -19,7 +19,7 @@ npm install @ascendance-hub/sapphire-core
 Core plus the Mongoose adapter (`mongoose` is a peer dependency):
 
 ```bash
-npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-mongo mongoose
+npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-mongoose mongoose
 ```
 
 Core plus the Drizzle adapter (`drizzle-orm` is a peer dependency, supported range `^0.44 || ^0.45`):
@@ -110,11 +110,11 @@ Adapters are not auto-registered. Register the one you want once in your applica
 ```ts
 import mongoose from 'mongoose'
 import { Sapphire, registerAdapter } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
 
-registerAdapter('mongo', toMongoSchema)
+registerAdapter('mongoose', toMongooseSchema)
 
-const a = new Sapphire({ defaultAdapter: 'mongo' })
+const a = new Sapphire({ defaultAdapter: 'mongoose' })
 
 const userSchema = a.object({
   name: a.string().min(1),
@@ -126,7 +126,7 @@ const mongoSchema = userSchema.getSchema() as mongoose.Schema
 // mongoSchema is a real mongoose.Schema, ready for mongoose.model(...)
 ```
 
-`registerAdapter(name, fn)` puts your adapter under a name; `getSchema(name?, options?)` resolves the field's IR (`SapphireSchemaNode`) through that adapter. When the `Sapphire` instance has a `defaultAdapter`, `getSchema()` uses it; otherwise pass the name explicitly: `userSchema.getSchema('mongo')`.
+`registerAdapter(name, fn)` puts your adapter under a name; `getSchema(name?, options?)` resolves the field's IR (`SapphireSchemaNode`) through that adapter. When the `Sapphire` instance has a `defaultAdapter`, `getSchema()` uses it; otherwise pass the name explicitly: `userSchema.getSchema('mongoose')`.
 
 The same pattern works for the JSON Schema and Drizzle adapters — JSON Schema needs no options, Drizzle requires at minimum a `dialect`:
 

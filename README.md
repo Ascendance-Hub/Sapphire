@@ -12,10 +12,16 @@ npm install @ascendance-hub/sapphire-core
 
 Plus the adapter(s) you want. Each one declares its own peer dependencies — install them alongside.
 
+Mongo adapter — native MongoDB driver (`mongodb` is an optional peer dep):
+
+```bash
+npm install @ascendance-hub/sapphire-mongo
+```
+
 Mongoose adapter (`mongoose` is a peer dep):
 
 ```bash
-npm install @ascendance-hub/sapphire-mongo mongoose
+npm install @ascendance-hub/sapphire-mongoose mongoose
 ```
 
 Drizzle adapter (`drizzle-orm` is a peer dep, supported range `^0.44 || ^0.45`):
@@ -36,11 +42,11 @@ npm install @ascendance-hub/sapphire-json-schema
 // see docs/getting-started.md for the full walkthrough
 import mongoose from 'mongoose'
 import { Sapphire, registerAdapter, type Infer } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
 
-registerAdapter('mongo', toMongoSchema)
+registerAdapter('mongoose', toMongooseSchema)
 
-const a = new Sapphire({ defaultAdapter: 'mongo' })
+const a = new Sapphire({ defaultAdapter: 'mongoose' })
 
 const userSchema = a.object({
   name: a.string().min(1),
@@ -57,13 +63,16 @@ const mongoSchema = userSchema.getSchema() as mongoose.Schema
 const UserModel = mongoose.model('User', mongoSchema)
 ```
 
-The same `userSchema` powers three outputs from one definition:
+The same `userSchema` powers every adapter from one definition:
 
 ```ts
-// Mongo (no adapter options needed):
+// Mongoose Schema:
+userSchema.getSchema('mongoose')
+
+// Native MongoDB driver — a $jsonSchema collection validator:
 userSchema.getSchema('mongo')
 
-// JSON Schema 2020-12 (no adapter options needed):
+// JSON Schema 2020-12:
 userSchema.getSchema('json-schema')
 
 // Drizzle requires a dialect — pass adapter options as the second arg:
@@ -75,7 +84,7 @@ userSchema.getSchema('drizzle', { dialect: 'pg' })
 - [Docs index](./docs/README.md) — browseable table of contents.
 - [Getting Started](./docs/getting-started.md) — install, your first schema, parsing, and plugging in an adapter.
 - [Concepts](./docs/concepts/) — fields, modifiers, validation, inference, refs, composition.
-- [Adapters](./docs/adapters/) — Mongo, JSON Schema, Drizzle.
+- [Adapters](./docs/adapters/) — Mongo, Mongoose, JSON Schema, Drizzle.
 - [Recipes](./docs/recipes/) — form validation, share-types-with-frontend, custom adapters, error messages, Zod migration.
 
 ## Packages
@@ -83,7 +92,8 @@ userSchema.getSchema('drizzle', { dialect: 'pg' })
 | Package                                | Description                                                                                |
 | -------------------------------------- | ------------------------------------------------------------------------------------------ |
 | `@ascendance-hub/sapphire-core`        | Core — field DSL, IR (`SapphireSchemaNode`), validation, adapter registry, type inference. |
-| `@ascendance-hub/sapphire-mongo`       | Mongoose adapter — emits `mongoose.Schema` from any Sapphire IR.                           |
+| `@ascendance-hub/sapphire-mongo`       | Native MongoDB driver adapter — emits `$jsonSchema` collection validators.                 |
+| `@ascendance-hub/sapphire-mongoose`    | Mongoose adapter — emits `mongoose.Schema` from any Sapphire IR.                           |
 | `@ascendance-hub/sapphire-drizzle`     | Drizzle adapter — emits `pgTable` / `mysqlTable` / `sqliteTable`.                          |
 | `@ascendance-hub/sapphire-json-schema` | JSON Schema 2020-12 adapter — for AJV, MCP tools, form generators.                         |
 

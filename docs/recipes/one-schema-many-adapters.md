@@ -11,11 +11,11 @@ Sapphire's IR is the single source of truth. Adapters are pure functions over it
 ```ts
 import mongoose from 'mongoose'
 import { Sapphire, registerAdapter } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 
 // Register both adapters once.
-registerAdapter('mongo', toMongoSchema)
+registerAdapter('mongoose', toMongooseSchema)
 registerAdapter('json-schema', toJsonSchema)
 
 const a = new Sapphire()
@@ -34,7 +34,7 @@ const Product = a
   .index(['sku'], { unique: true })
 
 // Adapter #1 — Mongoose for persistence.
-const ProductMongoSchema = Product.getSchema('mongo') as mongoose.Schema
+const ProductMongoSchema = Product.getSchema('mongoose') as mongoose.Schema
 const ProductModel = mongoose.model('Product', ProductMongoSchema)
 
 // Adapter #2 — JSON Schema for the public API contract.
@@ -65,7 +65,7 @@ When two adapters need slightly different behaviour for the same field, layer `.
 const email = a
   .string()
   .email()
-  .adapter('mongo', { sparse: true, collation: { locale: 'en', strength: 2 } })
+  .adapter('mongoose', { sparse: true, collation: { locale: 'en', strength: 2 } })
   .adapter('json-schema', { examples: ['ada@example.com'], 'x-internal-pii': true })
 ```
 

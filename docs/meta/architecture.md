@@ -18,7 +18,7 @@ flowchart LR
 | Package                                | Responsibility                                                                                                                                                 |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@ascendance-hub/sapphire-core`        | Field DSL, IR, validation (`parse`/`safeParse`), `Infer<>`/`InferInput<>` types, adapter registry, named-schema registry, message resolver. Zero runtime deps. |
-| `@ascendance-hub/sapphire-mongo`       | Mongoose adapter. Walks the IR and emits a `mongoose.Schema`.                                                                                                  |
+| `@ascendance-hub/sapphire-mongoose`       | Mongoose adapter. Walks the IR and emits a `mongoose.Schema`.                                                                                                  |
 | `@ascendance-hub/sapphire-json-schema` | JSON Schema 2020-12 adapter. Emits a `$defs` collector with `$ref` cycles supported.                                                                           |
 | `@ascendance-hub/sapphire-drizzle`     | Drizzle adapter. Emits `pgTable` / `mysqlTable` / `sqliteTable` with lazy `references()` for refs.                                                             |
 
@@ -31,7 +31,7 @@ const a = new Sapphire()
 const User = a.object({ name: a.string().min(3) }).name('User')
 
 const ir = User.toSchema()
-const mongoSchema = User.getSchema('mongo')
+const mongoSchema = User.getSchema('mongoose')
 ```
 
 What happens at each step:
@@ -40,7 +40,7 @@ What happens at each step:
 2. **`a.object({ name: ... })`** instantiates an `ObjectField` carrying a generic `T extends Record<string, Field>` so composition methods (`pick`, `omit`, `partial`, `required`, `extend`, `merge`) stay typed against the actual shape.
 3. **`.name('User')`** registers the ObjectField in the Sapphire instance's `NamedSchemaRegistry`. This is what makes the schema reachable by `a.ref('User')` from elsewhere.
 4. **`User.toSchema()`** walks the field tree and emits an IR `SapphireSchemaNode`. The result is a flat discriminated union — `{ kind: 'object', name: 'User', properties: { name: { kind: 'string', minLength: 3, required: true } }, required: true }` — with no class instances and no TS types.
-5. **`User.getSchema('mongo')`** looks up the `'mongo'` adapter in the registry, calls it with the IR node, and returns the adapter's output (a `mongoose.Schema`). The lookup falls back to the instance's `defaultAdapter` when the name is omitted.
+5. **`User.getSchema('mongoose')`** looks up the `'mongoose'` adapter in the registry, calls it with the IR node, and returns the adapter's output (a `mongoose.Schema`). The lookup falls back to the instance's `defaultAdapter` when the name is omitted.
 
 The adapter does not see the DSL classes or the original field tree — only the IR. This is the boundary that makes third-party adapters possible.
 
@@ -61,7 +61,7 @@ Adapters own:
 
 ## Per-adapter behavior at a glance
 
-- **Mongo (`@ascendance-hub/sapphire-mongo`)** — walks the IR into `mongoose.Schema` paths. Unsupported kinds fall back to `Mixed`. Subdocuments use `_id: false` by default. Universal modifiers (`required`, `unique`, `index`, `default`, `enum`) map to Mongoose path options. Escape hatch `meta.mongo` merges last with `type`/`required` blacklisted.
+- **Mongo (`@ascendance-hub/sapphire-mongoose`)** — walks the IR into `mongoose.Schema` paths. Unsupported kinds fall back to `Mixed`. Subdocuments use `_id: false` by default. Universal modifiers (`required`, `unique`, `index`, `default`, `enum`) map to Mongoose path options. Escape hatch `meta.mongo` merges last with `type`/`required` blacklisted.
 - **JSON Schema (`@ascendance-hub/sapphire-json-schema`)** — emits 2020-12 (`prefixItems` for tuples, numeric `exclusiveMinimum`). `union` becomes `oneOf` (see [Design decisions](./design-decisions.md)). Named ObjectFields collect into `$defs` and `ref` becomes `$ref: '#/$defs/Name'`. Escape hatch `meta['json-schema']` merges last with `type` and `$ref` blacklisted.
 - **Drizzle (`@ascendance-hub/sapphire-drizzle`)** — emits `pgTable` / `mysqlTable` / `sqliteTable` chosen by `options.dialect`. Refs use `references(() => target.id)` via a `DrizzleTableRegistry` so cycles resolve lazily. Escape hatch `meta.drizzle` is interpreted as chained method calls; per-dialect sub-keys (`pg`, `mysql`, `sqlite`) gate calls by dialect. Unknown method names are silently skipped (intentional — see [`escape-hatch.md`](../concepts/escape-hatch.md)).
 

@@ -14,7 +14,7 @@ import { Sapphire, type SapphireSchemaNode } from '@ascendance-hub/sapphire-core
 const a = new Sapphire()
 const name = a
   .string()
-  .adapter('mongo', { sparse: true })
+  .adapter('mongoose', { sparse: true })
   .adapter('json-schema', { 'x-internal': true })
 
 const node = name.toSchema() as SapphireSchemaNode
@@ -34,9 +34,9 @@ const node = name.toSchema() as SapphireSchemaNode
 ```ts
 const a = new Sapphire()
 const user = a.object({
-  email: a.string().adapter('mongo', { sparse: true, collation: { locale: 'en' } }),
+  email: a.string().adapter('mongoose', { sparse: true, collation: { locale: 'en' } }),
 })
-const schema = toMongoSchema(user.toSchema()) as mongoose.Schema
+const schema = toMongooseSchema(user.toSchema()) as mongoose.Schema
 const path = schema.path('email') as unknown as {
   options: { sparse?: boolean; collation?: { locale: string }; type: unknown }
 }
@@ -45,7 +45,7 @@ const path = schema.path('email') as unknown as {
 // path.options.type === String  (blacklisted — escape-hatch can't override)
 ```
 
-Common keys: `sparse`, `collation`, `validate`, `select`, `alias`, `immutable`, `lowercase`/`uppercase`/`trim` overrides, custom getters/setters. At the object-schema level (object's `.adapter('mongo', { collection: 'users' })`), `collection` is honored for `mongoose.SchemaOptions.collection`.
+Common keys: `sparse`, `collation`, `validate`, `select`, `alias`, `immutable`, `lowercase`/`uppercase`/`trim` overrides, custom getters/setters. At the object-schema level (object's `.adapter('mongoose', { collection: 'users' })`), `collection` is honored for `mongoose.SchemaOptions.collection`.
 
 ### JSON Schema — passthrough with `type` and `$ref` blacklisted
 

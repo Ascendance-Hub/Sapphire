@@ -6,6 +6,7 @@
     [
       "@ascendance-hub/sapphire-core",
       "@ascendance-hub/sapphire-mongo",
+      "@ascendance-hub/sapphire-mongoose",
       "@ascendance-hub/sapphire-json-schema",
       "@ascendance-hub/sapphire-drizzle"
     ]
