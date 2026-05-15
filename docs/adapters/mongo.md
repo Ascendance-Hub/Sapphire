@@ -143,9 +143,9 @@ Any other key Mongoose accepts on a `SchemaTypeDefinition` is honored verbatim �
 
 The second argument to `toMongoSchema(node, options?)`:
 
-| Option     | Default  | Effect                                                                                                                              |
-| ---------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `subdocId` | `false`  | Whether nested object Schemas auto-add `_id`. Default deviates from Mongoose's `true` — most apps don't need `_id` on subdocuments. |
+| Option     | Default  | Effect                                                                                                                                |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `subdocId` | `false`  | Whether nested object Schemas auto-add `_id`. Default deviates from Mongoose's `true` — most apps don't need `_id` on subdocuments.   |
 | `rootId`   | `'auto'` | Root document `_id` strategy. `'auto'` = Mongoose default (auto ObjectId unless you declare `_id`). `'none'` = emit `{ _id: false }`. |
 
 ```ts
