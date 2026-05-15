@@ -74,6 +74,30 @@ function callChainFromMeta(
  * column type are warned about (typo guard) and skipped — or, with
  * `strict: true`, thrown.
  */
+/**
+ * Collects field-level `.index()` declarations from an object node's
+ * properties. Drizzle models single-column indexes at the table level (the
+ * third-arg callback of `xTable`), so the dialect builders call this and merge
+ * the result with the composite `obj.indexes` list.
+ *
+ * `node.index === true` → a plain index; `node.index === { unique: true }` →
+ * a unique index. The column-level `node.unique` constraint is separate and
+ * handled by `applyCommon`.
+ */
+export function collectFieldIndexes(
+  obj: Extract<SapphireSchemaNode, { kind: 'object' }>,
+): Array<{ key: string; unique: boolean }> {
+  const out: Array<{ key: string; unique: boolean }> = []
+  for (const [key, child] of Object.entries(obj.properties)) {
+    if (child.index === true) {
+      out.push({ key, unique: false })
+    } else if (child.index && typeof child.index === 'object') {
+      out.push({ key, unique: child.index.unique === true })
+    }
+  }
+  return out
+}
+
 export function applyCommon(col: any, node: SapphireSchemaNode, ctx: ApplyCtx): any {
   let out = col
   if (node.default !== undefined) {

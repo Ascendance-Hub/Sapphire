@@ -12,7 +12,7 @@ import {
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
-import { applyCommon } from '../shared/common'
+import { applyCommon, collectFieldIndexes } from '../shared/common'
 import type { DrizzleAdapterOptions } from '../index'
 import type { DrizzleTableRegistry } from '../registry'
 
@@ -92,16 +92,19 @@ function pgColumn(name: string, node: SapphireSchemaNode, ctx: Ctx): any {
       })
       break
     }
+    /* v8 ignore start -- exhaustiveness guard: unreachable while the IR union
+       is exhaustively handled above; TypeScript's `never` enforces it. */
     default: {
-      // Exhaustiveness guard.
       const _exhaustive: never = node
       throw new Error(`pgColumn: unhandled node kind ${(node as any).kind} (${_exhaustive})`)
     }
+    /* v8 ignore stop */
   }
   return applyCommon(col, node, ctx)
 }
 
 export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
+  /* v8 ignore next 3 -- defensive: toDrizzleSchema already rejects non-object roots */
   if (node.kind !== 'object') {
     throw new Error('pg.buildTable: expected ObjectField at root')
   }
@@ -121,15 +124,22 @@ export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
   // are emitted via the third-arg callback of `pgTable`. We use the **array** form
   // (the object form is deprecated in drizzle-orm). Index names follow the
   // pattern `<tableName>_idx_<i>` to stay stable & unique within the table.
+  // Field-level `.index()` declarations are merged in as single-column indexes.
   const idxList = obj.indexes ?? []
+  const fieldIdx = collectFieldIndexes(obj)
   const table =
-    idxList.length > 0
+    idxList.length > 0 || fieldIdx.length > 0
       ? pgTable(ctx.tableName, cols, (t: any) => {
-          return idxList.map((idx, i) => {
+          const composite = idxList.map((idx, i) => {
             const idxName = `${ctx.tableName}_idx_${i}`
             const idxCols = idx.keys.map((k) => t[k]) as [any, ...any[]]
             return idx.unique ? uniqueIndex(idxName).on(...idxCols) : index(idxName).on(...idxCols)
           })
+          const perField = fieldIdx.map(({ key, unique }) => {
+            const idxName = `${ctx.tableName}_${key}_idx`
+            return unique ? uniqueIndex(idxName).on(t[key]) : index(idxName).on(t[key])
+          })
+          return [...composite, ...perField]
         })
       : pgTable(ctx.tableName, cols)
   const emittedPkName =

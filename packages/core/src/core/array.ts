@@ -13,6 +13,18 @@ import type {
 } from '../lib/types'
 import { SapphireSchemaNode } from '../schema/types'
 
+/**
+ * Guards the count argument of `.min()` / `.max()` / `.length()`. Counts must
+ * be non-negative integers — a negative or fractional bound is always a caller
+ * bug, so we throw at build time rather than emit a nonsensical schema. Mirrors
+ * the argument guards on `StringField`.
+ */
+function assertCount(value: number, method: string): void {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw new Error(`${method} must be a non-negative integer`)
+  }
+}
+
 type ArrayRuleMessages = {
   min_items?: MessageValue
   max_items?: MessageValue
@@ -135,6 +147,7 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
   }
 
   min(value: number, opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
+    assertCount(value, 'min')
     return this.clone({
       minItems: value,
       ruleMessages: {
@@ -145,6 +158,7 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
   }
 
   max(value: number, opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
+    assertCount(value, 'max')
     return this.clone({
       maxItems: value,
       ruleMessages: {
@@ -155,6 +169,7 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
   }
 
   length(value: number, opts?: { message?: MessageValue }): ArrayField<F, TOut, TIn> {
+    assertCount(value, 'length')
     return this.clone({
       length: value,
       ruleMessages: {

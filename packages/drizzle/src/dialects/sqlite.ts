@@ -1,6 +1,6 @@
 import type { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core'
-import { applyCommon } from '../shared/common'
+import { applyCommon, collectFieldIndexes } from '../shared/common'
 import type { DrizzleAdapterOptions } from '../index'
 import type { DrizzleTableRegistry } from '../registry'
 
@@ -91,15 +91,19 @@ function sqliteColumn(name: string, node: SapphireSchemaNode, ctx: Ctx): any {
       })
       break
     }
+    /* v8 ignore start -- exhaustiveness guard: unreachable while the IR union
+       is exhaustively handled above; TypeScript's `never` enforces it. */
     default: {
       const _exhaustive: never = node
       throw new Error(`sqliteColumn: unhandled node kind ${(node as any).kind} (${_exhaustive})`)
     }
+    /* v8 ignore stop */
   }
   return applyCommon(col, node, ctx)
 }
 
 export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
+  /* v8 ignore next 3 -- defensive: toDrizzleSchema already rejects non-object roots */
   if (node.kind !== 'object') {
     throw new Error('sqlite.buildTable: expected ObjectField at root')
   }
@@ -121,14 +125,20 @@ export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
   // emit via the third-arg callback of `sqliteTable`, array form. Index names
   // follow `<tableName>_idx_<i>` (stable, unique within table).
   const idxList = obj.indexes ?? []
+  const fieldIdx = collectFieldIndexes(obj)
   const table =
-    idxList.length > 0
+    idxList.length > 0 || fieldIdx.length > 0
       ? sqliteTable(ctx.tableName, cols, (t: any) => {
-          return idxList.map((idx, i) => {
+          const composite = idxList.map((idx, i) => {
             const idxName = `${ctx.tableName}_idx_${i}`
             const idxCols = idx.keys.map((k) => t[k]) as [any, ...any[]]
             return idx.unique ? uniqueIndex(idxName).on(...idxCols) : index(idxName).on(...idxCols)
           })
+          const perField = fieldIdx.map(({ key, unique }) => {
+            const idxName = `${ctx.tableName}_${key}_idx`
+            return unique ? uniqueIndex(idxName).on(t[key]) : index(idxName).on(t[key])
+          })
+          return [...composite, ...perField]
         })
       : sqliteTable(ctx.tableName, cols)
   const emittedPkName =

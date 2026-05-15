@@ -1,6 +1,13 @@
 import { SapphireSchemaNode } from '../schema/types'
 
-export type SchemaAdapter = (node: SapphireSchemaNode, options?: unknown) => unknown
+/**
+ * An adapter is a pure function from the IR to some ORM-specific output. The
+ * `options` parameter is intentionally `any`: each adapter declares its own
+ * concrete options type (`MongoAdapterOptions`, `JsonSchemaAdapterOptions`,
+ * etc.), and `any` lets those typed functions register without a cast. The
+ * registry treats `options` opaquely and forwards whatever `getSchema` passed.
+ */
+export type SchemaAdapter = (node: SapphireSchemaNode, options?: any) => unknown
 
 export const adapterRegistry: Map<string, SchemaAdapter> = new Map()
 
