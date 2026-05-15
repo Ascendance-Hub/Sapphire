@@ -89,15 +89,15 @@ This is the keystone of the multi-adapter design. Adding a new IR kind is automa
 
 The flip side is that core can't add IR kinds without coordinating updates to every adapter — but since core and the four first-party adapters share a fixed version, that coordination is already part of the release.
 
-## Two Mongo packages
+## Two MongoDB packages
 
-`@ascendance-hub/sapphire-mongo` and `@ascendance-hub/sapphire-mongoose` are separate packages because they target two different ways of talking to MongoDB.
+`@ascendance-hub/sapphire-bson` and `@ascendance-hub/sapphire-mongoose` are separate packages because they target two different ways of talking to MongoDB.
 
-`sapphire-mongoose` is the original adapter — it emits a `mongoose.Schema`, for apps built on Mongoose. The package was once misnamed `sapphire-mongo`; the rename makes the name honest.
+`sapphire-mongoose` is the Mongoose adapter — it emits a `mongoose.Schema`, for apps built on Mongoose.
 
-`sapphire-mongo` is for apps on the **native MongoDB driver**, with no Mongoose. It emits a `$jsonSchema` collection validator (`toMongoValidator`) — the document you pass to `db.createCollection(name, { validator })` so the database itself rejects malformed inserts. A native-driver user should not have to install Mongoose just to use Sapphire.
+`sapphire-bson` is for apps on the **native MongoDB driver**, with no Mongoose. It emits a `$jsonSchema` collection validator (`toBsonSchema`) — the document you pass to `db.createCollection(name, { validator })` so the database itself rejects malformed inserts. A native-driver user should not have to install Mongoose just to use Sapphire. The package is named for what it emits — a BSON-typed JSON Schema — rather than for the database.
 
-The split keeps each package's blast radius small: `meta.mongo` and `meta.mongoose` are separate escape-hatch namespaces, and the registry keys `'mongo'` and `'mongoose'` never collide.
+The split keeps each package's blast radius small: `meta.bson` and `meta.mongoose` are separate escape-hatch namespaces, and the registry keys `'bson'` and `'mongoose'` never collide.
 
 ## Read more
 

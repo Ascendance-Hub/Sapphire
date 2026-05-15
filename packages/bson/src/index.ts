@@ -1,12 +1,12 @@
 import type { Field, Infer, SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 import { EMAIL_RE, UUID_RE } from '@ascendance-hub/sapphire-core'
 
-export interface MongoValidatorOptions {
+export interface BsonValidatorOptions {
   /** Sets `additionalProperties` on every emitted object schema. Omitted when undefined. */
   additionalProperties?: boolean
 }
 
-export interface MongoValidator {
+export interface BsonValidator {
   $jsonSchema: Record<string, unknown>
 }
 
@@ -16,17 +16,17 @@ export interface MongoValidator {
  *
  * ```ts
  * import type { Collection } from 'mongodb'
- * import type { MongoDoc } from '@ascendance-hub/sapphire-mongo'
- * const users: Collection<MongoDoc<typeof User>> = db.collection('users')
+ * import type { BsonDoc } from '@ascendance-hub/sapphire-bson'
+ * const users: Collection<BsonDoc<typeof User>> = db.collection('users')
  * ```
  *
  * A thin alias over core's `Infer` — there is no runtime helper, since the
  * document shape is a purely type-level concern.
  */
-export type MongoDoc<F extends Field> = Infer<F>
+export type BsonDoc<F extends Field> = Infer<F>
 
 /**
- * `$jsonSchema` keywords the adapter computes itself. The `.adapter('mongo', …)`
+ * `$jsonSchema` keywords the adapter computes itself. The `.adapter('bson', …)`
  * escape hatch cannot override these — overriding them would break validation.
  */
 const META_BLACKLIST = new Set(['bsonType', 'type', 'required', 'enum', 'properties', 'items'])
@@ -37,12 +37,12 @@ function escapeRegex(str: string): string {
 
 /**
  * Carries adapter-neutral keywords (`description`) and merges the
- * `.adapter('mongo', …)` escape hatch. Note: MongoDB rejects unknown
+ * `.adapter('bson', …)` escape hatch. Note: MongoDB rejects unknown
  * `$jsonSchema` keywords, so the hatch must only carry valid ones.
  */
 function applyCommon(out: Record<string, any>, node: SapphireSchemaNode): void {
   if (node.description !== undefined) out.description = node.description
-  const meta = node.meta?.mongo as Record<string, unknown> | undefined
+  const meta = node.meta?.bson as Record<string, unknown> | undefined
   if (meta) {
     for (const [k, v] of Object.entries(meta)) {
       if (META_BLACKLIST.has(k)) continue
@@ -66,7 +66,7 @@ function wrapNullable(out: Record<string, any>, node: SapphireSchemaNode): Recor
 
 function emitObject(
   node: Extract<SapphireSchemaNode, { kind: 'object' }>,
-  options: MongoValidatorOptions,
+  options: BsonValidatorOptions,
 ): Record<string, any> {
   const properties: Record<string, any> = {}
   const required: string[] = []
@@ -83,7 +83,7 @@ function emitObject(
   return out
 }
 
-function emit(node: SapphireSchemaNode, options: MongoValidatorOptions): Record<string, any> {
+function emit(node: SapphireSchemaNode, options: BsonValidatorOptions): Record<string, any> {
   switch (node.kind) {
     case 'string': {
       const out: Record<string, any> = { bsonType: 'string' }
@@ -197,10 +197,10 @@ function emit(node: SapphireSchemaNode, options: MongoValidatorOptions): Record<
  * `{ $jsonSchema: … }`, suitable for `db.createCollection(name, { validator })`
  * or `db.command({ collMod, validator })`.
  */
-export function toMongoValidator(
+export function toBsonSchema(
   node: SapphireSchemaNode,
-  options: MongoValidatorOptions = {},
-): MongoValidator {
+  options: BsonValidatorOptions = {},
+): BsonValidator {
   const root = emit(node, options)
   // MongoDB injects an `_id` into every document. A closed-shape root
   // (`additionalProperties: false`) must still permit that server-added `_id`

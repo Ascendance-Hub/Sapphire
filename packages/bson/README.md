@@ -1,4 +1,4 @@
-# @ascendance-hub/sapphire-mongo
+# @ascendance-hub/sapphire-bson
 
 Native MongoDB driver adapter for [Sapphire](https://github.com/Ascendance-Hub/Sapphire). Converts a Sapphire IR (`SapphireSchemaNode`) into a MongoDB **collection validator** — a `{ $jsonSchema: ... }` document you hand to the driver so the database itself rejects malformed inserts.
 
@@ -9,10 +9,10 @@ Native MongoDB driver adapter for [Sapphire](https://github.com/Ascendance-Hub/S
 ## Install
 
 ```bash
-npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-mongo
+npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-bson
 ```
 
-`@ascendance-hub/sapphire-core` is a peer dependency. `mongodb` is an **optional** peer dependency — `toMongoValidator` emits a plain object and never imports the driver; you only need `mongodb` installed to actually create the collection.
+`@ascendance-hub/sapphire-core` is a peer dependency. `mongodb` is an **optional** peer dependency — `toBsonSchema` emits a plain object and never imports the driver; you only need `mongodb` installed to actually create the collection.
 
 ## Register the adapter
 
@@ -20,18 +20,18 @@ The adapter is **not auto-registered**. Call `registerAdapter` once in your appl
 
 ```ts
 import { Sapphire, registerAdapter } from '@ascendance-hub/sapphire-core'
-import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
+import { toBsonSchema } from '@ascendance-hub/sapphire-bson'
 
-registerAdapter('mongo', toMongoValidator)
+registerAdapter('bson', toBsonSchema)
 
-export const a = new Sapphire({ defaultAdapter: 'mongo' })
+export const a = new Sapphire({ defaultAdapter: 'bson' })
 ```
 
 ## Quickstart
 
 ```ts
 import { MongoClient } from 'mongodb'
-import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
+import { toBsonSchema } from '@ascendance-hub/sapphire-bson'
 import { a } from './sapphire'
 
 const User = a.object({
@@ -40,7 +40,7 @@ const User = a.object({
   age: a.number().int().min(0).optional(),
 })
 
-const validator = toMongoValidator(User.toSchema())
+const validator = toBsonSchema(User.toSchema())
 // → { $jsonSchema: { bsonType: 'object', required: [...], properties: {...} } }
 
 const db = new MongoClient(process.env.MONGO_URL!).db('app')
@@ -70,28 +70,28 @@ MongoDB's flavor of JSON Schema — `bsonType` instead of `type`, BSON type name
 
 A `nullable()` primitive lifts into a `bsonType` array (`['string', 'null']`); a nullable `union`/`literal`/`enum` wraps in `anyOf` with a `{ bsonType: 'null' }` branch.
 
-## `MongoValidatorOptions`
+## `BsonValidatorOptions`
 
 | Option                 | Default     | Effect                                                                                                                                  |
 | ---------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `additionalProperties` | _(omitted)_ | When set, emits `additionalProperties` on every object. `false` gives a closed shape (the root still permits MongoDB's injected `_id`). |
 
-## `.adapter('mongo', opts)` escape hatch
+## `.adapter('bson', opts)` escape hatch
 
-Keys passed via `.adapter('mongo', { ... })` are merged into the emitted node. The adapter-computed keys `bsonType`, `type`, `required`, `enum`, `properties`, `items` are blacklisted and cannot be overridden.
+Keys passed via `.adapter('bson', { ... })` are merged into the emitted node. The adapter-computed keys `bsonType`, `type`, `required`, `enum`, `properties`, `items` are blacklisted and cannot be overridden.
 
 **Note:** MongoDB rejects unknown `$jsonSchema` keywords — only pass keys that are valid `$jsonSchema` keywords (`title`, `minProperties`, `patternProperties`, …).
 
-## Typed documents — `MongoDoc`
+## Typed documents — `BsonDoc`
 
 ```ts
 import type { Collection } from 'mongodb'
-import type { MongoDoc } from '@ascendance-hub/sapphire-mongo'
+import type { BsonDoc } from '@ascendance-hub/sapphire-bson'
 
-const users: Collection<MongoDoc<typeof User>> = db.collection('users')
+const users: Collection<BsonDoc<typeof User>> = db.collection('users')
 ```
 
-`MongoDoc<F>` is a type-only alias over core's `Infer` — there is no runtime helper.
+`BsonDoc<F>` is a type-only alias over core's `Infer` — there is no runtime helper.
 
 ## Limitations
 

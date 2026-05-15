@@ -1,4 +1,4 @@
-# Mongo adapter — `@ascendance-hub/sapphire-mongo`
+# Native MongoDB adapter — `@ascendance-hub/sapphire-bson`
 
 The Mongo adapter converts a Sapphire IR (`SapphireSchemaNode`) into a MongoDB
 **collection validator** — a `{ $jsonSchema: ... }` document you hand to the
@@ -14,11 +14,11 @@ instead.
 ## Install
 
 ```bash
-npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-mongo
+npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-bson
 ```
 
 `@ascendance-hub/sapphire-core` is a peer dependency. `mongodb` is an **optional**
-peer dependency — `toMongoValidator` emits a plain object and never imports the
+peer dependency — `toBsonSchema` emits a plain object and never imports the
 driver, so you only need `mongodb` installed to actually create the collection.
 
 ## Register the adapter
@@ -28,11 +28,11 @@ application entry point:
 
 ```ts
 import { Sapphire, registerAdapter } from '@ascendance-hub/sapphire-core'
-import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
+import { toBsonSchema } from '@ascendance-hub/sapphire-bson'
 
-registerAdapter('mongo', toMongoValidator)
+registerAdapter('bson', toBsonSchema)
 
-export const a = new Sapphire({ defaultAdapter: 'mongo' })
+export const a = new Sapphire({ defaultAdapter: 'bson' })
 ```
 
 `registerAdapter` is process-global. The Mongoose adapter registers under the
@@ -42,7 +42,7 @@ separate name `'mongoose'`, so both can coexist in one process.
 
 ```ts
 import { MongoClient } from 'mongodb'
-import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
+import { toBsonSchema } from '@ascendance-hub/sapphire-bson'
 import { a } from './sapphire'
 
 const User = a.object({
@@ -51,7 +51,7 @@ const User = a.object({
   age: a.number().int().min(0).optional(),
 })
 
-const validator = toMongoValidator(User.toSchema())
+const validator = toBsonSchema(User.toSchema())
 // → { $jsonSchema: { bsonType: 'object', required: [...], properties: {...} } }
 
 const client = new MongoClient(process.env.MONGO_URL!)
@@ -63,12 +63,12 @@ await db.createCollection('users', { validator })
 await db.command({ collMod: 'users', validator })
 ```
 
-`field.getSchema('mongo')` is sugar for `toMongoValidator(field.toSchema())` once
+`field.getSchema('bson')` is sugar for `toBsonSchema(field.toSchema())` once
 the adapter is registered.
 
 ## IR → `$jsonSchema` mapping
 
-`toMongoValidator` walks the IR and emits MongoDB's flavor of JSON Schema —
+`toBsonSchema` walks the IR and emits MongoDB's flavor of JSON Schema —
 `bsonType` instead of `type`, BSON type names, everything inlined (no `$ref`).
 
 | IR `kind` | `$jsonSchema` output                                            | Notes                                                                                                                                                                                                                                                                    |
@@ -107,9 +107,9 @@ There is no special handling — an `_id` is just another property:
   an `ObjectId` `_id` server-side as usual.
 - An `_id` of `a.ref('User')` emits `{ bsonType: 'objectId' }`.
 
-## `.adapter('mongo', opts)` escape hatch
+## `.adapter('bson', opts)` escape hatch
 
-Values from `.adapter('mongo', { ... })` are read from `node.meta.mongo` and
+Values from `.adapter('bson', { ... })` are read from `node.meta.bson` and
 merged into the emitted node, with a blacklist of keys the adapter computes
 itself:
 
@@ -123,28 +123,28 @@ const META_BLACKLIST = new Set(['bsonType', 'type', 'required', 'enum', 'propert
 > are valid `$jsonSchema` keywords (`title`, `minProperties`, `maxProperties`,
 > `patternProperties`, …) through the escape hatch.
 
-## `MongoValidatorOptions`
+## `BsonValidatorOptions`
 
-The second argument to `toMongoValidator(node, options?)`:
+The second argument to `toBsonSchema(node, options?)`:
 
 | Option                 | Default     | Effect                                                                                                                                                                         |
 | ---------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `additionalProperties` | _(omitted)_ | When set, emits `additionalProperties` on every object schema. Set `false` for a strict, closed-shape validator — the root object still permits MongoDB's auto-injected `_id`. |
 
 ```ts
-toMongoValidator(User.toSchema(), { additionalProperties: false })
+toBsonSchema(User.toSchema(), { additionalProperties: false })
 ```
 
-## Typed documents — `MongoDoc`
+## Typed documents — `BsonDoc`
 
-`MongoDoc<F>` is a type-only helper for the native driver's
+`BsonDoc<F>` is a type-only helper for the native driver's
 `Collection<TSchema>`:
 
 ```ts
 import type { Collection } from 'mongodb'
-import type { MongoDoc } from '@ascendance-hub/sapphire-mongo'
+import type { BsonDoc } from '@ascendance-hub/sapphire-bson'
 
-const users: Collection<MongoDoc<typeof User>> = db.collection('users')
+const users: Collection<BsonDoc<typeof User>> = db.collection('users')
 ```
 
 It is a thin alias over core's `Infer` — the document shape is a purely

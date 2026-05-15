@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
 import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
-import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
+import { toBsonSchema } from '@ascendance-hub/sapphire-bson'
 import { toDrizzleSchema, DrizzleTableRegistry } from '@ascendance-hub/sapphire-drizzle'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 import { getTableConfig } from 'drizzle-orm/pg-core'
@@ -63,7 +63,7 @@ describe('S1 — refs across adapters', () => {
 
   it('Mongo validator: ref emits bsonType objectId', () => {
     const { Post } = buildPair()
-    const validator = toMongoValidator(Post.toSchema()).$jsonSchema as {
+    const validator = toBsonSchema(Post.toSchema()).$jsonSchema as {
       properties: Record<string, { bsonType: string }>
     }
     expect(validator.properties.author.bsonType).toBe('objectId')
@@ -75,7 +75,7 @@ describe('S1 — refs across adapters', () => {
     const snapshot = JSON.stringify(ir)
 
     toMongooseSchema(ir)
-    toMongoValidator(ir)
+    toBsonSchema(ir)
     const tables = new DrizzleTableRegistry()
     toDrizzleSchema(User.toSchema(), { dialect: 'pg', tableName: 'users', tables })
     toDrizzleSchema(ir, { dialect: 'pg', tableName: 'posts', tables })

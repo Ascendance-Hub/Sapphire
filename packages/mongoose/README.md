@@ -4,7 +4,7 @@ Mongoose adapter for [Sapphire](https://github.com/Ascendance-Hub/Sapphire). Con
 
 > **Unofficial.** A community adapter — not affiliated with, sponsored, or endorsed by the Mongoose project or Automattic, Inc.
 
-> Using the native MongoDB driver instead of Mongoose? See [`@ascendance-hub/sapphire-mongo`](https://www.npmjs.com/package/@ascendance-hub/sapphire-mongo), which emits `$jsonSchema` collection validators.
+> Using the native MongoDB driver instead of Mongoose? See [`@ascendance-hub/sapphire-bson`](https://www.npmjs.com/package/@ascendance-hub/sapphire-bson), which emits `$jsonSchema` collection validators.
 
 ## Install
 

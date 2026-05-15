@@ -12,7 +12,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { MongoClient, ObjectId, type Collection, type Db } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import { Sapphire, type Field } from '@ascendance-hub/sapphire-core'
-import { toMongoValidator, type MongoValidator, type MongoValidatorOptions } from '../src'
+import { toBsonSchema, type BsonValidator, type BsonValidatorOptions } from '../src'
 
 const a = new Sapphire()
 
@@ -34,7 +34,7 @@ afterAll(async () => {
 })
 
 /** Create a fresh collection guarded by `validator`. */
-async function collectionFor(validator: MongoValidator): Promise<Collection> {
+async function collectionFor(validator: BsonValidator): Promise<Collection> {
   const name = `c_${seq++}`
   await db.createCollection(name, { validator })
   return db.collection(name)
@@ -47,9 +47,9 @@ async function collectionFor(validator: MongoValidator): Promise<Collection> {
 async function check(
   field: Field,
   cases: { accepts: unknown[]; rejects: unknown[] },
-  options?: MongoValidatorOptions,
+  options?: BsonValidatorOptions,
 ): Promise<void> {
-  const validator = toMongoValidator(a.object({ val: field }).toSchema(), options)
+  const validator = toBsonSchema(a.object({ val: field }).toSchema(), options)
   const coll = await collectionFor(validator)
   for (const value of cases.accepts) {
     await expect(coll.insertOne({ val: value })).resolves.toBeTruthy()
@@ -161,7 +161,7 @@ describe('integration — ref / nullable', () => {
 
 describe('integration — object-level behaviour', () => {
   it('required keys are enforced server-side', async () => {
-    const validator = toMongoValidator(
+    const validator = toBsonSchema(
       a.object({ title: a.string(), body: a.string().optional() }).toSchema(),
     )
     const coll = await collectionFor(validator)
@@ -170,14 +170,14 @@ describe('integration — object-level behaviour', () => {
   })
 
   it('a declared _id field is validated like any other property', async () => {
-    const validator = toMongoValidator(a.object({ _id: a.string(), name: a.string() }).toSchema())
+    const validator = toBsonSchema(a.object({ _id: a.string(), name: a.string() }).toSchema())
     const coll = await collectionFor(validator)
     await expect(coll.insertOne({ _id: 'user-1', name: 'Ana' })).resolves.toBeTruthy()
     await expect(coll.insertOne({ _id: 42, name: 'Ana' })).rejects.toThrow()
   })
 
   it('additionalProperties: false rejects unknown keys', async () => {
-    const validator = toMongoValidator(a.object({ name: a.string() }).toSchema(), {
+    const validator = toBsonSchema(a.object({ name: a.string() }).toSchema(), {
       additionalProperties: false,
     })
     const coll = await collectionFor(validator)
@@ -185,9 +185,9 @@ describe('integration — object-level behaviour', () => {
     await expect(coll.insertOne({ name: 'Ana', extra: true })).rejects.toThrow()
   })
 
-  it('the .adapter("mongo", …) escape hatch reaches the validator', () =>
+  it('the .adapter("bson", …) escape hatch reaches the validator', () =>
     // `minimum` is a valid $jsonSchema keyword — passed straight through.
-    check(a.number().adapter('mongo', { minimum: 18 }), {
+    check(a.number().adapter('bson', { minimum: 18 }), {
       accepts: [18, 40],
       rejects: [17],
     }))

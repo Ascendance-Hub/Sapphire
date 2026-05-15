@@ -19,7 +19,7 @@ The repo is a monorepo managed by **npm workspaces**:
 ```
 packages/
 ├── core/           # @ascendance-hub/sapphire-core
-├── mongo/          # @ascendance-hub/sapphire-mongo (native MongoDB driver)
+├── bson/           # @ascendance-hub/sapphire-bson (native MongoDB driver)
 ├── mongoose/       # @ascendance-hub/sapphire-mongoose
 ├── json-schema/    # @ascendance-hub/sapphire-json-schema
 └── drizzle/        # @ascendance-hub/sapphire-drizzle

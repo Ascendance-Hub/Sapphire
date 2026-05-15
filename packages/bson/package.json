@@ -1,5 +1,5 @@
 {
-  "name": "@ascendance-hub/sapphire-mongo",
+  "name": "@ascendance-hub/sapphire-bson",
   "version": "0.5.0",
   "description": "Native MongoDB driver adapter for Sapphire — emits $jsonSchema collection validators.",
   "type": "module",
@@ -40,13 +40,15 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ascendance-Hub/Sapphire.git",
-    "directory": "packages/mongo"
+    "directory": "packages/bson"
   },
   "keywords": [
     "typescript",
     "schema",
+    "bson",
     "mongodb",
     "jsonschema",
+    "validator",
     "sapphire"
   ],
   "author": {

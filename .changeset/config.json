@@ -5,7 +5,7 @@
   "fixed": [
     [
       "@ascendance-hub/sapphire-core",
-      "@ascendance-hub/sapphire-mongo",
+      "@ascendance-hub/sapphire-bson",
       "@ascendance-hub/sapphire-mongoose",
       "@ascendance-hub/sapphire-json-schema",
       "@ascendance-hub/sapphire-drizzle"

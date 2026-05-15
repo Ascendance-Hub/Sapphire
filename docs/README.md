@@ -22,7 +22,7 @@ Schema once, types and adapters everywhere. These docs walk you from a first ins
 
 ## Adapters
 
-- [Mongo (`@ascendance-hub/sapphire-mongo`)](./adapters/mongo.md) — native MongoDB driver `$jsonSchema` collection validators.
+- [Mongo (`@ascendance-hub/sapphire-bson`)](./adapters/bson.md) — native MongoDB driver `$jsonSchema` collection validators.
 - [Mongoose (`@ascendance-hub/sapphire-mongoose`)](./adapters/mongoose.md) — Mongoose `Schema` output, with refs, timestamps, and composite indexes.
 - [JSON Schema (`@ascendance-hub/sapphire-json-schema`)](./adapters/json-schema.md) — JSON Schema 2020-12 output for AJV, MCP tools, and frontend form generators.
 - [Drizzle (`@ascendance-hub/sapphire-drizzle`)](./adapters/drizzle.md) — `pgTable` / `mysqlTable` / `sqliteTable` output with lazy refs and composite indexes.

@@ -13,7 +13,7 @@ import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire, type SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
-import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
+import { toBsonSchema } from '@ascendance-hub/sapphire-bson'
 import { toDrizzleSchema } from '@ascendance-hub/sapphire-drizzle'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 
@@ -28,7 +28,7 @@ function drizzleColumns(table: unknown): string[] {
 }
 
 function validatorKeys(ir: SapphireSchemaNode): string[] {
-  const schema = toMongoValidator(ir).$jsonSchema as { properties?: Record<string, unknown> }
+  const schema = toBsonSchema(ir).$jsonSchema as { properties?: Record<string, unknown> }
   return Object.keys(schema.properties ?? {})
 }
 
@@ -121,7 +121,7 @@ describe('S2 — composition across adapters', () => {
 
     it('Mongo validator: no required array after partial()', () => {
       const ir = User.partial().toSchema()
-      const schema = toMongoValidator(ir).$jsonSchema as { required?: string[] }
+      const schema = toBsonSchema(ir).$jsonSchema as { required?: string[] }
       expect(schema.required).toBeUndefined()
     })
   })

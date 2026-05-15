@@ -10,7 +10,7 @@ import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
 import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
-import { toMongoValidator } from '@ascendance-hub/sapphire-mongo'
+import { toBsonSchema } from '@ascendance-hub/sapphire-bson'
 import { toDrizzleSchema } from '@ascendance-hub/sapphire-drizzle'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 import { getTableConfig } from 'drizzle-orm/pg-core'
@@ -85,7 +85,7 @@ describe('S1 — single definition, every adapter', () => {
     expect(body.required.sort()).toEqual(['age', 'email', 'name'])
 
     // --- Mongo (native driver $jsonSchema validator) ---
-    const validator = toMongoValidator(ir).$jsonSchema as {
+    const validator = toBsonSchema(ir).$jsonSchema as {
       bsonType: string
       properties: Record<string, { bsonType: string }>
       required: string[]
@@ -128,7 +128,7 @@ describe('S1 — single definition, every adapter', () => {
     expect(json.$defs.Profile.required).toEqual(['handle'])
 
     // Mongo validator: required array (named object is inlined — no $ref)
-    const validator = toMongoValidator(ir).$jsonSchema as { required?: string[] }
+    const validator = toBsonSchema(ir).$jsonSchema as { required?: string[] }
     expect(validator.required).toEqual(['handle'])
   })
 

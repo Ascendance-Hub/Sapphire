@@ -130,6 +130,6 @@ The frontend bundle now contains zero Sapphire runtime — only the structural t
 ## See also
 
 - [Adapters → JSON Schema](../adapters/json-schema.md) — full 2020-12 mapping table and emitter options.
-- [Adapters → Mongo](../adapters/mongo.md) — Mongoose IR mapping and refs.
+- [Adapters → Mongoose](../adapters/mongoose.md) — Mongoose IR mapping and refs.
 - [Concepts → Composition](../concepts/composition.md) — `partial`, `pick`, `omit` for read/write/patch splits.
 - [Recipes → One schema, many adapters](./one-schema-many-adapters.md) — sister recipe focused on multi-output emission.

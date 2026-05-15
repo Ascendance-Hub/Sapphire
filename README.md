@@ -15,7 +15,7 @@ Plus the adapter(s) you want. Each one declares its own peer dependencies — in
 Mongo adapter — native MongoDB driver (`mongodb` is an optional peer dep):
 
 ```bash
-npm install @ascendance-hub/sapphire-mongo
+npm install @ascendance-hub/sapphire-bson
 ```
 
 Mongoose adapter (`mongoose` is a peer dep):
@@ -70,7 +70,7 @@ The same `userSchema` powers every adapter from one definition:
 userSchema.getSchema('mongoose')
 
 // Native MongoDB driver — a $jsonSchema collection validator:
-userSchema.getSchema('mongo')
+userSchema.getSchema('bson')
 
 // JSON Schema 2020-12:
 userSchema.getSchema('json-schema')
@@ -92,7 +92,7 @@ userSchema.getSchema('drizzle', { dialect: 'pg' })
 | Package                                | Description                                                                                |
 | -------------------------------------- | ------------------------------------------------------------------------------------------ |
 | `@ascendance-hub/sapphire-core`        | Core — field DSL, IR (`SapphireSchemaNode`), validation, adapter registry, type inference. |
-| `@ascendance-hub/sapphire-mongo`       | Native MongoDB driver adapter — emits `$jsonSchema` collection validators.                 |
+| `@ascendance-hub/sapphire-bson`        | Native MongoDB driver adapter — emits `$jsonSchema` collection validators.                 |
 | `@ascendance-hub/sapphire-mongoose`    | Mongoose adapter — emits `mongoose.Schema` from any Sapphire IR.                           |
 | `@ascendance-hub/sapphire-drizzle`     | Drizzle adapter — emits `pgTable` / `mysqlTable` / `sqliteTable`.                          |
 | `@ascendance-hub/sapphire-json-schema` | JSON Schema 2020-12 adapter — for AJV, MCP tools, form generators.                         |
