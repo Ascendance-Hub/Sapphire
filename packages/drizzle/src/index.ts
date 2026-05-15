@@ -24,6 +24,13 @@ export interface DrizzleAdapterOptions<D extends DrizzleDialect = DrizzleDialect
    * schemas.
    */
   tables?: DrizzleTableRegistry
+  /**
+   * S2: when true, `meta.drizzle.*` keys that name a method missing on the
+   * resolved column builder will **throw** instead of being silently dropped.
+   * Use this in dev / CI as a typo guard. In non-strict mode (default), a
+   * warning is logged outside production (`NODE_ENV !== 'production'`).
+   */
+  strict?: boolean
 }
 
 // Overloads — return type is conditional on the dialect literal. The exact
@@ -41,7 +48,22 @@ export function toDrizzleSchema(
   options: DrizzleAdapterOptions<'sqlite'>,
 ): any
 export function toDrizzleSchema(node: SapphireSchemaNode, options: DrizzleAdapterOptions): unknown
-export function toDrizzleSchema(node: SapphireSchemaNode, options: DrizzleAdapterOptions): unknown {
+export function toDrizzleSchema(
+  node: SapphireSchemaNode,
+  options?: DrizzleAdapterOptions,
+): unknown {
+  // B1: when invoked via `getSchema('drizzle')` the registry forwards `options`
+  // verbatim — including `undefined`. Surface a clear error instead of a generic
+  // "Cannot read properties of undefined".
+  if (!options || typeof options !== 'object') {
+    throw new Error(
+      'toDrizzleSchema: options.dialect is required. ' +
+        "Use `schema.getSchema('drizzle', { dialect: 'pg' })` or call the adapter directly.",
+    )
+  }
+  if (!('dialect' in options) || !options.dialect) {
+    throw new Error("toDrizzleSchema: options.dialect is required ('pg' | 'mysql' | 'sqlite').")
+  }
   if (node.kind !== 'object') {
     throw new Error(
       'toDrizzleSchema: root node must be ObjectField (Drizzle adapter only emits tables)',

@@ -94,6 +94,70 @@ describe('pick/omit immutability', () => {
   })
 })
 
+// S7: pick/omit drop schema-level config (name/timestamps/indexes/meta/
+// description/message) by design — they yield conceptually new schemas.
+// extend/merge preserve config because they are the same conceptual schema
+// just wider. This test pins the asymmetry so a future "consistency cleanup"
+// doesn't quietly change behaviour.
+describe('S7 — pick/omit vs extend/merge config preservation asymmetry', () => {
+  it('pick drops name/timestamps/indexes; extend preserves them', () => {
+    const User = a
+      .object({ email: a.string(), age: a.number(), createdAt: a.date() })
+      .name('User_S7Asymmetry')
+      .timestamps()
+      .index(['email'], { unique: true })
+
+    // pick → fresh config.
+    const Picked = User.pick(['email'] as const)
+    expect(Picked.getName()).toBeUndefined()
+    const pickedIR = Picked.toSchema()
+    expect(pickedIR.kind).toBe('object')
+    if (pickedIR.kind === 'object') {
+      expect(pickedIR.timestamps).toBeUndefined()
+      expect(pickedIR.indexes).toBeUndefined()
+    }
+
+    // omit → same fresh-config rule.
+    const a2 = new Sapphire()
+    const User2 = a2
+      .object({ email: a.string(), createdAt: a.date() })
+      .name('User_S7Asymmetry_b')
+      .timestamps()
+    const Omitted = User2.omit(['createdAt'] as const)
+    expect(Omitted.getName()).toBeUndefined()
+    const omittedIR = Omitted.toSchema()
+    if (omittedIR.kind === 'object') {
+      expect(omittedIR.timestamps).toBeUndefined()
+    }
+
+    // extend → config preserved (same conceptual schema, wider).
+    const a3 = new Sapphire()
+    const User3 = a3
+      .object({ email: a.string() })
+      .name('User_S7Asymmetry_c')
+      .timestamps()
+      .index(['email'], { unique: true })
+    const Extended = User3.extend({ age: a.number() })
+    expect(Extended.getName()).toBe('User_S7Asymmetry_c')
+    const extIR = Extended.toSchema()
+    if (extIR.kind === 'object') {
+      expect(extIR.timestamps).toBe(true)
+      expect(extIR.indexes?.length).toBe(1)
+    }
+
+    // merge → same preserve-config rule as extend (it delegates to extend).
+    const a4 = new Sapphire()
+    const Base = a4.object({ email: a.string() }).name('User_S7Asymmetry_d').timestamps()
+    const Audit = a4.object({ createdAt: a.date() })
+    const Merged = Base.merge(Audit)
+    expect(Merged.getName()).toBe('User_S7Asymmetry_d')
+    const mergedIR = Merged.toSchema()
+    if (mergedIR.kind === 'object') {
+      expect(mergedIR.timestamps).toBe(true)
+    }
+  })
+})
+
 describe('ObjectField.partial', () => {
   it('makes every key optional at runtime (parse with empty object passes)', () => {
     const User = a.object({ name: a.string(), age: a.number() })
@@ -163,6 +227,54 @@ describe('ObjectField.required', () => {
     User.required()
     // original still expects name to be required
     expect(User.safeParse({}).success).toBe(false)
+  })
+
+  it('partial() is shallow: nested objects become optional as a whole but their inner keys stay required', () => {
+    const Inner = a.object({ city: a.string(), zip: a.string() })
+    const User = a.object({ name: a.string(), address: Inner })
+    const Patch = User.partial()
+
+    // both top-level keys are optional now — empty object passes
+    expect(Patch.safeParse({}).success).toBe(true)
+
+    // when `address` IS provided, its inner shape is still strict (city/zip required)
+    expect(Patch.safeParse({ address: {} }).success).toBe(false)
+    expect(Patch.safeParse({ address: { city: 'SP', zip: '01000' } }).success).toBe(true)
+  })
+
+  it('partial().required() round-trip on a nested object restores top-level required, inner unchanged', () => {
+    const Inner = a.object({ city: a.string() })
+    const User = a.object({ name: a.string(), address: Inner })
+    const Round = User.partial().required()
+
+    // both top-level keys required again
+    expect(Round.safeParse({}).success).toBe(false)
+    expect(Round.safeParse({ name: 'A', address: { city: 'SP' } }).success).toBe(true)
+    // inner field still required (round-trip didn't widen it)
+    expect(Round.safeParse({ name: 'A', address: {} }).success).toBe(false)
+  })
+
+  it('partial() does not recurse into already-optional inner fields', () => {
+    const Inner = a.object({ city: a.string().optional() })
+    const User = a.object({ address: Inner })
+    const Patch = User.partial()
+    // address itself is optional now
+    expect(Patch.safeParse({}).success).toBe(true)
+    // address provided as empty object still parses (city was optional in the source)
+    expect(Patch.safeParse({ address: {} }).success).toBe(true)
+  })
+
+  it('required() walks one level: nested object children become required too (via their own .required())', () => {
+    // `address` is an ObjectField whose own `.required()` re-flips its inner keys.
+    // So calling required() at the top transitively re-tightens nested object children.
+    const Inner = a.object({ city: a.string() }).partial()
+    const Wrapped = a.object({ address: Inner })
+    const Tight = Wrapped.required()
+    // address itself is required again
+    expect(Tight.safeParse({}).success).toBe(false)
+    // and city is required again too (nested .required() ran)
+    expect(Tight.safeParse({ address: {} }).success).toBe(false)
+    expect(Tight.safeParse({ address: { city: 'SP' } }).success).toBe(true)
   })
 })
 

@@ -92,3 +92,5 @@ The flip side is that core can't add IR kinds without coordinating updates to ev
 ## Read more
 
 [`specs/V1_DESIGN.md`](../../specs/V1_DESIGN.md) is the internal design doc that this page summarizes. It covers maintainer-facing rationale, trade-offs that were considered and rejected, and notes for future work. The `specs/` directory is gitignored — the link above only resolves in a local checkout of the repo, not when browsing on GitHub. The file is maintained alongside source by Sapphire maintainers.
+
+A drift-notice header at the top of `V1_DESIGN.md` flags where the design diverged from the shipped implementation (e.g. `toAdapter()` stayed as `getSchema()`, `toIR()` was renamed to `toSchema()`, the IR gained an `'enum'` kind, the `'nonempty'` issue code was dropped). The full reconciliation lives in [`specs/season-two/part-two/AUDIT_V1_DESIGN_VS_IMPL.md`](../../specs/season-two/part-two/AUDIT_V1_DESIGN_VS_IMPL.md), which catalogues every drift, its cause, and its severity. If anything on this page reads like it contradicts what the code does, the audit (and ultimately the code under `packages/*/src`) wins.

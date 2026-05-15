@@ -38,12 +38,12 @@ describe('meta-schema validation (2020-12)', () => {
       },
     ],
     [
-      'array nonempty',
+      'array nonempty (minItems: 1)',
       {
         kind: 'array',
         required: true,
         items: { kind: 'string', required: true },
-        nonempty: true,
+        minItems: 1,
       },
     ],
     [

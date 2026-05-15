@@ -47,7 +47,6 @@ function applyCommon(
     }
   }
   if (node.default !== undefined) def.default = node.default
-  if (node.enum !== undefined) def.enum = [...node.enum]
   if (node.description !== undefined) def.description = node.description
 
   // Escape hatch: meta.mongo merges last (overrides core-derived options),
@@ -119,7 +118,13 @@ function buildField(node: SapphireSchemaNode, options: MongoAdapterOptions): Rec
       if (node.multipleOf !== undefined) {
         const m = node.multipleOf
         validators.push({
-          validator: (v) => Math.abs(v % m) < Number.EPSILON,
+          // Mirrors core's float-tolerant check (see number.ts _parse). Accept
+          // when remainder is within EPSILON of 0 or of |m|.
+          validator: (v) => {
+            const rem = v % m
+            const tol = Math.max(Number.EPSILON, Math.abs(m) * Number.EPSILON)
+            return Math.abs(rem) < tol || Math.abs(Math.abs(rem) - Math.abs(m)) < tol
+          },
           message: `Must be multiple of ${m}`,
         })
       }

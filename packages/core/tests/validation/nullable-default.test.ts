@@ -25,6 +25,23 @@ describe('Modifiers — nullable / default / describe / adapter / unique / index
     if (r.success) expect(r.data).toBe('x')
   })
 
+  it('default(v).optional() — undefined input still gets the default at runtime', () => {
+    // Counterpart to types/modifiers.test.ts "default(x).optional()" — pins the
+    // runtime side. Even though the type widens to `string | undefined`,
+    // the default substitution still runs before the optional short-circuit.
+    const f = a.string().default('x').optional()
+    const r = f.safeParse(undefined)
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data).toBe('x')
+  })
+
+  it('optional().default(v) — same runtime as the reverse order', () => {
+    const f = a.string().optional().default('x')
+    const r = f.safeParse(undefined)
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data).toBe('x')
+  })
+
   it('default(v) does NOT replace null on a non-nullable required field', () => {
     const f = a.string().default('x')
     const r = f.safeParse(null)

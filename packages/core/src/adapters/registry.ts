@@ -24,6 +24,7 @@ export function resolveSchema(
   node: SapphireSchemaNode,
   name: string | undefined,
   defaultAdapter: string | undefined,
+  options?: unknown,
 ): unknown {
   const target = name ?? defaultAdapter
   if (!target) {
@@ -37,5 +38,5 @@ export function resolveSchema(
       `No adapter named "${target}". Registered: ${listAdapters().join(', ') || '<none>'}`,
     )
   }
-  return adapter(node)
+  return adapter(node, options)
 }

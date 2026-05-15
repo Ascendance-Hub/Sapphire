@@ -76,20 +76,19 @@ function pgColumn(name: string, node: SapphireSchemaNode, ctx: Ctx): any {
     }
     case 'ref': {
       const targetName = (node as any).target as string
-      const pkName =
-        ctx.options.primaryKey === false
-          ? 'id'
-          : typeof ctx.options.primaryKey === 'string'
-            ? ctx.options.primaryKey
-            : 'id'
       col = integer(name).references((): any => {
-        const target = ctx.tables.get(targetName)
-        if (!target) {
+        const entry = ctx.tables.get(targetName)
+        if (!entry) {
           throw new Error(
             `drizzle adapter: ref target table "${targetName}" not registered. Emit it before invoking queries that traverse this reference.`,
           )
         }
-        return (target as any)[pkName]
+        if (entry.pkName === null) {
+          throw new Error(
+            `drizzle adapter: ref target "${targetName}" was emitted with primaryKey: false — refs require a target PK column. Re-emit "${targetName}" with primaryKey: '<colName>' or use the default implicit PK.`,
+          )
+        }
+        return (entry.table as any)[entry.pkName]
       })
       break
     }
@@ -133,6 +132,12 @@ export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
           })
         })
       : pgTable(ctx.tableName, cols)
-  ctx.tables.set(obj.name ?? ctx.tableName, table)
+  const emittedPkName =
+    ctx.options.primaryKey === false
+      ? null
+      : typeof ctx.options.primaryKey === 'string'
+        ? ctx.options.primaryKey
+        : 'id'
+  ctx.tables.set(obj.name ?? ctx.tableName, table, emittedPkName)
   return table
 }

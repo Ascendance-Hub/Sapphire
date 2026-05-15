@@ -43,9 +43,6 @@ function escapeRegex(str: string): string {
 function applyCommon(out: Record<string, any>, node: SapphireSchemaNode): void {
   if (node.default !== undefined) out.default = node.default
   if (node.description !== undefined) out.description = node.description
-  if (out.enum === undefined && node.enum !== undefined) {
-    out.enum = [...node.enum]
-  }
   const metaJs = node.meta?.['json-schema'] as Record<string, unknown> | undefined
   if (metaJs) {
     for (const [k, v] of Object.entries(metaJs)) {
@@ -124,8 +121,7 @@ function hasStringConstraints(node: SapphireSchemaNode): boolean {
     node.regex ||
     node.format ||
     node.startsWith ||
-    node.endsWith ||
-    node.enum,
+    node.endsWith,
   )
 }
 
@@ -191,9 +187,6 @@ function emit(node: SapphireSchemaNode, ctx: Ctx): Record<string, any> {
       if (node.length !== undefined) {
         out.minItems = node.length
         out.maxItems = node.length
-      }
-      if (node.nonempty) {
-        out.minItems = Math.max(out.minItems ?? 0, 1)
       }
       applyCommon(out, node)
       return wrapNullable(out, node)

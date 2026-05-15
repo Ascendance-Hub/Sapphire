@@ -85,19 +85,20 @@ describe('ArrayField', () => {
       }
     })
 
-    it('nonempty: rejects empty', () => {
+    // I3: nonempty() is now sugar for .min(1). Issue code is always min_items.
+    it('nonempty: rejects empty (emits min_items code)', () => {
       const field = a.array(a.string()).nonempty()
       expect(field.safeParse(['a']).success).toBe(true)
       const r = field.safeParse([])
       expect(r.success).toBe(false)
-      if (!r.success) expect(r.error.issues.some((i) => i.code === 'nonempty')).toBe(true)
+      if (!r.success) expect(r.error.issues.some((i) => i.code === 'min_items')).toBe(true)
     })
 
-    it('nonempty: per-rule message override', () => {
+    it('nonempty: per-rule message override (via min_items)', () => {
       const field = a.array(a.string()).nonempty({ message: 'empty no' })
       const r = field.safeParse([])
       if (!r.success) {
-        const issue = r.error.issues.find((i) => i.code === 'nonempty')
+        const issue = r.error.issues.find((i) => i.code === 'min_items')
         expect(issue?.message).toBe('empty no')
       }
     })

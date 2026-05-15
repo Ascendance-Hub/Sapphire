@@ -36,6 +36,15 @@ describe('Mongo adapter — number validators', () => {
     expect(new Model({ value: 9 }).validateSync()).toBeUndefined()
   })
 
+  // B3: float-tolerant — Mongo mirror of core's logic. Same input that passes
+  // core.safeParse must pass Mongoose.validate, and vice versa.
+  it('multipleOf(0.1): aceita 0.3 (float-tolerant, parity com core)', () => {
+    const Model = makeModel(a.number().multipleOf(0.1))
+    expect(new Model({ value: 0.3 }).validateSync()).toBeUndefined()
+    expect(new Model({ value: 0.6 }).validateSync()).toBeUndefined()
+    expect(new Model({ value: 0.35 }).validateSync()?.errors.value).toBeDefined()
+  })
+
   it('finite: rejeita Infinity', () => {
     const Model = makeModel(a.number().finite())
     expect(new Model({ value: Infinity }).validateSync()?.errors.value).toBeDefined()

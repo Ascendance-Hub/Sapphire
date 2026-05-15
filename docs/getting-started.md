@@ -126,17 +126,26 @@ const mongoSchema = userSchema.getSchema() as mongoose.Schema
 // mongoSchema is a real mongoose.Schema, ready for mongoose.model(...)
 ```
 
-`registerAdapter(name, fn)` puts your adapter under a name; `getSchema(name?)` resolves the field's IR (`SapphireSchemaNode`) through that adapter. When the `Sapphire` instance has a `defaultAdapter`, `getSchema()` uses it; otherwise pass the name explicitly: `userSchema.getSchema('mongo')`.
+`registerAdapter(name, fn)` puts your adapter under a name; `getSchema(name?, options?)` resolves the field's IR (`SapphireSchemaNode`) through that adapter. When the `Sapphire` instance has a `defaultAdapter`, `getSchema()` uses it; otherwise pass the name explicitly: `userSchema.getSchema('mongo')`.
 
-The exact same pattern works for the JSON Schema and Drizzle adapters:
+The same pattern works for the JSON Schema and Drizzle adapters — JSON Schema needs no options, Drizzle requires at minimum a `dialect`:
 
 ```ts
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 registerAdapter('json-schema', toJsonSchema)
+const jsonSchema = userSchema.getSchema('json-schema')
 
 import { toDrizzleSchema } from '@ascendance-hub/sapphire-drizzle'
 registerAdapter('drizzle', toDrizzleSchema)
+// Drizzle needs adapter options — pass them as the second argument:
+const usersTable = userSchema.getSchema('drizzle', { dialect: 'pg' })
 ```
+
+> [!NOTE]
+> The Drizzle adapter requires `{ dialect: 'pg' | 'mysql' | 'sqlite' }`. Calling
+> `getSchema('drizzle')` without options throws a clear error. See
+> [adapters/drizzle.md](./adapters/drizzle.md) for the full options surface
+> (`tableName`, `primaryKey`, `tables`).
 
 ## Next steps
 

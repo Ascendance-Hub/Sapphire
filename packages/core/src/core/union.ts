@@ -6,6 +6,7 @@ import type {
   FieldMessages,
   InstanceOptions,
   InternalParseResult,
+  MessageValue,
   ParseContext,
   ParseOptions,
   ValidationIssue,
@@ -21,6 +22,9 @@ type UnionConfig = {
   description?: string
   meta?: Record<string, unknown>
   fieldMessage?: FieldMessages | string
+  // I1: per-rule message for the `union_no_match` issue code
+  // (set via `t.union(fields, opts)`).
+  ruleMessages?: { union_no_match?: MessageValue }
 }
 
 export class UnionField<
@@ -52,8 +56,8 @@ export class UnionField<
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   optional(): UnionField<Fields, TOut | undefined, TIn | undefined> {
@@ -147,7 +151,13 @@ export class UnionField<
       if (sub.issues.length === 0) return { value: sub.value, issues: [] }
     }
     const issues: ValidationIssue[] = [
-      buildIssue('union_no_match', ctx, {}, this.config.fieldMessage),
+      buildIssue(
+        'union_no_match',
+        ctx,
+        {},
+        this.config.fieldMessage,
+        this.config.ruleMessages?.union_no_match,
+      ),
     ]
     return { value, issues }
   }

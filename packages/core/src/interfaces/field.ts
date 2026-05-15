@@ -11,7 +11,7 @@ export interface Field<TOutput = unknown, TInput = TOutput> {
   readonly _input: TInput
 
   toSchema(): SapphireSchemaNode
-  getSchema(name?: string): unknown
+  getSchema(name?: string, options?: unknown): unknown
 
   parse(value: unknown, opts?: ParseOptions): TOutput
   safeParse(value: unknown, opts?: ParseOptions): SafeParseResult<TOutput>

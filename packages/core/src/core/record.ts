@@ -57,8 +57,8 @@ export class RecordField<
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   optional(): RecordField<K, V, TOut | undefined, TIn | undefined> {
@@ -176,7 +176,12 @@ export class RecordField<
       issues.push(...keySub.issues)
       const valSub = (this.valueField as unknown as InternalField)._parse(entryValue, entryCtx)
       issues.push(...valSub.issues)
-      out[String(keySub.value ?? key)] = valSub.value
+      // B5: only keep entries that validated cleanly. Including invalid entries
+      // in `out` violated the discriminated-union contract of SafeParseResult —
+      // a caller reading internal state after a failed parse would see dirty data.
+      if (keySub.issues.length === 0 && valSub.issues.length === 0) {
+        out[String(keySub.value)] = valSub.value
+      }
       if (ctx.abortEarly && issues.length > 0) break
     }
 

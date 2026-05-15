@@ -28,10 +28,12 @@ describe('Default messages — Dispatch D (novos codes)', () => {
     if (!r.success) expect(r.error.issues[0].message).toBe('Must be a valid email')
   })
 
-  it('nonempty: a.array(...).nonempty() on empty array', () => {
+  // I3: nonempty() is sugar for .min(1) — issue code is min_items, default
+  // message comes from the min_items message template.
+  it('nonempty: a.array(...).nonempty() on empty array (min_items message)', () => {
     const r = a.array(a.string()).nonempty().safeParse([])
     expect(r.success).toBe(false)
-    if (!r.success) expect(r.error.issues[0].message).toBe('Must not be empty')
+    if (!r.success) expect(r.error.issues[0].message).toBe('Must have at least 1 items')
   })
 
   it('min: a.number().min(5) on under-min input', () => {

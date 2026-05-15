@@ -60,8 +60,8 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   private clone(patch: Partial<DateConfig>): DateField<TOut, TIn> {
@@ -169,7 +169,10 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
    * _parse order: coerce (number/string → Date) → default substitution →
    * null/undefined handling → invalid_type check → accumulated min/max checks.
    *
-   * Without `coerce()`, string parseable to Date is accepted for back-compat.
+   * Strict by default — only `Date` instances are accepted. To accept strings
+   * or numbers (form payloads, URL params, JSON-deserialized timestamps), call
+   * `.coerce()` explicitly. This keeps the IR honest: `coerce: false` ⇒ runtime
+   * accepts only Date.
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (this.config.coerce) {
@@ -206,23 +209,9 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
         }
       }
       date = value
-    } else if (typeof value === 'string') {
-      const d = new Date(value)
-      if (isNaN(d.getTime())) {
-        return {
-          value,
-          issues: [
-            buildIssue(
-              'invalid_type',
-              ctx,
-              { expected: 'date', got: 'invalid date string' },
-              this.config.fieldMessage,
-            ),
-          ],
-        }
-      }
-      date = d
     } else {
+      // B4 clean break: strings/numbers are NOT accepted without `.coerce()`.
+      // The coercion branch above would have converted them to Date already.
       return {
         value,
         issues: [
@@ -236,6 +225,7 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
       }
     }
     const issues: ValidationIssue[] = []
+    // I2: abortEarly bails after the first rule failure within this leaf field.
     if (this.config.min !== undefined && date.getTime() < this.config.min.getTime()) {
       issues.push(
         buildIssue(
@@ -246,6 +236,7 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
           this.config.ruleMessages?.min,
         ),
       )
+      if (ctx.abortEarly) return { value: date, issues }
     }
     if (this.config.max !== undefined && date.getTime() > this.config.max.getTime()) {
       issues.push(
@@ -257,6 +248,7 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
           this.config.ruleMessages?.max,
         ),
       )
+      if (ctx.abortEarly) return { value: date, issues }
     }
     return { value: date, issues }
   }

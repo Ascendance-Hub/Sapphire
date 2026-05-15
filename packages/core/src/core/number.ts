@@ -85,8 +85,8 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   private clone(patch: Partial<NumberConfig>): NumberField<TOut, TIn> {
@@ -252,6 +252,9 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   }
 
   multipleOf(value: number, opts?: { message?: MessageValue }): NumberField<TOut, TIn> {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value === 0) {
+      throw new Error('multipleOf must be a non-zero finite number')
+    }
     return this.clone({
       multipleOf: value,
       ruleMessages: {
@@ -328,10 +331,13 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
     }
     const n = value
     const issues: ValidationIssue[] = []
+    // I2: abortEarly bails after the first rule failure within this leaf field.
+    const bail = () => ctx.abortEarly && issues.length > 0
     if (this.config.int && !Number.isInteger(n)) {
       issues.push(
         buildIssue('int', ctx, { got: n }, this.config.fieldMessage, this.config.ruleMessages?.int),
       )
+      if (bail()) return { value: n, issues }
     }
     if (this.config.finite && !Number.isFinite(n)) {
       issues.push(
@@ -343,6 +349,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
           this.config.ruleMessages?.finite,
         ),
       )
+      if (bail()) return { value: n, issues }
     }
     if (this.config.safe && !Number.isSafeInteger(n)) {
       issues.push(
@@ -354,6 +361,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
           this.config.ruleMessages?.safe,
         ),
       )
+      if (bail()) return { value: n, issues }
     }
     if (this.config.min !== undefined && n < this.config.min) {
       const code = this.config.minCode ?? 'min'
@@ -366,6 +374,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
           this.config.ruleMessages?.[code],
         ),
       )
+      if (bail()) return { value: n, issues }
     }
     if (this.config.max !== undefined && n > this.config.max) {
       const code = this.config.maxCode ?? 'max'
@@ -378,6 +387,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
           this.config.ruleMessages?.[code],
         ),
       )
+      if (bail()) return { value: n, issues }
     }
     if (this.config.exclusiveMin !== undefined && n <= this.config.exclusiveMin) {
       issues.push(
@@ -389,6 +399,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
           this.config.ruleMessages?.gt,
         ),
       )
+      if (bail()) return { value: n, issues }
     }
     if (this.config.exclusiveMax !== undefined && n >= this.config.exclusiveMax) {
       issues.push(
@@ -400,17 +411,26 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
           this.config.ruleMessages?.lt,
         ),
       )
+      if (bail()) return { value: n, issues }
     }
-    if (this.config.multipleOf !== undefined && n % this.config.multipleOf !== 0) {
-      issues.push(
-        buildIssue(
-          'multiple_of',
-          ctx,
-          { multipleOf: this.config.multipleOf },
-          this.config.fieldMessage,
-          this.config.ruleMessages?.multiple_of,
-        ),
-      )
+    if (this.config.multipleOf !== undefined) {
+      // Float-tolerant comparison: `0.3 % 0.1` is ~0.0999… not exactly 0 due
+      // to IEEE-754. Accept when |rem| or |rem - m| is within EPSILON of zero.
+      const m = this.config.multipleOf
+      const rem = n % m
+      const tol = Math.max(Number.EPSILON, Math.abs(m) * Number.EPSILON)
+      if (Math.abs(rem) >= tol && Math.abs(Math.abs(rem) - Math.abs(m)) >= tol) {
+        issues.push(
+          buildIssue(
+            'multiple_of',
+            ctx,
+            { multipleOf: this.config.multipleOf },
+            this.config.fieldMessage,
+            this.config.ruleMessages?.multiple_of,
+          ),
+        )
+        if (bail()) return { value: n, issues }
+      }
     }
     return { value: n, issues }
   }

@@ -66,8 +66,8 @@ export class RefField<TOut = unknown, TIn = unknown> implements Field<TOut, TIn>
     }
   }
 
-  getSchema(name?: string) {
-    return resolveSchema(this.toSchema(), name, this.defaultAdapter)
+  getSchema(name?: string, options?: unknown) {
+    return resolveSchema(this.toSchema(), name, this.defaultAdapter, options)
   }
 
   getTarget(): string {
