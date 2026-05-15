@@ -47,17 +47,16 @@ export default defineConfig({
       // sustained lift. Function coverage trails because the duplicated
       // modifier methods across fields (vide S1 / SPEC_FIX_SMELLS) are
       // exercised on a few fields and just inherited on the rest.
-      // season-three lifted these to the new floor after the modifier-surface
-      // + edge-case + adapter-edge coverage pass. They are regression guards,
-      // kept just under the measured values (≈98.3 / 92.7 / 99.4 / 98.3). The
-      // remaining gap is defensive `default: throw` exhaustiveness guards that
-      // TypeScript's `never` type already enforces at compile time — not worth
-      // runtime tests.
+      // season-three review pass lifted these again. Regression guards kept
+      // just under the measured values (≈99.0 / 93.7 / 99.7 / 99.0). The
+      // exhaustiveness `default: throw` guards are excluded via `/* v8 ignore */`
+      // comments; the remaining ~6% branch gap is defensive short-circuits
+      // (`?.` / `??`) not worth contrived runtime tests.
       thresholds: {
-        lines: 97,
-        branches: 90,
-        functions: 98,
-        statements: 97,
+        lines: 98,
+        branches: 92,
+        functions: 99,
+        statements: 98,
       },
     },
     // Benchmarks live under packages/*/bench/. Use `npm run bench`.

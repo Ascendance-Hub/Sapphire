@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
 import { toMongoSchema } from '../src'
+import { uniqueModelName } from './_setup'
 
 describe('Mongo adapter — root _id (I2)', () => {
   const a = new Sapphire()
@@ -24,7 +25,7 @@ describe('Mongo adapter — root _id (I2)', () => {
   it('explicit string _id accepts a string and rejects nothing auto-generated', () => {
     const User = a.object({ _id: a.string(), name: a.string() })
     const schema = toMongoSchema(User.toSchema()) as mongoose.Schema
-    const Model = mongoose.model('RootIdString_' + Date.now(), schema)
+    const Model = mongoose.model(uniqueModelName('RootIdString'), schema)
     const doc = new Model({ _id: 'user-123', name: 'Ana' })
     expect(doc.validateSync()).toBeUndefined()
     expect(doc._id).toBe('user-123')

@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { Sapphire } from '../../src/lib/sapphire'
+import { fallbackMessage } from '../../src/messages'
+
+describe('fallbackMessage — unknown / custom issue codes', () => {
+  it('produces a generic message for a code with no built-in resolver', () => {
+    // `IssueCode` is an open union (`... | (string & {})`); adapters and future
+    // refine APIs may attach custom codes. fallbackMessage is the safety net.
+    expect(fallbackMessage('some_custom_code')).toBe('Validation error: some_custom_code')
+  })
+})
 
 describe('Default messages — Dispatch D (novos codes)', () => {
   const a = new Sapphire()

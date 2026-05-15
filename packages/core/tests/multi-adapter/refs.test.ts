@@ -88,22 +88,26 @@ describe('S1 — refs across adapters', () => {
     expect(Broken.safeParse({ x: 'anything' }).success).toBe(false)
   })
 
-  it('optional ref across adapters: Mongo non-required, Drizzle nullable', () => {
+  it('optional ref across adapters: Mongo non-required, Drizzle nullable column', () => {
     const a = new Sapphire()
-    a.object({ name: a.string() }).name('User')
+    const User = a.object({ name: a.string() }).name('User')
     const Post = a.object({ title: a.string(), author: a.ref('User').optional() }).name('PostOpt')
     const ir = Post.toSchema()
 
+    // Mongo: the author path is not required
     const mongoSchema = toMongoSchema(ir) as mongoose.Schema
     expect(
       (mongoSchema.path('author') as unknown as { isRequired?: boolean }).isRequired,
     ).toBeFalsy()
 
+    // Drizzle: the FK column is nullable (notNull === false)
     const tables = new DrizzleTableRegistry()
-    toDrizzleSchema(a.object({ name: a.string() }).name('U2').toSchema(), {
+    toDrizzleSchema(User.toSchema(), { dialect: 'pg', tableName: 'users', tables })
+    const postsTable = toDrizzleSchema(ir, {
       dialect: 'pg',
-      tableName: 'u2',
+      tableName: 'posts',
       tables,
-    })
+    }) as Record<string, { notNull: boolean }>
+    expect(postsTable.author.notNull).toBe(false)
   })
 })

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
+import { getTableConfig } from 'drizzle-orm/pg-core'
 import { toDrizzleSchema, DrizzleTableRegistry } from '../src'
 
 describe('drizzle bootstrap', () => {
@@ -33,8 +34,10 @@ describe('drizzle bootstrap', () => {
 
   it('uses the ObjectField .name() as the table name when tableName is omitted', () => {
     const a = new Sapphire()
-    const ir = a.object({ name: a.string() }).name('AutoNamed').toSchema()
-    expect(() => toDrizzleSchema(ir, { dialect: 'pg' })).not.toThrow()
+    const ir = a.object({ name: a.string() }).name('auto_named').toSchema()
+    const table = toDrizzleSchema(ir, { dialect: 'pg' })
+    const cfg = getTableConfig(table as never)
+    expect(cfg.name).toBe('auto_named')
   })
 
   it('throws on an unknown dialect', () => {

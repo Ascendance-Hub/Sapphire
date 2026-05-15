@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import type { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 import { toMongoSchema } from '../src'
+import { uniqueModelName } from './_setup'
 
 describe('Mongo adapter — enum', () => {
   it('string enum → { type: String, enum: [...] }', () => {
@@ -43,9 +44,16 @@ describe('Mongo adapter — enum', () => {
       },
     }
     const schema = toMongoSchema(node) as mongoose.Schema
-    const Model = mongoose.model('EnumEdge_' + Date.now(), schema)
+    const Model = mongoose.model(uniqueModelName('EnumEdge'), schema)
     expect(new Model({ role: 'admin' }).validateSync()).toBeUndefined()
     expect(new Model({ role: 'ghost' }).validateSync()?.errors.role).toBeDefined()
+  })
+})
+
+describe('Mongo adapter — string .length()', () => {
+  it('exact length → minlength === maxlength', () => {
+    const node: SapphireSchemaNode = { kind: 'string', required: true, length: 5 }
+    expect(toMongoSchema(node)).toMatchObject({ minlength: 5, maxlength: 5 })
   })
 })
 

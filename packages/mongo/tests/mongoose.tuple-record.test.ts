@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
 import { toMongoSchema } from '../src'
+import { uniqueModelName } from './_setup'
 
 describe('Mongo adapter — tuple length validator', () => {
   const a = new Sapphire({ defaultAdapter: 'mongo' })
@@ -9,7 +10,7 @@ describe('Mongo adapter — tuple length validator', () => {
   it('tuple [string, number]: rejeita length errado', () => {
     const obj = a.object({ pair: a.tuple([a.string(), a.number()]) })
     const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
-    const Model = mongoose.model('TestTuple1_' + Date.now(), schema)
+    const Model = mongoose.model(uniqueModelName('TestTuple1'), schema)
     const tooShort = new Model({ pair: ['x'] })
     expect(tooShort.validateSync()?.errors.pair).toBeDefined()
     const tooLong = new Model({ pair: ['x', 1, true] })
@@ -19,7 +20,7 @@ describe('Mongo adapter — tuple length validator', () => {
   it('tuple aceita length correto (type-checking de posição fica no core)', () => {
     const obj = a.object({ pair: a.tuple([a.string(), a.number()]) })
     const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
-    const Model = mongoose.model('TestTuple2_' + Date.now(), schema)
+    const Model = mongoose.model(uniqueModelName('TestTuple2'), schema)
     const ok = new Model({ pair: ['x', 1] })
     expect(ok.validateSync()).toBeUndefined()
     // Limitação documentada: tipos errados POR POSIÇÃO não são checados pelo Mongoose;
