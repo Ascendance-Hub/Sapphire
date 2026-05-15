@@ -23,6 +23,7 @@
 ## Task 1: Scaffold the `website/` workspace
 
 **Files:**
+
 - Create: `website/package.json`
 - Create: `website/astro.config.mjs`
 - Create: `website/tsconfig.json`
@@ -113,6 +114,7 @@ export default defineConfig({
 Empty file (prevents GitHub Pages from running Jekyll, which strips files beginning with `_`).
 
 ```
+
 ```
 
 - [ ] **Step 6: Create a placeholder `website/src/pages/index.astro`**
@@ -171,6 +173,7 @@ git commit -m "feat(website): scaffold Astro workspace"
 ## Task 2: Design tokens and global styles
 
 **Files:**
+
 - Create: `website/src/styles/tokens.css`
 - Create: `website/src/styles/global.css`
 
@@ -213,9 +216,12 @@ git commit -m "feat(website): scaffold Astro workspace"
 ```css
 @import './tokens.css';
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
@@ -224,10 +230,21 @@ html, body {
   line-height: 1.6;
 }
 
-a { color: var(--sapphire-600); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a {
+  color: var(--sapphire-600);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
 
-h1, h2, h3, h4 { color: var(--ink-900); line-height: 1.25; }
+h1,
+h2,
+h3,
+h4 {
+  color: var(--ink-900);
+  line-height: 1.25;
+}
 
 code {
   font-family: var(--font-mono);
@@ -244,7 +261,10 @@ pre {
   padding: 14px 16px;
   overflow-x: auto;
 }
-pre code { background: none; padding: 0; }
+pre code {
+  background: none;
+  padding: 0;
+}
 ```
 
 - [ ] **Step 3: Verify the build still passes**
@@ -264,6 +284,7 @@ git commit -m "feat(website): design tokens and global styles"
 ## Task 3: Base layout and navigation
 
 **Files:**
+
 - Create: `website/src/components/Nav.astro`
 - Create: `website/src/layouts/BaseLayout.astro`
 
@@ -371,6 +392,7 @@ git commit -m "feat(website): base layout and nav"
 ## Task 4: Landing page — hero and features
 
 **Files:**
+
 - Create: `website/src/components/Hero.astro`
 - Create: `website/src/components/FeatureRow.astro`
 - Modify: `website/src/pages/index.astro`
@@ -499,6 +521,7 @@ git commit -m "feat(website): landing page hero and features"
 ## Task 5: `ir-to-type.ts` — IR node to readable type string
 
 **Files:**
+
 - Create: `website/src/lib/ir-to-type.ts`
 - Test: `website/tests/ir-to-type.test.ts`
 - Create: `website/vitest.config.ts`
@@ -548,9 +571,7 @@ describe('irToTypeString', () => {
   })
 
   it('renders an enum as a union of its values', () => {
-    expect(
-      irToTypeString({ kind: 'enum', required: true, values: ['a', 'b'] }),
-    ).toBe('"a" | "b"')
+    expect(irToTypeString({ kind: 'enum', required: true, values: ['a', 'b'] })).toBe('"a" | "b"')
   })
 
   it('renders an array', () => {
@@ -706,6 +727,7 @@ git commit -m "feat(website): ir-to-type renderer"
 ## Task 6: `playground-eval.ts` — sandboxed schema evaluation
 
 **Files:**
+
 - Create: `website/src/lib/playground-eval.ts`
 - Test: `website/tests/playground-eval.test.ts`
 
@@ -865,6 +887,7 @@ git commit -m "feat(website): sandboxed playground evaluation"
 ## Task 7: Playground component (CodeMirror + live output)
 
 **Files:**
+
 - Create: `website/src/components/Playground.astro`
 
 - [ ] **Step 1: Create `website/src/components/Playground.astro`**
@@ -1039,6 +1062,7 @@ git commit -m "feat(website): interactive playground component"
 ## Task 8: Playground page + embed on the landing page
 
 **Files:**
+
 - Create: `website/src/pages/playground.astro`
 - Modify: `website/src/pages/index.astro`
 
@@ -1107,6 +1131,7 @@ git commit -m "feat(website): playground page and landing embed"
 ## Task 9: `remark-rewrite-links.ts` — markdown link rewriting
 
 **Files:**
+
 - Create: `website/src/lib/remark-rewrite-links.ts`
 - Test: `website/tests/remark-rewrite-links.test.ts`
 
@@ -1204,10 +1229,7 @@ export function rewriteDocLink(url: string, fromSlug: string, base: string): str
  * link resolves relative to its own document.
  */
 export function remarkRewriteLinks(options: { base: string }) {
-  return function transformer(
-    tree: unknown,
-    file: { path?: string },
-  ): void {
+  return function transformer(tree: unknown, file: { path?: string }): void {
     let fromSlug = ''
     if (typeof file.path === 'string') {
       const m = file.path.replace(/\\/g, '/').match(/\/docs\/(.+)\.md$/i)
@@ -1237,6 +1259,7 @@ git commit -m "feat(website): markdown doc-link rewriter"
 ## Task 10: Docs content collection, route, layout, and sidebar
 
 **Files:**
+
 - Create: `website/src/content.config.ts`
 - Create: `website/src/components/Sidebar.astro`
 - Create: `website/src/layouts/DocsLayout.astro`
@@ -1414,6 +1437,7 @@ git commit -m "feat(website): render all docs with sidebar navigation"
 ## Task 11: GitHub Pages deployment
 
 **Files:**
+
 - Create: `.github/workflows/pages.yml`
 
 - [ ] **Step 1: Create `.github/workflows/pages.yml`**

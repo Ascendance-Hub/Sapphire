@@ -18,7 +18,7 @@ renders them; it does not fork them.
 ## Locked decisions (from brainstorming)
 
 - **Playground depth:** live execution of Sapphire `core` + the `json-schema`
-  adapter, bundled to the browser. Mongo/Drizzle are *not* run live (their peer
+  adapter, bundled to the browser. Mongo/Drizzle are _not_ run live (their peer
   deps — `mongoose`, `drizzle-orm` — are heavy and Node-oriented); their output
   appears as pre-rendered examples on their own doc pages.
 - **Site shape:** marketing landing page **plus** the full documentation
@@ -74,10 +74,10 @@ website/
 
 ### Pages & routes
 
-| Route | Source | Layout |
-|---|---|---|
-| `/` | `index.astro` | BaseLayout |
-| `/playground` | `playground.astro` | BaseLayout |
+| Route          | Source                                   | Layout     |
+| -------------- | ---------------------------------------- | ---------- |
+| `/`            | `index.astro`                            | BaseLayout |
+| `/playground`  | `playground.astro`                       | BaseLayout |
 | `/docs/<slug>` | `../docs/**/*.md` via content collection | DocsLayout |
 
 `docs/README.md` becomes the docs index, served at `/docs`. Every other slug

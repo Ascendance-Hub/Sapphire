@@ -16,9 +16,7 @@ describe('irToTypeString', () => {
   })
 
   it('renders an enum as a union of its values', () => {
-    expect(
-      irToTypeString({ kind: 'enum', required: true, values: ['a', 'b'] }),
-    ).toBe('"a" | "b"')
+    expect(irToTypeString({ kind: 'enum', required: true, values: ['a', 'b'] })).toBe('"a" | "b"')
   })
 
   it('renders an array', () => {
