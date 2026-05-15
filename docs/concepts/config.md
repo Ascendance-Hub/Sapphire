@@ -102,6 +102,9 @@ a2.object({ y: a2.string() }).name('User')
 > [!WARNING]
 > **Function messages run AT MESSAGE TIME, not at field-creation time.** They receive `ctx = { path, code, ...extras }` per failure, but they have no access to the Sapphire instance — close over any extra data you need at definition site.
 
+> [!NOTE]
+> **A field captures its instance options when it is constructed.** `defaultAdapter` and the message layers are read off the `Sapphire` instance at the moment `a.string()` / `a.object()` etc. run. `abortEarly` and `stripUnknown`, by contrast, are read at parse time. The practical rule: construct one `Sapphire` instance per logical configuration and build all of that config's schemas from it — don't expect a field built on instance A to pick up changes you make by constructing instance B later.
+
 ## Related
 
 - [Validation](./validation.md) — `parse` / `safeParse` options and issue shape.

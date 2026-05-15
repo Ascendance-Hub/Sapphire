@@ -70,7 +70,10 @@ describe('S1 — single definition, every adapter', () => {
     // shape. The body lives under `$defs.User`.
     const json = toJsonSchema(ir) as {
       $ref: string
-      $defs: Record<string, { type: string; properties: Record<string, { type: string }>; required: string[] }>
+      $defs: Record<
+        string,
+        { type: string; properties: Record<string, { type: string }>; required: string[] }
+      >
     }
     expect(json.$ref).toBe('#/$defs/User')
     const body = json.$defs.User

@@ -17,9 +17,7 @@ describe('S1 — refs across adapters', () => {
   function buildPair() {
     const a = new Sapphire()
     const User = a.object({ name: a.string() }).name('User')
-    const Post = a
-      .object({ title: a.string(), author: a.ref('User') })
-      .name('Post')
+    const Post = a.object({ title: a.string(), author: a.ref('User') }).name('Post')
     return { User, Post }
   }
 
@@ -93,9 +91,7 @@ describe('S1 — refs across adapters', () => {
   it('optional ref across adapters: Mongo non-required, Drizzle nullable', () => {
     const a = new Sapphire()
     a.object({ name: a.string() }).name('User')
-    const Post = a
-      .object({ title: a.string(), author: a.ref('User').optional() })
-      .name('PostOpt')
+    const Post = a.object({ title: a.string(), author: a.ref('User').optional() }).name('PostOpt')
     const ir = Post.toSchema()
 
     const mongoSchema = toMongoSchema(ir) as mongoose.Schema

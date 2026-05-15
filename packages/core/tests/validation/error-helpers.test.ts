@@ -86,6 +86,29 @@ describe('SapphireValidationError — DTO helpers (I3)', () => {
         expect(r.error.format()._errors.length).toBe(1)
       }
     })
+
+    it('two issues under the same parent reuse the same node', () => {
+      // exercises format()'s "reuse existing node" branch — both failures
+      // live under `user`, so the `user` node is created once and reused.
+      const f = a.object({
+        user: a.object({
+          name: a.string().min(3),
+          email: a.string().email(),
+        }),
+      })
+      const r = f.safeParse({ user: { name: 'x', email: 'bad' } })
+      expect(r.success).toBe(false)
+      if (!r.success) {
+        const formatted = r.error.format()
+        const user = formatted.user as {
+          _errors: string[]
+          name: { _errors: string[] }
+          email: { _errors: string[] }
+        }
+        expect(user.name._errors.length).toBe(1)
+        expect(user.email._errors.length).toBe(1)
+      }
+    })
   })
 
   describe('toJSON()', () => {
