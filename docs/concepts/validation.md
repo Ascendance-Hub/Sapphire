@@ -80,29 +80,30 @@ interface ValidationIssue {
 
 ## `IssueCode` — built-in codes
 
-| Code                                                    | Where it fires                                                                 |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `required`                                              | Required field is `undefined` (or `null` when not nullable)                    |
-| `invalid_type`                                          | Wrong runtime type (e.g. `null` for a string, array for object)                |
-| `min_length`                                            | String shorter than `.min(n)`                                                  |
-| `max_length`                                            | String longer than `.max(n)`                                                   |
-| `length`                                                | String length not equal to `.length(n)`                                        |
-| `regex`                                                 | `.regex(...)` didn't match                                                     |
-| `format`                                                | `.email()` / `.url()` / `.uuid()` didn't match                                 |
-| `starts_with`                                           | `.startsWith(...)` failed                                                      |
-| `ends_with`                                             | `.endsWith(...)` failed                                                        |
-| `min` / `max`                                           | Number below `.min(n)` / above `.max(n)`                                       |
-| `gt` / `gte` / `lt` / `lte`                             | Numeric strict / inclusive bound failed                                        |
-| `int`                                                   | `.int()` got a non-integer                                                     |
-| `multiple_of`                                           | `.multipleOf(n)` failed                                                        |
-| `finite`                                                | `.finite()` got `±Infinity` (NaN is caught earlier by `invalid_type`)          |
-| `safe`                                                  | `.safe()` got an unsafe integer                                                |
-| `min_items` / `max_items` / `items_length` / `nonempty` | Array constraints                                                              |
-| `enum`                                                  | Value not in `enum(...)` set                                                   |
-| `literal`                                               | Literal mismatch                                                               |
-| `tuple_length`                                          | Tuple's array length didn't match its shape                                    |
-| `union_no_match`                                        | No `union(...)` branch accepted the value                                      |
-| `unknown_key`                                           | Object received a key not declared in the schema (and `stripUnknown` is false) |
+| Code                                       | Where it fires                                                                 |
+| ------------------------------------------ | ------------------------------------------------------------------------------ |
+| `required`                                 | Required field is `undefined` (or `null` when not nullable)                    |
+| `invalid_type`                             | Wrong runtime type (e.g. `null` for a string, array for object)                |
+| `min_length`                               | String shorter than `.min(n)`                                                  |
+| `max_length`                               | String longer than `.max(n)`                                                   |
+| `length`                                   | String length not equal to `.length(n)`                                        |
+| `regex`                                    | `.regex(...)` didn't match                                                     |
+| `format`                                   | `.email()` / `.url()` / `.uuid()` didn't match                                 |
+| `starts_with`                              | `.startsWith(...)` failed                                                      |
+| `ends_with`                                | `.endsWith(...)` failed                                                        |
+| `min` / `max`                              | Number below `.min(n)` / above `.max(n)`                                       |
+| `gt` / `gte` / `lt` / `lte`                | Numeric strict / inclusive bound failed                                        |
+| `int`                                      | `.int()` got a non-integer                                                     |
+| `multiple_of`                              | `.multipleOf(n)` failed                                                        |
+| `finite`                                   | `.finite()` got `±Infinity` (NaN is caught earlier by `invalid_type`)          |
+| `safe`                                     | `.safe()` got an unsafe integer                                                |
+| `min_items` / `max_items` / `items_length` | Array constraints (`.nonempty()` is sugar for `.min(1)` → `min_items`)         |
+| `enum`                                     | Value not in `enum(...)` set                                                   |
+| `literal`                                  | Literal mismatch                                                               |
+| `tuple_length`                             | Tuple's array length didn't match its shape                                    |
+| `union_no_match`                           | No `union(...)` branch accepted the value                                      |
+| `unknown_key`                              | Object received a key not declared in the schema (and `stripUnknown` is false) |
+| `ref_target_missing`                       | `a.ref(name)` target not registered on the Sapphire instance                   |
 
 Third-party adapters and future refine APIs can attach their own codes; `IssueCode` is `... | (string & {})` so custom codes type-check while built-ins still autocomplete.
 

@@ -97,7 +97,15 @@ const User = a
   .name('User')
 ```
 
-The string form never validates the target at construction time. The check happens at adapter emission (Mongo, JSON Schema) or at query time (Drizzle, where `references(() => ...)` is itself lazy).
+The string form never validates the target at **construction** time — that's what makes forward refs and cycles work.
+
+### Parse-time ref validation
+
+At **parse** time, a ref _does_ check that its target name is registered on the Sapphire instance. `someSchema.safeParse(...)` walking a `ref('User')` whose `'User'` was never `.name()`d emits a `ref_target_missing` issue and fails. This catches typos (`'Usr'`) the moment you parse, not only when an adapter runs.
+
+The check only runs when the registry is reachable — i.e. the field was built from a `Sapphire` instance (the normal case). It does not validate the _shape_ of the referenced value; v1 refs check target registration + presence, not the target's schema.
+
+Adapter emission still resolves the target independently (Mongo/JSON Schema at emit time, Drizzle lazily via `references(() => ...)`).
 
 ## Adapter behavior
 
@@ -153,7 +161,7 @@ Pass the same `DrizzleTableRegistry` across all `toDrizzleSchema` calls in a rel
 ## Pitfalls
 
 > [!WARNING]
-> **Ref target resolution is lazy.** A missing target only throws at adapter-emission time (Mongo/JSON Schema) or at query time (Drizzle, via the `references(() => target.id)` closure). This is useful for forward refs and cycles, but a typo in `'Usr'` will compile and only blow up when something actually walks the registry.
+> **Ref target resolution is lazy at construction, checked at parse.** A `ref('User')` never throws when you _build_ it — that's what enables forward refs and cycles. But `safeParse` validates the target is registered and fails with a `ref_target_missing` issue if not, so a typo in `'Usr'` surfaces the first time you parse. Adapter emission also resolves the target (Mongo/JSON Schema at emit time, Drizzle lazily via the `references(() => target.id)` closure).
 
 > [!WARNING]
 > **Named schemas are unique per Sapphire instance.** Re-using a name throws from `NamedSchemaRegistry.register`. In tests, prefer a fresh `new Sapphire()` per file (or per test) instead of a module-level singleton — otherwise two tests that both `.name('User')` will collide.

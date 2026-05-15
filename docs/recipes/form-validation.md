@@ -34,18 +34,20 @@ function registerHandler(payload: unknown) {
   const result = userRegistration.safeParse(payload)
 
   if (!result.success) {
-    // Pivot ValidationIssue[] into { field -> message[] }.
-    const fieldErrors: Record<string, string[]> = {}
-    for (const issue of result.error.issues) {
-      const fieldId = issue.path.join('.') || '_form'
-      ;(fieldErrors[fieldId] ??= []).push(String(issue.message))
-    }
-    return { ok: false as const, fieldErrors }
+    // `flatten()` buckets issues into per-field message arrays plus a
+    // form-level array — exactly the shape a flat form needs.
+    const { fieldErrors, formErrors } = result.error.flatten()
+    return { ok: false as const, fieldErrors, formErrors }
   }
 
   // result.data is typed as Registration
   return { ok: true as const, user: result.data }
 }
+
+// Need a custom path format (e.g. dotted `address.zip`)? Pivot the raw
+// `result.error.issues` yourself — each issue carries `path`, `code`,
+// `message`. For nested DTOs, `result.error.format()` returns a tree mirroring
+// the schema shape with an `_errors` array at every node.
 
 // --- A bad submission ----------------------------------------------
 
@@ -72,7 +74,7 @@ const response = registerHandler(sample)
 
 1. **Define the schema with per-rule messages.** `a.string().min(8, { message: '...' })` attaches a message only when _that specific rule_ fails. You can layer multiple rules on a single field — `password` above runs three checks (`min`, two `regex`) and every failing rule produces its own issue.
 2. **Call `safeParse`.** It never throws. The result is a discriminated union: `{ success: true, data }` or `{ success: false, error }`.
-3. **Pivot `issues` by path.** `issue.path` is a `(string | number)[]` pointing at the offending value. For top-level fields it's `['email']`; for nested fields it would be `['address', 'zip']`. Joining with `'.'` matches the dotted IDs most UI libraries expect.
+3. **Flatten the error.** `result.error.flatten()` returns `{ fieldErrors, formErrors }` — `fieldErrors` keyed by the top-level field name, `formErrors` for root-level issues. No manual pivot needed for flat forms. (For dotted nested paths or a schema-shaped tree, see the note under the snippet and `error.format()`.)
 4. **Return the map to the UI.** Each form field reads `fieldErrors[id]` and renders the message(s) inline.
 
 ## Variations

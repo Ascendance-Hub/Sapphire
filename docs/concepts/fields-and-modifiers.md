@@ -124,7 +124,7 @@ Heterogeneous, fixed-length. See [Tuples vs arrays](./tuples-vs-arrays.md) for t
 
 ## Refs
 
-`a.ref(target)` declares "this position holds a reference to a named schema". `target` is either an `ObjectField` returned by `.name(...)` or the name string directly. Validation only checks presence in v1; adapters resolve the target shape (Mongo `ObjectId`, JSON Schema `$ref`, Drizzle `references(() => target.id)`). Detailed coverage in [Refs and relations](./refs-and-relations.md).
+`a.ref(target)` declares "this position holds a reference to a named schema". `target` is either an `ObjectField` returned by `.name(...)` or the name string directly. Validation checks presence and that the referenced name is registered on the Sapphire instance — an unregistered target fails `safeParse` with a `ref_target_missing` issue. It does not check the referenced value's shape in v1. Adapters resolve the target shape (Mongo `ObjectId`, JSON Schema `$ref`, Drizzle `references(() => target.id)`). Detailed coverage in [Refs and relations](./refs-and-relations.md).
 
 ## Universal modifiers
 

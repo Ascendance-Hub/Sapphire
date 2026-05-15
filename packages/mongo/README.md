@@ -82,13 +82,27 @@ Any options passed via `.adapter('mongo', { ... })` are merged into the Mongoose
 
 ## `MongoAdapterOptions`
 
-| Option     | Default | Effect                                                                                 |
-| ---------- | ------- | -------------------------------------------------------------------------------------- |
-| `subdocId` | `false` | Whether nested object Schemas auto-add `_id`. Default deviates from Mongoose's `true`. |
+| Option     | Default  | Effect                                                                                       |
+| ---------- | -------- | -------------------------------------------------------------------------------------------- |
+| `subdocId` | `false`  | Whether nested object Schemas auto-add `_id`. Default deviates from Mongoose's `true`.       |
+| `rootId`   | `'auto'` | Root document `_id` strategy. `'auto'` = Mongoose default; `'none'` = emit `{ _id: false }`. |
 
 ```ts
 toMongoSchema(node, { subdocId: true })
 ```
+
+### Custom root `_id`
+
+Declare a field literally named `_id` to use a custom identity instead of the
+auto-generated `ObjectId` — Mongoose honors a declared `_id` path:
+
+```ts
+const User = a.object({ _id: a.string(), name: a.string() })
+toMongoSchema(User.toSchema()) // String _id, no auto ObjectId
+```
+
+`rootId: 'none'` strips the root `_id` entirely (ignored when the schema
+declares its own `_id`).
 
 ## Limitations
 
