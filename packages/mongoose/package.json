@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@ascendance-hub/sapphire-core": "*",
+    "mongodb-memory-server": "^11.0.0",
     "mongoose": "^9.6.1"
   },
   "repository": {
