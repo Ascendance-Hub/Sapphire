@@ -29,6 +29,9 @@
   },
   "devDependencies": {
     "@ascendance-hub/sapphire-core": "*",
+    "@electric-sql/pglite": "^0.4.0",
+    "better-sqlite3": "^12.0.0",
+    "drizzle-kit": "^0.31.0",
     "drizzle-orm": "^0.45.2"
   },
   "repository": {
