@@ -1,0 +1,24 @@
+{
+  "name": "@ascendance-hub/sapphire-website",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "astro": "^5.6.0",
+    "codemirror": "^6.0.1",
+    "@codemirror/lang-javascript": "^6.2.2"
+  },
+  "devDependencies": {
+    "@ascendance-hub/sapphire-core": "*",
+    "@ascendance-hub/sapphire-json-schema": "*",
+    "unist-util-visit": "^5.0.0",
+    "vitest": "^2.1.9"
+  }
+}

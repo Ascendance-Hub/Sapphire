@@ -5,7 +5,8 @@
   "description": "Monorepo do Sapphire — schema-and-types generator multi-ORM.",
   "workspaces": [
     "packages/*",
-    "examples/consumer"
+    "examples/consumer",
+    "website"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
