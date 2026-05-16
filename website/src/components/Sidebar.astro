@@ -1,12 +1,22 @@
 ---
 import { getCollection } from 'astro:content'
+import { useTranslations, asLocale } from '../i18n/ui'
 const base = import.meta.env.BASE_URL.replace(/\/$/, '')
-const entries = await getCollection('docs')
+const locale = asLocale(Astro.currentLocale)
+const t = useTranslations(locale)
+const docsBase = locale === 'pt-br' ? `${base}/pt-br/docs` : `${base}/docs`
+
+const all = await getCollection('docs')
+// Show only the current locale's docs; strip the `pt-br/` id prefix so the
+// grouping/links logic is locale-agnostic.
+const entries = all
+  .filter((e) => (locale === 'pt-br' ? e.id.startsWith('pt-br/') : !e.id.startsWith('pt-br/')))
+  .map((e) => ({ id: locale === 'pt-br' ? e.id.slice('pt-br/'.length) : e.id }))
 
 // group by top-level folder; README is the index
 const groups: Record<string, { id: string; title: string }[]> = {}
 for (const entry of entries) {
-  const id = entry.id // e.g. 'concepts/fields-and-modifiers' or 'README'
+  const id = entry.id
   if (/^readme$/i.test(id)) continue
   const folder = id.includes('/') ? id.split('/')[0] : id
   const title = id.split('/').pop()!.replace(/-/g, ' ')
@@ -20,12 +30,12 @@ const sortedFolders = Object.keys(groups).sort(
 const current = Astro.url.pathname.replace(/\/$/, '')
 ---
 <aside class="sidebar">
-  <a class="idx" href={`${base}/docs`}>Documentation</a>
+  <a class="idx" href={docsBase}>{t('sidebar.index')}</a>
   {sortedFolders.map((folder) => (
     <div class="group">
       <div class="group-name">{folder.replace(/-/g, ' ')}</div>
       {groups[folder].map((d) => {
-        const href = `${base}/docs/${d.id}`
+        const href = `${docsBase}/${d.id}`
         return (
           <a class:list={['link', { on: current === href }]} href={href}>{d.title}</a>
         )

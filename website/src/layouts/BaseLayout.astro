@@ -1,14 +1,17 @@
 ---
 import Nav from '../components/Nav.astro'
 import '../styles/global.css'
+import { useTranslations, asLocale } from '../i18n/ui'
 interface Props {
   title: string
   description?: string
 }
 const { title, description = 'One schema, every ORM — Sapphire.' } = Astro.props
+const locale = asLocale(Astro.currentLocale)
+const t = useTranslations(locale)
 ---
 <!doctype html>
-<html lang="en">
+<html lang={locale === 'pt-br' ? 'pt-BR' : 'en'}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -21,7 +24,7 @@ const { title, description = 'One schema, every ORM — Sapphire.' } = Astro.pro
       <slot />
     </main>
     <footer>
-      <span>Sapphire — BSD-3-Clause</span>
+      <span>{t('footer.license')}</span>
     </footer>
     <style>
       footer {

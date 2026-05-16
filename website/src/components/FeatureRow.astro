@@ -1,8 +1,10 @@
 ---
+import { useTranslations, asLocale } from '../i18n/ui'
+const t = useTranslations(asLocale(Astro.currentLocale))
 const features = [
-  { icon: '⛃', title: 'Multi-output', body: 'One definition becomes a Mongoose schema, a Drizzle table, and a JSON Schema document.' },
-  { icon: '{ }', title: 'Typed end to end', body: 'Infer<> derives a precise TypeScript type from the same schema — no drift.' },
-  { icon: '✓', title: 'Validation built in', body: 'parse / safeParse with structured, DTO-ready errors via flatten() and format().' },
+  { icon: '⛃', title: t('features.multiOutput.title'), body: t('features.multiOutput.body') },
+  { icon: '{ }', title: t('features.typed.title'), body: t('features.typed.body') },
+  { icon: '✓', title: t('features.validation.title'), body: t('features.validation.body') },
 ]
 ---
 <section class="features">

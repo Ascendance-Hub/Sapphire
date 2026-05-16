@@ -1,11 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
 import Playground from '../components/Playground.astro'
+import { useTranslations } from '../i18n/ui'
+const t = useTranslations('en')
 ---
-<BaseLayout title="Sapphire — playground">
+<BaseLayout title={t('title.playground')}>
   <section class="pg-page">
-    <h1>Playground</h1>
-    <p>Edit the schema and the sample value — every panel recomputes live.</p>
+    <h1>{t('playground.title')}</h1>
+    <p>{t('playground.intro')}</p>
     <Playground />
   </section>
   <style>

@@ -1,15 +1,16 @@
 ---
+import { useTranslations, asLocale } from '../i18n/ui'
 const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+const locale = asLocale(Astro.currentLocale)
+const t = useTranslations(locale)
+const prefix = locale === 'pt-br' ? `${base}/pt-br` : base
 ---
 <section class="hero">
-  <h1>One schema. Every ORM.</h1>
-  <p>
-    Define your data shape once — Sapphire emits Mongoose, Drizzle, JSON Schema
-    and TypeScript types from a single source of truth.
-  </p>
+  <h1>{t('hero.title')}</h1>
+  <p>{t('hero.tagline')}</p>
   <div class="cta">
-    <a class="btn primary" href={`${base}/docs`}>Get started →</a>
-    <a class="btn ghost" href={`${base}/playground`}>Open playground</a>
+    <a class="btn primary" href={`${prefix}/docs`}>{t('hero.getStarted')}</a>
+    <a class="btn ghost" href={`${prefix}/playground`}>{t('hero.openPlayground')}</a>
   </div>
 </section>
 
