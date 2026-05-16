@@ -1,6 +1,6 @@
 {
   "name": "@ascendance-hub/sapphire-core",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Core do Sapphire — fields, IR, registry de adapters e geração de tipos.",
   "type": "module",
   "main": "./dist/index.cjs",
