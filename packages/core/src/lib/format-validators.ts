@@ -14,17 +14,29 @@ export const EMAIL_RE =
 //   - variant nibble: position 19 must be 8/9/a/b (binary 10xx)
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+/** Default URL schemes accepted by `.url()` when no `protocols` option is set. */
+export const DEFAULT_URL_PROTOCOLS: readonly string[] = ['http', 'https']
+
+/**
+ * Validates `v` as a URL whose scheme is one of `protocols`. `URL.protocol`
+ * carries a trailing `:` (`'http:'`), stripped before the membership check.
+ */
+export function isUrl(v: string, protocols: readonly string[]): boolean {
+  let parsed: URL
+  try {
+    parsed = new URL(v)
+  } catch {
+    return false
+  }
+  return protocols.includes(parsed.protocol.slice(0, -1))
+}
+
 export const formatValidators = {
   email: (v: string): boolean => EMAIL_RE.test(v),
   uuid: (v: string): boolean => UUID_RE.test(v),
-  url: (v: string): boolean => {
-    try {
-      new URL(v)
-      return true
-    } catch {
-      return false
-    }
-  },
+  // season-five S5: `.url()` defaults to http/https; other schemes opt in via
+  // the `protocols` option, which routes through `isUrl(v, protocols)`.
+  url: (v: string): boolean => isUrl(v, DEFAULT_URL_PROTOCOLS),
 } satisfies Record<'email' | 'uuid' | 'url', (v: string) => boolean>
 
 export type StringFormat = keyof typeof formatValidators

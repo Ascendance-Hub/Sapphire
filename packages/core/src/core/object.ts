@@ -389,7 +389,12 @@ export class ObjectField<
     for (const [key, child] of Object.entries(this.obj)) {
       const childCtx: ParseContext = { ...ctx, path: [...ctx.path, key] }
       const sub = (child as unknown as InternalField)._parse(v[key], childCtx)
-      out[key] = sub.value
+      // S2: omit an optional key that was absent from the input. A key present
+      // in the input (even as `undefined`) is preserved; a key whose field
+      // produced a value (e.g. via `default`) is kept. Matches Zod.
+      if (key in v || sub.value !== undefined) {
+        out[key] = sub.value
+      }
       issues.push(...sub.issues)
       if (ctx.abortEarly && issues.length > 0) {
         return { value: out, issues }

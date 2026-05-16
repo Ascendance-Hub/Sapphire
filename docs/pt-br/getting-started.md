@@ -134,6 +134,8 @@ const mongoSchema = userSchema.getSchema() as mongoose.Schema
 
 `registerAdapter(name, fn)` coloca o seu adapter sob um nome; `getSchema(name?, options?)` resolve a IR do field (`SapphireSchemaNode`) através daquele adapter. Quando a instância `Sapphire` tem um `defaultAdapter`, `getSchema()` o usa; caso contrário, passe o nome explicitamente: `userSchema.getSchema('mongoose')`.
 
+O registry de adapters é **global ao processo**: registre cada adapter uma vez, no startup da aplicação, antes de qualquer chamada de `getSchema`. Registrar um adapter nunca bloqueia outro — uma aplicação multi-banco registra `'mongoose'`, `'drizzle'` e os demais lado a lado e emite todos a partir de uma única definição de schema.
+
 O mesmo padrão funciona para os adapters de JSON Schema e Drizzle — o JSON Schema não precisa de opções, o Drizzle exige no mínimo um `dialect`:
 
 ```ts

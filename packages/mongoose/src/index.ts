@@ -1,6 +1,8 @@
 import mongoose from 'mongoose'
 import {
   formatValidators,
+  isUrl,
+  DEFAULT_URL_PROTOCOLS,
   type SapphireSchemaNode,
   type StringFormat,
 } from '@ascendance-hub/sapphire-core'
@@ -89,7 +91,16 @@ function buildField(
       }
       const validators: Array<{ validator: (v: string) => boolean; message: string }> = []
       if (node.format !== undefined) {
-        validators.push(stringFormatValidator(node.format))
+        if (node.format === 'url') {
+          // season-five S5: honor the IR's per-field URL protocol list.
+          const protocols = node.urlProtocols ?? [...DEFAULT_URL_PROTOCOLS]
+          validators.push({
+            validator: (v: string) => isUrl(v, protocols),
+            message: 'Invalid url',
+          })
+        } else {
+          validators.push(stringFormatValidator(node.format))
+        }
       }
       if (node.startsWith !== undefined) {
         const prefix = node.startsWith

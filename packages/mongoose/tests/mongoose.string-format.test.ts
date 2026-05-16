@@ -24,6 +24,19 @@ describe('Mongoose adapter — string formats / startsWith / endsWith / transfor
     expect(new Model({ value: 'https://example.com' }).validateSync()).toBeUndefined()
   })
 
+  // season-five S5: `.url()` defaults to http/https; `protocols` widens it.
+  it('url format: rejeita schemes não-http por padrão', () => {
+    const Model = makeModel(a.string().url())
+    expect(new Model({ value: 'javascript:alert(1)' }).validateSync()?.errors.value).toBeDefined()
+    expect(new Model({ value: 'mailto:a@b.com' }).validateSync()?.errors.value).toBeDefined()
+  })
+
+  it('url format: protocols custom amplia os schemes aceitos', () => {
+    const Model = makeModel(a.string().url({ protocols: ['http', 'https', 'ftp'] }))
+    expect(new Model({ value: 'ftp://files.example.com' }).validateSync()).toBeUndefined()
+    expect(new Model({ value: 'https://example.com' }).validateSync()).toBeUndefined()
+  })
+
   it('uuid format: rejeita inválido, aceita válido', () => {
     const Model = makeModel(a.string().uuid())
     expect(new Model({ value: '123' }).validateSync()?.errors.value).toBeDefined()
