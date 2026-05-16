@@ -18,16 +18,16 @@ const name = a
   .adapter('json-schema', { 'x-internal': true })
 
 const node = name.toSchema() as SapphireSchemaNode
-// node.meta === { mongo: { sparse: true }, 'json-schema': { 'x-internal': true } }
+// node.meta === { mongoose: { sparse: true }, 'json-schema': { 'x-internal': true } }
 ```
 
 `.adapter(name, opts)` returns a new field (immutable, like every other modifier). Repeated calls with the same name merge.
 
 ## Per-adapter behavior
 
-### Mongo — passthrough except blacklisted keys
+### Mongoose — passthrough except blacklisted keys
 
-`meta.mongo` is merged **last** into every Mongoose `SchemaTypeDefinition`. It wins over Sapphire-derived options (e.g. you can override `def.minlength`), except for the blacklist: `type` and `required` are always Sapphire-controlled.
+`meta.mongoose` is merged **last** into every Mongoose `SchemaTypeDefinition`. It wins over Sapphire-derived options (e.g. you can override `def.minlength`), except for the blacklist: `type` and `required` are always Sapphire-controlled.
 
 <!-- from tests/docs-examples/escape-hatch.test.ts -->
 
@@ -46,6 +46,10 @@ const path = schema.path('email') as unknown as {
 ```
 
 Common keys: `sparse`, `collation`, `validate`, `select`, `alias`, `immutable`, `lowercase`/`uppercase`/`trim` overrides, custom getters/setters. At the object-schema level (object's `.adapter('mongoose', { collection: 'users' })`), `collection` is honored for `mongoose.SchemaOptions.collection`.
+
+### MongoDB native driver — passthrough into `$jsonSchema`
+
+`meta.bson` is merged **last** into the emitted `$jsonSchema` node by the `@ascendance-hub/sapphire-bson` adapter. Its blacklist is the set of keywords the adapter computes itself — `bsonType`, `type`, `required`, `enum`, `properties`, `items`. Because MongoDB rejects unknown `$jsonSchema` keywords, only pass valid ones through this hatch. See [Adapters → Mongo](../adapters/bson.md) for the full surface.
 
 ### JSON Schema — passthrough with `type` and `$ref` blacklisted
 
@@ -110,7 +114,7 @@ const pgTable = toDrizzleSchema(user.toSchema(), {
 ## Pitfalls
 
 > [!WARNING]
-> **Escape-hatch values merge LAST.** They win over Sapphire-derived keys in every adapter (except for each adapter's small blacklist — mongo: `type`/`required`; json-schema: `type`/`$ref`). This is a sharp tool: reach for it sparingly and keep close tests.
+> **Escape-hatch values merge LAST.** They win over Sapphire-derived keys in every adapter (except for each adapter's small blacklist — mongoose: `type`/`required`; bson: the `$jsonSchema` keywords it computes; json-schema: `type`/`$ref`). This is a sharp tool: reach for it sparingly and keep close tests.
 
 > [!WARNING]
 > **Drizzle's escape hatch silently ignores method names it doesn't recognize.** A typo like `.uniqe` produces a passing typecheck and a column that quietly lacks the constraint you intended. Always assert the column's runtime properties (`isUnique`, `notNull`, etc.) in tests.

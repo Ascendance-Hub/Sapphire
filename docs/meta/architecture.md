@@ -9,6 +9,7 @@ flowchart LR
     A["Field DSL<br/>(a.string, a.object, ...)"] --> B["IR<br/>(SapphireSchemaNode)"]
     B --> C{Adapter Registry}
     C --> D["Mongoose Schema"]
+    C --> G["MongoDB $jsonSchema<br/>validator"]
     C --> E["JSON Schema 2020-12"]
     C --> F["Drizzle tables<br/>(pg/mysql/sqlite)"]
 ```
@@ -19,6 +20,7 @@ flowchart LR
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@ascendance-hub/sapphire-core`        | Field DSL, IR, validation (`parse`/`safeParse`), `Infer<>`/`InferInput<>` types, adapter registry, named-schema registry, message resolver. Zero runtime deps. |
 | `@ascendance-hub/sapphire-mongoose`    | Mongoose adapter. Walks the IR and emits a `mongoose.Schema`.                                                                                                  |
+| `@ascendance-hub/sapphire-bson`        | Native MongoDB driver adapter. Walks the IR and emits a `$jsonSchema` collection validator.                                                                    |
 | `@ascendance-hub/sapphire-json-schema` | JSON Schema 2020-12 adapter. Emits a `$defs` collector with `$ref` cycles supported.                                                                           |
 | `@ascendance-hub/sapphire-drizzle`     | Drizzle adapter. Emits `pgTable` / `mysqlTable` / `sqliteTable` with lazy `references()` for refs.                                                             |
 
@@ -61,7 +63,8 @@ Adapters own:
 
 ## Per-adapter behavior at a glance
 
-- **Mongo (`@ascendance-hub/sapphire-mongoose`)** — walks the IR into `mongoose.Schema` paths. Unsupported kinds fall back to `Mixed`. Subdocuments use `_id: false` by default. Universal modifiers (`required`, `unique`, `index`, `default`, `enum`) map to Mongoose path options. Escape hatch `meta.mongo` merges last with `type`/`required` blacklisted.
+- **Mongoose (`@ascendance-hub/sapphire-mongoose`)** — walks the IR into `mongoose.Schema` paths. Unsupported kinds fall back to `Mixed`. Subdocuments use `_id: false` by default. Universal modifiers (`required`, `unique`, `index`, `default`, `enum`) map to Mongoose path options. Escape hatch `meta.mongoose` merges last with `type`/`required` blacklisted.
+- **MongoDB native driver (`@ascendance-hub/sapphire-bson`)** — emits a `$jsonSchema` collection validator (`toBsonSchema`) for `db.createCollection(name, { validator })`. Maps IR kinds to `bsonType` names, uses JSON Schema draft-4 exclusive bounds, inlines named objects (no `$ref`), and emits `ref` as `bsonType: 'objectId'`. Escape hatch `meta.bson` merges last.
 - **JSON Schema (`@ascendance-hub/sapphire-json-schema`)** — emits 2020-12 (`prefixItems` for tuples, numeric `exclusiveMinimum`). `union` becomes `oneOf` (see [Design decisions](./design-decisions.md)). Named ObjectFields collect into `$defs` and `ref` becomes `$ref: '#/$defs/Name'`. Escape hatch `meta['json-schema']` merges last with `type` and `$ref` blacklisted.
 - **Drizzle (`@ascendance-hub/sapphire-drizzle`)** — emits `pgTable` / `mysqlTable` / `sqliteTable` chosen by `options.dialect`. Refs use `references(() => target.id)` via a `DrizzleTableRegistry` so cycles resolve lazily. Escape hatch `meta.drizzle` is interpreted as chained method calls; per-dialect sub-keys (`pg`, `mysql`, `sqlite`) gate calls by dialect. Unknown method names are silently skipped (intentional — see [`escape-hatch.md`](../concepts/escape-hatch.md)).
 
