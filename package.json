@@ -4,6 +4,7 @@
   "private": true,
   "description": "Monorepo do Sapphire — schema-and-types generator multi-ORM.",
   "workspaces": [
+    "packages/core",
     "packages/*",
     "examples/consumer",
     "website"

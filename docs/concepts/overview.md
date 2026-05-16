@@ -42,5 +42,5 @@ If you are coming from another schema library and want a feature-by-feature mapp
 ## Links
 
 - [Getting Started](../getting-started.md) — install and your first schema.
-- [Adapters → Mongo](../adapters/mongo.md) / [JSON Schema](../adapters/json-schema.md) / [Drizzle](../adapters/drizzle.md).
+- [Adapters → Mongo](../adapters/bson.md) / [Mongoose](../adapters/mongoose.md) / [JSON Schema](../adapters/json-schema.md) / [Drizzle](../adapters/drizzle.md).
 - [Concepts → Fields and modifiers](./fields-and-modifiers.md).

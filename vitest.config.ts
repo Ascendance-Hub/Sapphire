@@ -15,7 +15,8 @@ export default defineConfig({
     environment: 'node',
     setupFiles: [
       'packages/core/tests/_setup.ts',
-      'packages/mongo/tests/_setup.ts',
+      'packages/mongoose/tests/_setup.ts',
+      'packages/bson/tests/_setup.ts',
       'packages/json-schema/tests/_setup.ts',
       'packages/drizzle/tests/_setup.ts',
     ],

@@ -1,18 +1,18 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '../src'
+import { toMongooseSchema } from '../src'
 import { uniqueModelName } from './_setup'
 
 describe('Integração com Mongoose', () => {
-  const a = new Sapphire({ defaultAdapter: 'mongo' })
+  const a = new Sapphire({ defaultAdapter: 'mongoose' })
 
   it('top-level object retorna mongoose.Schema diretamente', () => {
     const userField = a.object({
       name: a.string(),
       age: a.number().optional(),
     })
-    const schema = toMongoSchema(userField.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(userField.toSchema()) as mongoose.Schema
     expect(schema).toBeInstanceOf(mongoose.Schema)
     expect(schema.path('name')).toBeDefined()
     expect(schema.path('age')).toBeDefined()
@@ -27,7 +27,7 @@ describe('Integração com Mongoose', () => {
         updatedAt: a.date().optional(),
       }),
     })
-    const schema = toMongoSchema(productField.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(productField.toSchema()) as mongoose.Schema
     expect(schema).toBeInstanceOf(mongoose.Schema)
     const sub = schema.path('metadata') as any
     expect(sub.schema).toBeInstanceOf(mongoose.Schema)
@@ -38,7 +38,7 @@ describe('Integração com Mongoose', () => {
     const field = a.object({
       val: a.type().union([a.string(), a.number()]),
     })
-    const schema = toMongoSchema(field.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(field.toSchema()) as mongoose.Schema
     const valPath = schema.path('val') as any
     expect(valPath.instance).toBe('Mixed')
   })
@@ -47,7 +47,7 @@ describe('Integração com Mongoose', () => {
     const userField = a.object({
       name: a.string(),
     })
-    const schema = toMongoSchema(userField.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(userField.toSchema()) as mongoose.Schema
     const Model = mongoose.model(uniqueModelName('TestUser'), schema)
     const doc = new Model({})
     const err = doc.validateSync()

@@ -8,7 +8,8 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
+import { toBsonSchema } from '@ascendance-hub/sapphire-bson'
 import { toDrizzleSchema, DrizzleTableRegistry } from '@ascendance-hub/sapphire-drizzle'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 import { getTableConfig } from 'drizzle-orm/pg-core'
@@ -23,7 +24,7 @@ describe('S1 — refs across adapters', () => {
 
   it('Mongo: ref emits an ObjectId path carrying ref: "User"', () => {
     const { Post } = buildPair()
-    const schema = toMongoSchema(Post.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(Post.toSchema()) as mongoose.Schema
     const authorPath = schema.path('author') as unknown as {
       instance: string
       options: { ref: string }
@@ -60,12 +61,21 @@ describe('S1 — refs across adapters', () => {
     expect(json.$defs.User).toBeDefined()
   })
 
-  it('the same Post IR drives all three adapters without mutation', () => {
+  it('Mongo validator: ref emits bsonType objectId', () => {
+    const { Post } = buildPair()
+    const validator = toBsonSchema(Post.toSchema()).$jsonSchema as {
+      properties: Record<string, { bsonType: string }>
+    }
+    expect(validator.properties.author.bsonType).toBe('objectId')
+  })
+
+  it('the same Post IR drives all four adapters without mutation', () => {
     const { User, Post } = buildPair()
     const ir = Post.toSchema()
     const snapshot = JSON.stringify(ir)
 
-    toMongoSchema(ir)
+    toMongooseSchema(ir)
+    toBsonSchema(ir)
     const tables = new DrizzleTableRegistry()
     toDrizzleSchema(User.toSchema(), { dialect: 'pg', tableName: 'users', tables })
     toDrizzleSchema(ir, { dialect: 'pg', tableName: 'posts', tables })
@@ -95,7 +105,7 @@ describe('S1 — refs across adapters', () => {
     const ir = Post.toSchema()
 
     // Mongo: the author path is not required
-    const mongoSchema = toMongoSchema(ir) as mongoose.Schema
+    const mongoSchema = toMongooseSchema(ir) as mongoose.Schema
     expect(
       (mongoSchema.path('author') as unknown as { isRequired?: boolean }).isRequired,
     ).toBeFalsy()

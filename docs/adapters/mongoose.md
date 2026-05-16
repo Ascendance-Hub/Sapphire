@@ -1,11 +1,13 @@
-# Mongo adapter — `@ascendance-hub/sapphire-mongo`
+# Mongoose adapter — `@ascendance-hub/sapphire-mongoose`
 
-The Mongo adapter converts a Sapphire IR (`SapphireSchemaNode`) into a `mongoose.Schema` (when the root node is an object) or a `SchemaTypeDefinition` (anywhere else). It is the closest match for Sapphire's modeling style — Mongoose has a similar "schema-as-definition" surface — and is the adapter where the most modifiers survive at the DB level.
+The Mongoose adapter converts a Sapphire IR (`SapphireSchemaNode`) into a `mongoose.Schema` (when the root node is an object) or a `SchemaTypeDefinition` (anywhere else). It is the closest match for Sapphire's modeling style — Mongoose has a similar "schema-as-definition" surface — and is the adapter where the most modifiers survive at the DB level.
+
+> **Unofficial.** A community adapter — not affiliated with, sponsored, or endorsed by the Mongoose project or Automattic, Inc.
 
 ## Install
 
 ```bash
-npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-mongo mongoose
+npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-mongoose mongoose
 ```
 
 Both `@ascendance-hub/sapphire-core` and `mongoose` are **peer dependencies**. The package will not pull them in transitively — install them alongside.
@@ -16,11 +18,11 @@ The adapter is **not auto-registered**. Call `registerAdapter` once in your appl
 
 ```ts
 import { Sapphire, registerAdapter } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
 
-registerAdapter('mongo', toMongoSchema)
+registerAdapter('mongoose', toMongooseSchema)
 
-export const a = new Sapphire({ defaultAdapter: 'mongo' })
+export const a = new Sapphire({ defaultAdapter: 'mongoose' })
 ```
 
 `registerAdapter` is process-global. Calling it twice with the same name throws; calling it from a library is discouraged — leave it to the consuming application.
@@ -29,7 +31,7 @@ export const a = new Sapphire({ defaultAdapter: 'mongo' })
 
 ```ts
 import mongoose from 'mongoose'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
 import { a } from './sapphire'
 
 const User = a
@@ -42,11 +44,11 @@ const User = a
   .timestamps()
   .index(['email'], { unique: true })
 
-const UserSchema = User.getSchema('mongo') as mongoose.Schema
+const UserSchema = User.getSchema('mongoose') as mongoose.Schema
 const UserModel = mongoose.model('User', UserSchema)
 ```
 
-`field.getSchema('mongo')` is sugar for `toMongoSchema(field.toSchema())` once the adapter is registered — the latter is the explicit form when you want to skip the registry.
+`field.getSchema('mongoose')` is sugar for `toMongooseSchema(field.toSchema())` once the adapter is registered — the latter is the explicit form when you want to skip the registry.
 
 ## IR → Mongoose mapping
 
@@ -90,12 +92,12 @@ These apply to **every** node kind unless noted:
 
 The root-level `ObjectField` carries schema-wide flags that translate to Mongoose `SchemaOptions`:
 
-| Sapphire call                                                | Mongoose effect                                                                                                           |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `.name('User')`                                              | Used by `mongoose.model(name, schema)` — the adapter does not call `mongoose.model` itself, it returns the bare `Schema`. |
-| `.timestamps()`                                              | `new Schema(def, { timestamps: true })` — Mongoose then auto-fills `createdAt`/`updatedAt`.                               |
-| `.index(['email', 'name'], { unique: true })`                | Each call accumulates: `schema.index({ email: 1, name: 1 }, { unique: true })`. Multiple invocations stack.               |
-| `.adapter('mongo', { collection: 'people' })` (object-level) | `new Schema(def, { collection: 'people' })`.                                                                              |
+| Sapphire call                                                   | Mongoose effect                                                                                                           |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `.name('User')`                                                 | Used by `mongoose.model(name, schema)` — the adapter does not call `mongoose.model` itself, it returns the bare `Schema`. |
+| `.timestamps()`                                                 | `new Schema(def, { timestamps: true })` — Mongoose then auto-fills `createdAt`/`updatedAt`.                               |
+| `.index(['email', 'name'], { unique: true })`                   | Each call accumulates: `schema.index({ email: 1, name: 1 }, { unique: true })`. Multiple invocations stack.               |
+| `.adapter('mongoose', { collection: 'people' })` (object-level) | `new Schema(def, { collection: 'people' })`.                                                                              |
 
 ## Refs
 
@@ -114,9 +116,9 @@ Emits `{ type: ObjectId, ref: 'User', required: true }`. The string lands direct
 
 See [refs-and-relations.md](../concepts/refs-and-relations.md) for the full ref lifecycle.
 
-## `.adapter('mongo', opts)` escape hatch
+## `.adapter('mongoose', opts)` escape hatch
 
-Values from `.adapter('mongo', { ... })` are read from `node.meta.mongo` and merged into the field's Mongoose definition **last** (after Sapphire-derived keys). They win on conflicts, with one exception — the blacklist:
+Values from `.adapter('mongoose', { ... })` are read from `node.meta.mongoose` and merged into the field's Mongoose definition **last** (after Sapphire-derived keys). They win on conflicts, with one exception — the blacklist:
 
 ```ts
 const META_BLACKLIST = new Set(['type', 'required'])
@@ -139,9 +141,9 @@ Common keys:
 
 Any other key Mongoose accepts on a `SchemaTypeDefinition` is honored verbatim — the adapter simply copies the entries onto the definition object.
 
-## `MongoAdapterOptions`
+## `MongooseAdapterOptions`
 
-The second argument to `toMongoSchema(node, options?)`:
+The second argument to `toMongooseSchema(node, options?)`:
 
 | Option     | Default  | Effect                                                                                                                                |
 | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
@@ -149,7 +151,7 @@ The second argument to `toMongoSchema(node, options?)`:
 | `rootId`   | `'auto'` | Root document `_id` strategy. `'auto'` = Mongoose default (auto ObjectId unless you declare `_id`). `'none'` = emit `{ _id: false }`. |
 
 ```ts
-toMongoSchema(node, { subdocId: true })
+toMongooseSchema(node, { subdocId: true })
 ```
 
 ### Custom root `_id`
@@ -163,13 +165,13 @@ const User = a.object({
   _id: a.string(), // custom string id — you supply it on every insert
   name: a.string(),
 })
-toMongoSchema(User.toSchema()) // → Schema with a String _id, no auto ObjectId
+toMongooseSchema(User.toSchema()) // → Schema with a String _id, no auto ObjectId
 ```
 
 To strip the root `_id` entirely (rare — capped logs, views):
 
 ```ts
-toMongoSchema(User.toSchema(), { rootId: 'none' }) // → Schema with { _id: false }
+toMongooseSchema(User.toSchema(), { rootId: 'none' }) // → Schema with { _id: false }
 ```
 
 `rootId: 'none'` is ignored when the schema already declares its own `_id`
@@ -190,13 +192,13 @@ field — a field you explicitly asked for is never stripped.
 > **`nullable()` is a no-op.** Mongoose has no dedicated nullable flag; non-required fields accept `null` implicitly. If you need strict `null` rejection, validate via `safeParse`.
 
 > [!WARNING]
-> **`nullable() + required` differs across Sapphire and Mongoose.** Sapphire treats `null` as a valid value when `nullable: true` is set. Mongoose, by default, treats `null` as missing for the `required` check. Result: a field declared as `a.string().nullable()` (with the default `required: true`) will pass `Sapphire.safeParse(null)` but Mongoose `.validate()` will reject `null` on the same path. If you want Mongoose to also accept `null` without filling, pass an explicit `default: null` via the escape hatch (`.adapter('mongo', { default: null })`), or drop `nullable()` and validate elsewhere.
+> **`nullable() + required` differs across Sapphire and Mongoose.** Sapphire treats `null` as a valid value when `nullable: true` is set. Mongoose, by default, treats `null` as missing for the `required` check. Result: a field declared as `a.string().nullable()` (with the default `required: true`) will pass `Sapphire.safeParse(null)` but Mongoose `.validate()` will reject `null` on the same path. If you want Mongoose to also accept `null` without filling, pass an explicit `default: null` via the escape hatch (`.adapter('mongoose', { default: null })`), or drop `nullable()` and validate elsewhere.
 
 > [!WARNING]
 > **`coerce()` is dropped.** Use `safeParse` before handing values to Mongoose if you want Sapphire's coercion semantics.
 
 > [!WARNING]
-> **Subdocument `_id: false` is the default.** Mongoose's own default is `true`. Set `subdocId: true` on `toMongoSchema` to opt back in.
+> **Subdocument `_id: false` is the default.** Mongoose's own default is `true`. Set `subdocId: true` on `toMongooseSchema` to opt back in.
 
 > [!WARNING]
 > **No discriminator / plugin / hook support.** Sapphire emits a bare `Schema`. Mongoose's discriminators, plugins, and middleware are deferred to V1_FUTURE — wire them on the returned `Schema` yourself if you need them now.

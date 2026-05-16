@@ -1,32 +1,32 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
-import { toMongoSchema } from '../src'
+import { toMongooseSchema } from '../src'
 import type { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 
-describe('toMongoSchema (primitives + composites — buildField)', () => {
+describe('toMongooseSchema (primitives + composites — buildField)', () => {
   it('string → { type: String, required }', () => {
     const node: SapphireSchemaNode = { kind: 'string', required: true }
-    expect(toMongoSchema(node)).toEqual({ type: String, required: true })
+    expect(toMongooseSchema(node)).toEqual({ type: String, required: true })
   })
 
   it('string com minLength usa key minlength (Mongoose)', () => {
     const node: SapphireSchemaNode = { kind: 'string', required: true, minLength: 3 }
-    expect(toMongoSchema(node)).toEqual({ type: String, required: true, minlength: 3 })
+    expect(toMongooseSchema(node)).toEqual({ type: String, required: true, minlength: 3 })
   })
 
   it('number → { type: Number, required }', () => {
     const node: SapphireSchemaNode = { kind: 'number', required: false }
-    expect(toMongoSchema(node)).toEqual({ type: Number, required: false })
+    expect(toMongooseSchema(node)).toEqual({ type: Number, required: false })
   })
 
   it('boolean → { type: Boolean, required }', () => {
     const node: SapphireSchemaNode = { kind: 'boolean', required: true }
-    expect(toMongoSchema(node)).toEqual({ type: Boolean, required: true })
+    expect(toMongooseSchema(node)).toEqual({ type: Boolean, required: true })
   })
 
   it('date → { type: Date, required }', () => {
     const node: SapphireSchemaNode = { kind: 'date', required: true }
-    expect(toMongoSchema(node)).toEqual({ type: Date, required: true })
+    expect(toMongooseSchema(node)).toEqual({ type: Date, required: true })
   })
 
   it('top-level object → mongoose.Schema instance', () => {
@@ -38,7 +38,7 @@ describe('toMongoSchema (primitives + composites — buildField)', () => {
         age: { kind: 'number', required: false },
       },
     }
-    const result = toMongoSchema(node)
+    const result = toMongooseSchema(node)
     expect(result).toBeInstanceOf(mongoose.Schema)
     const schema = result as mongoose.Schema
     expect(schema.path('name')).toBeDefined()
@@ -59,7 +59,7 @@ describe('toMongoSchema (primitives + composites — buildField)', () => {
         },
       },
     }
-    const schema = toMongoSchema(node) as mongoose.Schema
+    const schema = toMongooseSchema(node) as mongoose.Schema
     const subPath = schema.path('meta') as any
     expect(subPath.schema).toBeInstanceOf(mongoose.Schema)
     expect(subPath.schema.options._id).toBe(false)
@@ -79,7 +79,7 @@ describe('toMongoSchema (primitives + composites — buildField)', () => {
         },
       },
     }
-    const schema = toMongoSchema(node, { subdocId: true }) as mongoose.Schema
+    const schema = toMongooseSchema(node, { subdocId: true }) as mongoose.Schema
     const subPath = schema.path('meta') as any
     expect(subPath.schema.options._id).toBe(true)
   })
@@ -90,7 +90,7 @@ describe('toMongoSchema (primitives + composites — buildField)', () => {
       required: true,
       items: { kind: 'string', required: true },
     }
-    expect(toMongoSchema(node)).toEqual({
+    expect(toMongooseSchema(node)).toEqual({
       type: [{ type: String, required: true }],
       required: true,
     })
@@ -105,7 +105,7 @@ describe('toMongoSchema (primitives + composites — buildField)', () => {
         { kind: 'date', required: true },
       ],
     }
-    const result = toMongoSchema(node) as Record<string, any>
+    const result = toMongooseSchema(node) as Record<string, any>
     expect(result.type).toBe(mongoose.Schema.Types.Mixed)
     expect(result.required).toBe(false)
   })

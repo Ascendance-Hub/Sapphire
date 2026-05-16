@@ -15,10 +15,10 @@ Sapphire was designed for exactly this. Define once, fan out to three consumers 
 ```ts
 // packages/shared/src/schemas.ts -------------------------------------
 import { Sapphire, registerAdapter, type Infer } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 
-registerAdapter('mongo', toMongoSchema)
+registerAdapter('mongoose', toMongooseSchema)
 registerAdapter('json-schema', toJsonSchema)
 
 export const a = new Sapphire()
@@ -37,7 +37,7 @@ export type User = Infer<typeof User>
 
 // (2) Mongoose schema — backend persistence.
 import mongoose from 'mongoose'
-export const UserMongoSchema = User.getSchema('mongo') as mongoose.Schema
+export const UserMongoSchema = User.getSchema('mongoose') as mongoose.Schema
 export const UserModel = mongoose.model('User', UserMongoSchema)
 
 // (3) JSON Schema 2020-12 — frontend form generator OR MCP inputSchema.
@@ -71,7 +71,7 @@ export function UserForm({ onSubmit }: { onSubmit: (u: User) => void }) {
 1. **Define `User` once** as a named object schema. `.name('User')` registers it in the Sapphire instance's registry — JSON Schema picks the name up for `$defs`, and Mongo uses it for `mongoose.model`.
 2. **Three outputs from the same field:**
    - `Infer<typeof User>` is a pure type expression — zero runtime cost.
-   - `User.getSchema('mongo')` walks the IR through `toMongoSchema` and returns a `mongoose.Schema`.
+   - `User.getSchema('mongoose')` walks the IR through `toMongooseSchema` and returns a `mongoose.Schema`.
    - `toJsonSchema(User.toSchema(), opts)` returns a plain JSON object.
 3. **Ship the type and the JSON Schema to the frontend.** The Mongoose schema stays server-side (it pulls in `mongoose`). A workspace `shared` package is the typical home — re-exported from there into both apps.
 4. **Refactor in one place.** Add a field on `User`, and the type updates everywhere, the Mongoose model gets a new path, and the form generator picks up the new question on next build.
@@ -122,7 +122,7 @@ export { User as UserSchema } from './schemas' // backend uses this
 The frontend bundle now contains zero Sapphire runtime — only the structural type survives.
 
 > [!WARNING]
-> **Don't ship the Mongoose schema to the browser.** `@ascendance-hub/sapphire-mongo` and `mongoose` itself are server-only. Export the JSON Schema and the `Infer<>` type from a shared package; keep `UserMongoSchema` and `UserModel` in a backend-only module.
+> **Don't ship the Mongoose schema to the browser.** `@ascendance-hub/sapphire-mongoose` and `mongoose` itself are server-only. Export the JSON Schema and the `Infer<>` type from a shared package; keep `UserMongoSchema` and `UserModel` in a backend-only module.
 
 > [!WARNING]
 > **`additionalProperties: false` is opt-in.** JSON Schema's spec default is permissive. If you want the form generator to reject unknown keys, pass `{ additionalProperties: false }` to `toJsonSchema` — Sapphire's `stripUnknown`/`unknown_key` semantics aren't conveyed automatically.
@@ -130,6 +130,6 @@ The frontend bundle now contains zero Sapphire runtime — only the structural t
 ## See also
 
 - [Adapters → JSON Schema](../adapters/json-schema.md) — full 2020-12 mapping table and emitter options.
-- [Adapters → Mongo](../adapters/mongo.md) — Mongoose IR mapping and refs.
+- [Adapters → Mongoose](../adapters/mongoose.md) — Mongoose IR mapping and refs.
 - [Concepts → Composition](../concepts/composition.md) — `partial`, `pick`, `omit` for read/write/patch splits.
 - [Recipes → One schema, many adapters](./one-schema-many-adapters.md) — sister recipe focused on multi-output emission.

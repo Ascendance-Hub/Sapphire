@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire, registerAdapter } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 
 describe('docs/concepts/refs-and-relations.md — snippet pinning', () => {
@@ -89,8 +89,8 @@ describe('docs/concepts/refs-and-relations.md — snippet pinning', () => {
   })
 
   it('mongo adapter — refs emit { type: ObjectId, ref: Name }', () => {
-    registerAdapter('mongo', toMongoSchema)
-    const a = new Sapphire({ defaultAdapter: 'mongo' })
+    registerAdapter('mongoose', toMongooseSchema)
+    const a = new Sapphire({ defaultAdapter: 'mongoose' })
 
     const User = a.object({ email: a.string().email() }).name('User')
     const Post = a.object({

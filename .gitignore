@@ -51,3 +51,6 @@ Desktop.ini
 .superpowers/
 website/dist/
 website/.astro/
+
+# Local "real DB" integration projects — not part of the repo
+/e2e/

@@ -1,9 +1,9 @@
 import { registerAdapter } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '../src'
+import { toMongooseSchema } from '../src'
 
-// Registers the mongo adapter explicitly for tests. In real applications,
+// Registers the mongoose adapter explicitly for tests. In real applications,
 // the consumer is expected to call this in their entry point.
-registerAdapter('mongo', toMongoSchema)
+registerAdapter('mongoose', toMongooseSchema)
 
 /**
  * Unique Mongoose model name. Mongoose's model registry is process-global;

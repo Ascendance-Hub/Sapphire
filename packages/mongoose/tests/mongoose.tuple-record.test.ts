@@ -1,15 +1,15 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '../src'
+import { toMongooseSchema } from '../src'
 import { uniqueModelName } from './_setup'
 
-describe('Mongo adapter — tuple length validator', () => {
-  const a = new Sapphire({ defaultAdapter: 'mongo' })
+describe('Mongoose adapter — tuple length validator', () => {
+  const a = new Sapphire({ defaultAdapter: 'mongoose' })
 
   it('tuple [string, number]: rejeita length errado', () => {
     const obj = a.object({ pair: a.tuple([a.string(), a.number()]) })
-    const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(obj.toSchema()) as mongoose.Schema
     const Model = mongoose.model(uniqueModelName('TestTuple1'), schema)
     const tooShort = new Model({ pair: ['x'] })
     expect(tooShort.validateSync()?.errors.pair).toBeDefined()
@@ -19,7 +19,7 @@ describe('Mongo adapter — tuple length validator', () => {
 
   it('tuple aceita length correto (type-checking de posição fica no core)', () => {
     const obj = a.object({ pair: a.tuple([a.string(), a.number()]) })
-    const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(obj.toSchema()) as mongoose.Schema
     const Model = mongoose.model(uniqueModelName('TestTuple2'), schema)
     const ok = new Model({ pair: ['x', 1] })
     expect(ok.validateSync()).toBeUndefined()
@@ -30,14 +30,14 @@ describe('Mongo adapter — tuple length validator', () => {
   })
 })
 
-describe('Mongo adapter — record com keyField', () => {
-  const a = new Sapphire({ defaultAdapter: 'mongo' })
+describe('Mongoose adapter — record com keyField', () => {
+  const a = new Sapphire({ defaultAdapter: 'mongoose' })
 
   it('keyField string → Map of values', () => {
     const obj = a.object({
       flags: a.type().record(a.string(), a.boolean()),
     })
-    const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(obj.toSchema()) as mongoose.Schema
     const path = schema.path('flags') as any
     expect(path.instance).toBe('Map')
   })
@@ -46,7 +46,7 @@ describe('Mongo adapter — record com keyField', () => {
     const obj = a.object({
       labels: a.type().record(a.type().enum(['a', 'b'] as const), a.string()),
     })
-    const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(obj.toSchema()) as mongoose.Schema
     const path = schema.path('labels') as any
     expect(path.instance).toBe('Map')
   })
@@ -55,7 +55,7 @@ describe('Mongo adapter — record com keyField', () => {
     const obj = a.object({
       scores: a.type().record(a.number(), a.string()),
     })
-    const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(obj.toSchema()) as mongoose.Schema
     const path = schema.path('scores') as any
     expect(path.instance).toBe('Mixed')
   })

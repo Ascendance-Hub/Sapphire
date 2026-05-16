@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire, registerAdapter, type Infer } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
 
 describe('docs/getting-started.md — snippet pinning', () => {
   it('your first schema — define + Infer', () => {
@@ -87,9 +87,9 @@ describe('docs/getting-started.md — snippet pinning', () => {
 
   it('add an adapter — registerAdapter + getSchema', () => {
     // --- snippet: register an adapter and emit a mongoose schema ---
-    registerAdapter('mongo', toMongoSchema)
+    registerAdapter('mongoose', toMongooseSchema)
 
-    const a = new Sapphire({ defaultAdapter: 'mongo' })
+    const a = new Sapphire({ defaultAdapter: 'mongoose' })
 
     const userSchema = a.object({
       name: a.string().min(1),

@@ -5,7 +5,7 @@ import {
   type StringFormat,
 } from '@ascendance-hub/sapphire-core'
 
-export interface MongoAdapterOptions {
+export interface MongooseAdapterOptions {
   /**
    * Default `_id` setting for nested subdoc schemas. When `false` (default), Sapphire
    * does NOT auto-add `_id` to subdocs (deviates from Mongoose's default `true`).
@@ -28,7 +28,7 @@ export interface MongoAdapterOptions {
 type ObjectNode = Extract<SapphireSchemaNode, { kind: 'object' }>
 
 /**
- * Keys that `meta.mongo` cannot override on a Mongoose definition object.
+ * Keys that `meta.mongoose` cannot override on a Mongoose definition object.
  * These are computed by Sapphire and overriding them would break the adapter.
  */
 const META_BLACKLIST = new Set(['type', 'required'])
@@ -46,7 +46,7 @@ function stringFormatValidator(format: StringFormat): {
 function applyCommon(
   def: Record<string, any>,
   node: SapphireSchemaNode,
-  _options: MongoAdapterOptions,
+  _options: MongooseAdapterOptions,
 ): void {
   if (node.unique) def.unique = true
   if (node.index !== undefined) {
@@ -60,9 +60,9 @@ function applyCommon(
   if (node.default !== undefined) def.default = node.default
   if (node.description !== undefined) def.description = node.description
 
-  // Escape hatch: meta.mongo merges last (overrides core-derived options),
+  // Escape hatch: meta.mongoose merges last (overrides core-derived options),
   // EXCEPT for blacklisted keys (type/required) — those are always Sapphire-controlled.
-  const metaMongo = node.meta?.mongo as Record<string, any> | undefined
+  const metaMongo = node.meta?.mongoose as Record<string, any> | undefined
   if (metaMongo) {
     for (const [k, v] of Object.entries(metaMongo)) {
       if (META_BLACKLIST.has(k)) continue
@@ -71,7 +71,10 @@ function applyCommon(
   }
 }
 
-function buildField(node: SapphireSchemaNode, options: MongoAdapterOptions): Record<string, any> {
+function buildField(
+  node: SapphireSchemaNode,
+  options: MongooseAdapterOptions,
+): Record<string, any> {
   switch (node.kind) {
     case 'string': {
       const def: Record<string, any> = { type: String, required: node.required }
@@ -248,7 +251,7 @@ function buildField(node: SapphireSchemaNode, options: MongoAdapterOptions): Rec
   }
 }
 
-function buildSubdoc(node: ObjectNode, options: MongoAdapterOptions): mongoose.Schema {
+function buildSubdoc(node: ObjectNode, options: MongooseAdapterOptions): mongoose.Schema {
   const definition: Record<string, any> = {}
   for (const [key, child] of Object.entries(node.properties)) {
     definition[key] = buildField(child, options)
@@ -256,7 +259,7 @@ function buildSubdoc(node: ObjectNode, options: MongoAdapterOptions): mongoose.S
   return new mongoose.Schema(definition, { _id: options.subdocId ?? false })
 }
 
-function buildSchema(node: ObjectNode, options: MongoAdapterOptions): mongoose.Schema {
+function buildSchema(node: ObjectNode, options: MongooseAdapterOptions): mongoose.Schema {
   const definition: Record<string, any> = {}
   for (const [key, child] of Object.entries(node.properties)) {
     definition[key] = buildField(child, options)
@@ -269,7 +272,7 @@ function buildSchema(node: ObjectNode, options: MongoAdapterOptions): mongoose.S
   if (options.rootId === 'none' && !('_id' in definition)) {
     schemaOptions._id = false
   }
-  const meta = node.meta?.mongo as Record<string, any> | undefined
+  const meta = node.meta?.mongoose as Record<string, any> | undefined
   if (meta?.collection) schemaOptions.collection = String(meta.collection)
   const schema = new mongoose.Schema(definition, schemaOptions)
   if (node.indexes && node.indexes.length > 0) {
@@ -282,9 +285,9 @@ function buildSchema(node: ObjectNode, options: MongoAdapterOptions): mongoose.S
   return schema
 }
 
-export function toMongoSchema(
+export function toMongooseSchema(
   node: SapphireSchemaNode,
-  options: MongoAdapterOptions = {},
+  options: MongooseAdapterOptions = {},
 ): mongoose.Schema | Record<string, any> {
   if (node.kind === 'object') {
     return buildSchema(node, options)

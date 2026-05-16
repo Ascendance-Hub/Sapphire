@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@ascendance-hub/sapphire-core": "*",
-    "@ascendance-hub/sapphire-mongo": "*",
+    "@ascendance-hub/sapphire-mongoose": "*",
     "mongoose": "^9.6.1"
   }
 }

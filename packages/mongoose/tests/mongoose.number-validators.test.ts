@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '../src'
+import { toMongooseSchema } from '../src'
 
-describe('Mongo adapter — number validators', () => {
-  const a = new Sapphire({ defaultAdapter: 'mongo' })
+describe('Mongoose adapter — number validators', () => {
+  const a = new Sapphire({ defaultAdapter: 'mongoose' })
 
   function makeModel(field: ReturnType<Sapphire['number']>) {
     const obj = a.object({ value: field })
-    const schema = toMongoSchema(obj.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(obj.toSchema()) as mongoose.Schema
     return mongoose.model('TestNum_' + Math.random().toString(36).slice(2), schema)
   }
 

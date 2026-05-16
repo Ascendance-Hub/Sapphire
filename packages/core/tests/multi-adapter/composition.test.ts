@@ -11,8 +11,9 @@
  */
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
-import { Sapphire } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { Sapphire, type SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
+import { toBsonSchema } from '@ascendance-hub/sapphire-bson'
 import { toDrizzleSchema } from '@ascendance-hub/sapphire-drizzle'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 
@@ -26,6 +27,11 @@ function drizzleColumns(table: unknown): string[] {
   return Object.keys(table as Record<string, unknown>)
 }
 
+function validatorKeys(ir: SapphireSchemaNode): string[] {
+  const schema = toBsonSchema(ir).$jsonSchema as { properties?: Record<string, unknown> }
+  return Object.keys(schema.properties ?? {})
+}
+
 describe('S2 — composition across adapters', () => {
   const a = new Sapphire()
   const User = a.object({
@@ -37,7 +43,7 @@ describe('S2 — composition across adapters', () => {
   describe('pick', () => {
     it('Mongo: picked schema has only the picked paths', () => {
       const ir = User.pick(['name', 'age']).toSchema()
-      const schema = toMongoSchema(ir) as mongoose.Schema
+      const schema = toMongooseSchema(ir) as mongoose.Schema
       expect(mongoKeys(schema).sort()).toEqual(['age', 'name'])
     })
 
@@ -55,12 +61,17 @@ describe('S2 — composition across adapters', () => {
       const json = toJsonSchema(ir) as { properties: Record<string, unknown> }
       expect(Object.keys(json.properties)).toEqual(['name'])
     })
+
+    it('Mongo validator: picked schema validator has only the picked properties', () => {
+      const ir = User.pick(['name', 'age']).toSchema()
+      expect(validatorKeys(ir).sort()).toEqual(['age', 'name'])
+    })
   })
 
   describe('omit', () => {
     it('Mongo: omitted key is gone', () => {
       const ir = User.omit(['secret']).toSchema()
-      const schema = toMongoSchema(ir) as mongoose.Schema
+      const schema = toMongooseSchema(ir) as mongoose.Schema
       expect(mongoKeys(schema)).not.toContain('secret')
     })
 
@@ -75,12 +86,17 @@ describe('S2 — composition across adapters', () => {
       const json = toJsonSchema(ir) as { properties: Record<string, unknown> }
       expect(Object.keys(json.properties).sort()).toEqual(['age', 'name'])
     })
+
+    it('Mongo validator: omitted property is gone from the validator', () => {
+      const ir = User.omit(['secret']).toSchema()
+      expect(validatorKeys(ir)).not.toContain('secret')
+    })
   })
 
   describe('partial', () => {
     it('Mongo: every path is non-required after partial()', () => {
       const ir = User.partial().toSchema()
-      const schema = toMongoSchema(ir) as mongoose.Schema
+      const schema = toMongooseSchema(ir) as mongoose.Schema
       for (const key of mongoKeys(schema)) {
         const path = schema.path(key) as unknown as { isRequired?: boolean }
         expect(path.isRequired).toBeFalsy()
@@ -102,12 +118,18 @@ describe('S2 — composition across adapters', () => {
       const json = toJsonSchema(ir) as { required?: string[] }
       expect(json.required).toBeUndefined()
     })
+
+    it('Mongo validator: no required array after partial()', () => {
+      const ir = User.partial().toSchema()
+      const schema = toBsonSchema(ir).$jsonSchema as { required?: string[] }
+      expect(schema.required).toBeUndefined()
+    })
   })
 
   describe('required (round-trips partial)', () => {
     it('Mongo: partial().required() re-tightens every path', () => {
       const ir = User.partial().required().toSchema()
-      const schema = toMongoSchema(ir) as mongoose.Schema
+      const schema = toMongooseSchema(ir) as mongoose.Schema
       for (const key of mongoKeys(schema)) {
         const path = schema.path(key) as unknown as { isRequired?: boolean }
         expect(path.isRequired).toBe(true)
@@ -124,7 +146,7 @@ describe('S2 — composition across adapters', () => {
   describe('extend', () => {
     it('Mongo: extended key appears as a path', () => {
       const ir = User.extend({ role: a.string() }).toSchema()
-      const schema = toMongoSchema(ir) as mongoose.Schema
+      const schema = toMongooseSchema(ir) as mongoose.Schema
       expect(mongoKeys(schema)).toContain('role')
     })
 
@@ -142,7 +164,7 @@ describe('S2 — composition across adapters', () => {
 
     it('extend with a modifier-carrying field propagates the modifier to Mongo', () => {
       const ir = User.extend({ slug: a.string().trim() }).toSchema()
-      const schema = toMongoSchema(ir) as mongoose.Schema
+      const schema = toMongooseSchema(ir) as mongoose.Schema
       const slug = schema.path('slug') as unknown as { options: { trim?: boolean } }
       expect(slug.options.trim).toBe(true)
     })
@@ -152,7 +174,7 @@ describe('S2 — composition across adapters', () => {
     it('Mongo: merged keys from both sides appear', () => {
       const Audit = a.object({ createdBy: a.string() })
       const ir = User.merge(Audit).toSchema()
-      const schema = toMongoSchema(ir) as mongoose.Schema
+      const schema = toMongooseSchema(ir) as mongoose.Schema
       const keys = mongoKeys(schema)
       expect(keys).toContain('name')
       expect(keys).toContain('createdBy')

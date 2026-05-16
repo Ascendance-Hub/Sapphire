@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import mongoose from 'mongoose'
 import { Sapphire, type SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
-import { toMongoSchema } from '@ascendance-hub/sapphire-mongo'
+import { toMongooseSchema } from '@ascendance-hub/sapphire-mongoose'
 import { toJsonSchema } from '@ascendance-hub/sapphire-json-schema'
 import { toDrizzleSchema, DrizzleTableRegistry } from '@ascendance-hub/sapphire-drizzle'
 
@@ -12,26 +12,26 @@ describe('docs/concepts/escape-hatch.md — snippet pinning', () => {
     const a = new Sapphire()
     const name = a
       .string()
-      .adapter('mongo', { sparse: true })
+      .adapter('mongoose', { sparse: true })
       .adapter('json-schema', { 'x-internal': true })
 
     const node = name.toSchema() as SapphireSchemaNode
-    // node.meta === { mongo: { sparse: true }, 'json-schema': { 'x-internal': true } }
+    // node.meta === { mongoose: { sparse: true }, 'json-schema': { 'x-internal': true } }
     // --- end snippet ---
 
     expect(node.meta).toEqual({
-      mongo: { sparse: true },
+      mongoose: { sparse: true },
       'json-schema': { 'x-internal': true },
     })
   })
 
-  it('mongo — meta.mongo merges last and overrides Sapphire-derived keys (except blacklisted)', () => {
-    // --- snippet: mongo escape hatch ---
+  it('mongoose — meta.mongoose merges last and overrides Sapphire-derived keys (except blacklisted)', () => {
+    // --- snippet: mongoose escape hatch ---
     const a = new Sapphire()
     const user = a.object({
-      email: a.string().adapter('mongo', { sparse: true, collation: { locale: 'en' } }),
+      email: a.string().adapter('mongoose', { sparse: true, collation: { locale: 'en' } }),
     })
-    const schema = toMongoSchema(user.toSchema()) as mongoose.Schema
+    const schema = toMongooseSchema(user.toSchema()) as mongoose.Schema
     const path = schema.path('email') as unknown as {
       options: { sparse?: boolean; collation?: { locale: string }; type: unknown }
     }

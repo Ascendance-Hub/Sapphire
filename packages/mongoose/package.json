@@ -1,7 +1,7 @@
 {
-  "name": "@ascendance-hub/sapphire-mongo",
+  "name": "@ascendance-hub/sapphire-mongoose",
   "version": "0.5.0",
-  "description": "Adapter Mongoose para o Sapphire.",
+  "description": "Mongoose adapter for Sapphire.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -29,12 +29,13 @@
   },
   "devDependencies": {
     "@ascendance-hub/sapphire-core": "*",
+    "mongodb-memory-server": "^11.0.0",
     "mongoose": "^9.6.1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ascendance-Hub/Sapphire.git",
-    "directory": "packages/mongo"
+    "directory": "packages/mongoose"
   },
   "keywords": [
     "typescript",

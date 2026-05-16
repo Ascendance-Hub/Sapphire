@@ -2,6 +2,8 @@
 
 Drizzle ORM adapter for [Sapphire](https://github.com/Ascendance-Hub/Sapphire). Converts a Sapphire IR (`SapphireSchemaNode`) into a Drizzle table definition (`pgTable` / `mysqlTable` / `sqliteTable`) ready to pass into `drizzle(connection, { schema: { ... } })`.
 
+> **Unofficial.** A community adapter — not affiliated with, sponsored, or endorsed by the Drizzle Team.
+
 ## Install
 
 ```bash
