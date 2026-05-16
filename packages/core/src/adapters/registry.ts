@@ -9,8 +9,21 @@ import { SapphireSchemaNode } from '../schema/types'
  */
 export type SchemaAdapter = (node: SapphireSchemaNode, options?: any) => unknown
 
+/**
+ * The adapter registry is **process-global** — a single `Map` shared by every
+ * `Sapphire` instance in the process. This is intentional (S1): the set of
+ * adapters is a startup-time concern, not a per-instance one. Register every
+ * adapter you need once, at application startup, before any `getSchema(name)`
+ * call. Adapters coexist under distinct names — registering one never blocks
+ * another, so a multi-database app registers `'mongoose'`, `'drizzle'`, etc.
+ * side by side and emits all of them from one schema definition.
+ */
 export const adapterRegistry: Map<string, SchemaAdapter> = new Map()
 
+/**
+ * Wires an adapter function to a name in the process-global registry, making
+ * it reachable via `field.getSchema(name)`. Call once per adapter at startup.
+ */
 export function registerAdapter(name: string, adapter: SchemaAdapter): void {
   adapterRegistry.set(name, adapter)
 }

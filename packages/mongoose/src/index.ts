@@ -1,6 +1,8 @@
 import mongoose from 'mongoose'
 import {
   formatValidators,
+  isUrl,
+  DEFAULT_URL_PROTOCOLS,
   type SapphireSchemaNode,
   type StringFormat,
 } from '@ascendance-hub/sapphire-core'
@@ -89,7 +91,16 @@ function buildField(
       }
       const validators: Array<{ validator: (v: string) => boolean; message: string }> = []
       if (node.format !== undefined) {
-        validators.push(stringFormatValidator(node.format))
+        if (node.format === 'url') {
+          // season-five S5: honor the IR's per-field URL protocol list.
+          const protocols = node.urlProtocols ?? [...DEFAULT_URL_PROTOCOLS]
+          validators.push({
+            validator: (v: string) => isUrl(v, protocols),
+            message: 'Invalid url',
+          })
+        } else {
+          validators.push(stringFormatValidator(node.format))
+        }
       }
       if (node.startsWith !== undefined) {
         const prefix = node.startsWith
@@ -132,12 +143,14 @@ function buildField(
       if (node.multipleOf !== undefined) {
         const m = node.multipleOf
         validators.push({
-          // Mirrors core's float-tolerant check (see number.ts _parse). Accept
-          // when remainder is within EPSILON of 0 or of |m|.
+          // Mirrors core's float-tolerant check (see number.ts _parse): `v` is
+          // a multiple of `m` iff `v / m` is an integer, with a tolerance that
+          // scales with the quotient's magnitude (a fixed bound wrongly
+          // rejects large operands).
           validator: (v) => {
-            const rem = v % m
-            const tol = Math.max(Number.EPSILON, Math.abs(m) * Number.EPSILON)
-            return Math.abs(rem) < tol || Math.abs(Math.abs(rem) - Math.abs(m)) < tol
+            const quotient = v / m
+            const tol = Number.EPSILON * Math.max(1, Math.abs(quotient)) * 8
+            return Math.abs(quotient - Math.round(quotient)) <= tol
           },
           message: `Must be multiple of ${m}`,
         })
@@ -171,10 +184,20 @@ function buildField(
     case 'object': {
       // Nested object → subdoc Schema (sized as a SchemaTypeDefinition).
       // Mongoose accepts a Schema as a path type for subdocs.
-      return { type: buildSubdoc(node, options), required: node.required }
+      const def: Record<string, any> = {
+        type: buildSubdoc(node, options),
+        required: node.required,
+      }
+      applyCommon(def, node, options)
+      return def
     }
     case 'array': {
-      return { type: [buildField(node.items, options)], required: node.required }
+      const def: Record<string, any> = {
+        type: [buildField(node.items, options)],
+        required: node.required,
+      }
+      applyCommon(def, node, options)
+      return def
     }
     case 'union': {
       const def: Record<string, any> = {

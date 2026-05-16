@@ -1,6 +1,6 @@
 import { resolveSchema } from '../adapters/registry'
 import { Field, InternalField, SafeParseResult } from '../interfaces/field'
-import { formatValidators } from '../lib/format-validators'
+import { formatValidators, isUrl, DEFAULT_URL_PROTOCOLS } from '../lib/format-validators'
 import { buildIssue } from '../lib/issue-builder'
 import { runParse, runSafeParse } from '../lib/parse-runner'
 import type {
@@ -41,6 +41,7 @@ type StringConfig = {
   length?: number
   regex?: { source: string; flags: string }
   format?: StringFormat
+  urlProtocols?: string[]
   startsWith?: string
   endsWith?: string
   transforms?: StringTransform[]
@@ -74,6 +75,9 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
       ...(this.config.length !== undefined ? { length: this.config.length } : {}),
       ...(this.config.regex !== undefined ? { regex: this.config.regex } : {}),
       ...(this.config.format !== undefined ? { format: this.config.format } : {}),
+      ...(this.config.format === 'url'
+        ? { urlProtocols: [...(this.config.urlProtocols ?? DEFAULT_URL_PROTOCOLS)] }
+        : {}),
       ...(this.config.startsWith !== undefined ? { startsWith: this.config.startsWith } : {}),
       ...(this.config.endsWith !== undefined ? { endsWith: this.config.endsWith } : {}),
       ...(this.config.transforms && this.config.transforms.length > 0
@@ -222,9 +226,15 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
     })
   }
 
-  url(opts?: { message?: MessageValue }): StringField<TOut, TIn> {
+  /**
+   * Validates the string as a URL. Defaults to accepting only `http` and
+   * `https` schemes (season-five S5); pass `protocols` to widen or narrow the
+   * accepted set, e.g. `.url({ protocols: ['http', 'https', 'ftp'] })`.
+   */
+  url(opts?: { message?: MessageValue; protocols?: string[] }): StringField<TOut, TIn> {
     return this.clone({
       format: 'url',
+      ...(opts?.protocols !== undefined ? { urlProtocols: [...opts.protocols] } : {}),
       ruleMessages: {
         ...this.config.ruleMessages,
         ...(opts?.message !== undefined ? { format: opts.message } : {}),
@@ -381,7 +391,10 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
       }
     }
     if (this.config.format !== undefined) {
-      const ok = formatValidators[this.config.format](str)
+      const ok =
+        this.config.format === 'url'
+          ? isUrl(str, this.config.urlProtocols ?? DEFAULT_URL_PROTOCOLS)
+          : formatValidators[this.config.format](str)
       if (!ok) {
         issues.push(
           buildIssue(

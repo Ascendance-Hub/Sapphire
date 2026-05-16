@@ -45,6 +45,15 @@ describe('Mongoose adapter — number validators', () => {
     expect(new Model({ value: 0.35 }).validateSync()?.errors.value).toBeDefined()
   })
 
+  // season-five B1: the tolerance must scale with operand magnitude — a large
+  // exact multiple was wrongly rejected. Parity with core's fixed check.
+  it('multipleOf(0.1): aceita múltiplo grande (B1, parity com core)', () => {
+    const Model = makeModel(a.number().multipleOf(0.1))
+    expect(new Model({ value: 100.2 }).validateSync()).toBeUndefined()
+    expect(new Model({ value: 1000.3 }).validateSync()).toBeUndefined()
+    expect(new Model({ value: 100.35 }).validateSync()?.errors.value).toBeDefined()
+  })
+
   it('finite: rejeita Infinity', () => {
     const Model = makeModel(a.number().finite())
     expect(new Model({ value: Infinity }).validateSync()?.errors.value).toBeDefined()

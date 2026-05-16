@@ -61,32 +61,59 @@ function wrapNullable(out: Record<string, any>, node: SapphireSchemaNode): Recor
   return { oneOf: [out, { type: 'null' }] }
 }
 
-function collectNamed(node: SapphireSchemaNode, defs: Map<string, SapphireSchemaNode>): void {
+/**
+ * Walks `node`, collecting every named object into `defs`.
+ *
+ * `detectConflict` controls what happens when a name is already collected:
+ *  - `true` (the schema tree): two structurally-different objects under one
+ *    name would silently collapse into a single `$defs` entry, leaving the
+ *    later `$ref`s pointing at the wrong shape. Since shape-changing ops
+ *    (extend/merge/partial/required) keep the name by design (season-three
+ *    S7), this collision is reachable — throw a clear error. (season-five B4)
+ *  - `false` (the `options.defs` escape hatch): the tree-collected definition
+ *    wins silently, the documented behaviour for the manual `defs` override.
+ */
+function collectNamed(
+  node: SapphireSchemaNode,
+  defs: Map<string, SapphireSchemaNode>,
+  detectConflict = true,
+): void {
   if (node.kind === 'object' && node.name !== undefined) {
     if (!NAME_RE.test(node.name)) {
       throw new Error(
         `[sapphire-json-schema] Object name "${node.name}" contains characters not allowed in a $defs key. Use only [A-Za-z0-9_-].`,
       )
     }
-    if (defs.has(node.name)) return
+    const existing = defs.get(node.name)
+    if (existing !== undefined) {
+      if (detectConflict && JSON.stringify(existing) !== JSON.stringify(node)) {
+        throw new Error(
+          `[sapphire-json-schema] Two different object schemas are both named ` +
+            `"${node.name}". A schema name must map to exactly one shape — give ` +
+            `the derived schema a fresh name via .name(...), or keep only one ` +
+            `variant in the emitted tree.`,
+        )
+      }
+      return
+    }
     defs.set(node.name, node)
   }
   switch (node.kind) {
     case 'object':
-      for (const child of Object.values(node.properties)) collectNamed(child, defs)
+      for (const child of Object.values(node.properties)) collectNamed(child, defs, detectConflict)
       break
     case 'array':
-      collectNamed(node.items, defs)
+      collectNamed(node.items, defs, detectConflict)
       break
     case 'tuple':
-      for (const item of node.items) collectNamed(item, defs)
+      for (const item of node.items) collectNamed(item, defs, detectConflict)
       break
     case 'union':
-      for (const opt of node.options) collectNamed(opt, defs)
+      for (const opt of node.options) collectNamed(opt, defs, detectConflict)
       break
     case 'record':
-      collectNamed(node.keys, defs)
-      collectNamed(node.values, defs)
+      collectNamed(node.keys, defs, detectConflict)
+      collectNamed(node.values, defs, detectConflict)
       break
     default:
       break
@@ -262,7 +289,9 @@ export function toJsonSchema(
           `[sapphire-json-schema] options.defs key "${name}" contains characters not allowed in a $defs key. Use only [A-Za-z0-9_-].`,
         )
       }
-      collectNamed(n, defs)
+      // `options.defs` is the manual escape hatch — a tree-collected
+      // definition wins silently here (no conflict detection).
+      collectNamed(n, defs, false)
       if (!defs.has(name)) defs.set(name, n as Extract<SapphireSchemaNode, { kind: 'object' }>)
     }
   }

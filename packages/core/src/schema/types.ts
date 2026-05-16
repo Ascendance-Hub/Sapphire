@@ -1,5 +1,3 @@
-import type { FieldMessages } from '../lib/types'
-
 export interface NodeBase {
   required: boolean
   nullable?: boolean
@@ -8,7 +6,6 @@ export interface NodeBase {
   unique?: boolean
   index?: boolean | { unique?: boolean }
   meta?: Record<string, unknown>
-  message?: FieldMessages
 }
 
 export type SapphireSchemaNode =
@@ -19,6 +16,8 @@ export type SapphireSchemaNode =
       length?: number
       regex?: { source: string; flags: string }
       format?: 'email' | 'url' | 'uuid'
+      /** Accepted URL schemes — present only when `format` is `'url'`. */
+      urlProtocols?: string[]
       startsWith?: string
       endsWith?: string
       transforms?: ('trim' | 'toLowerCase' | 'toUpperCase')[]

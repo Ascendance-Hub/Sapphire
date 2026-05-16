@@ -22,5 +22,11 @@ export {
   resolveSchema,
 } from './adapters/registry'
 export type { SchemaAdapter } from './adapters/registry'
-export { formatValidators, EMAIL_RE, UUID_RE } from './lib/format-validators'
+export {
+  formatValidators,
+  isUrl,
+  DEFAULT_URL_PROTOCOLS,
+  EMAIL_RE,
+  UUID_RE,
+} from './lib/format-validators'
 export type { StringFormat } from './lib/format-validators'

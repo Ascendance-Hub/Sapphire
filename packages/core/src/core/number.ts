@@ -432,12 +432,15 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
       if (bail()) return { value: n, issues }
     }
     if (this.config.multipleOf !== undefined) {
-      // Float-tolerant comparison: `0.3 % 0.1` is ~0.0999… not exactly 0 due
-      // to IEEE-754. Accept when |rem| or |rem - m| is within EPSILON of zero.
+      // Float-tolerant: `n` is a multiple of `m` iff `n / m` is an integer.
+      // The rounding error of `n / m` grows with the magnitude of the
+      // quotient, so the tolerance scales with it — a fixed EPSILON bound
+      // (or one scaled by the divisor `m`) wrongly rejects large operands,
+      // e.g. `100.2` is a true multiple of `0.1`.
       const m = this.config.multipleOf
-      const rem = n % m
-      const tol = Math.max(Number.EPSILON, Math.abs(m) * Number.EPSILON)
-      if (Math.abs(rem) >= tol && Math.abs(Math.abs(rem) - Math.abs(m)) >= tol) {
+      const quotient = n / m
+      const tol = Number.EPSILON * Math.max(1, Math.abs(quotient)) * 8
+      if (Math.abs(quotient - Math.round(quotient)) > tol) {
         issues.push(
           buildIssue(
             'multiple_of',
