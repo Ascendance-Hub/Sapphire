@@ -105,19 +105,19 @@ is made from corrected sources.
 
 ## Files touched (overview)
 
-| File | Change |
-| ---- | ------ |
-| `website/astro.config.mjs` | Add the `i18n` config block. |
-| `website/src/content.config.ts` | Locale-aware docs collection. |
-| `website/src/i18n/ui.ts` | NEW — UI strings dictionary + locale helper. |
-| `website/src/components/Nav.astro` | Flag switcher + translated links. |
-| `website/src/components/{Hero,FeatureRow,Playground,Sidebar}.astro` | Read translated strings. |
-| `website/src/layouts/{BaseLayout,DocsLayout}.astro` | `lang` attribute + translated strings. |
-| `website/src/pages/pt-br/**` | NEW — pt-br routes (index, playground, docs/[...slug]). |
-| `website/src/pages/docs/[...slug].astro` | Scope to the en entries. |
-| `website/src/lib/remark-rewrite-links.ts` | Locale-aware link rewriting. |
-| `docs/pt-br/**` | NEW — 26 translated docs. |
-| `docs/**` (English) | `sapphire-bson` mention fixes. |
+| File                                                                | Change                                                  |
+| ------------------------------------------------------------------- | ------------------------------------------------------- |
+| `website/astro.config.mjs`                                          | Add the `i18n` config block.                            |
+| `website/src/content.config.ts`                                     | Locale-aware docs collection.                           |
+| `website/src/i18n/ui.ts`                                            | NEW — UI strings dictionary + locale helper.            |
+| `website/src/components/Nav.astro`                                  | Flag switcher + translated links.                       |
+| `website/src/components/{Hero,FeatureRow,Playground,Sidebar}.astro` | Read translated strings.                                |
+| `website/src/layouts/{BaseLayout,DocsLayout}.astro`                 | `lang` attribute + translated strings.                  |
+| `website/src/pages/pt-br/**`                                        | NEW — pt-br routes (index, playground, docs/[...slug]). |
+| `website/src/pages/docs/[...slug].astro`                            | Scope to the en entries.                                |
+| `website/src/lib/remark-rewrite-links.ts`                           | Locale-aware link rewriting.                            |
+| `docs/pt-br/**`                                                     | NEW — 26 translated docs.                               |
+| `docs/**` (English)                                                 | `sapphire-bson` mention fixes.                          |
 
 ## Out of scope
 
