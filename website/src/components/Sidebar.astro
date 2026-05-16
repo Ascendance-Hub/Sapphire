@@ -54,4 +54,15 @@ const current = Astro.url.pathname.replace(/\/$/, '')
   }
   .link { display: block; padding: 3px 0; color: var(--ink-600); font-size: 13.5px; text-transform: capitalize; }
   .link.on { color: var(--sapphire-600); font-weight: 600; }
+
+  /* Phones: the sidebar becomes a scrollable nav box above the article. */
+  @media (max-width: 640px) {
+    .sidebar {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      max-height: 42vh;
+      overflow-y: auto;
+    }
+  }
 </style>

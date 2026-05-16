@@ -19,5 +19,11 @@ const { title } = Astro.props
     .docs-body :global(h1) { margin-top: 0; }
     .docs-body :global(pre) { font-size: 13px; }
     .docs-body :global(img) { max-width: 100%; }
+
+    /* Phones: stack the sidebar above the article and reclaim horizontal space. */
+    @media (max-width: 640px) {
+      .docs-shell { flex-direction: column; align-items: stretch; }
+      .docs-body { padding: 20px 16px 36px; }
+    }
   </style>
 </BaseLayout>

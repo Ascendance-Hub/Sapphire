@@ -79,4 +79,11 @@ const ptHref = `${base}/pt-br${bare || '/'}`
   .flag { font-size: 16px; opacity: 0.4; filter: grayscale(1); }
   .flag:hover { text-decoration: none; opacity: 0.85; }
   .flag.on { opacity: 1; filter: none; }
+
+  /* Phones: tighten spacing; wrap to a second row rather than overflow. */
+  @media (max-width: 560px) {
+    .nav { gap: 10px; padding: 11px 14px; flex-wrap: wrap; }
+    .links { gap: 13px; font-size: 13px; }
+    .gh { padding: 5px 10px; }
+  }
 </style>
