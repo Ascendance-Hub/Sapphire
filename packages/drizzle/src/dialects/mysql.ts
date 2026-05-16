@@ -128,8 +128,19 @@ export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
   const obj = node as ObjectNode
   const cols: Record<string, any> = {}
 
-  if (ctx.options.primaryKey !== false) {
-    const pkName = typeof ctx.options.primaryKey === 'string' ? ctx.options.primaryKey : 'id'
+  // Resolve the implicit primary-key column name (null when disabled).
+  const pkName =
+    ctx.options.primaryKey === false
+      ? null
+      : typeof ctx.options.primaryKey === 'string'
+        ? ctx.options.primaryKey
+        : 'id'
+  // season-five B2: when the schema declares its own field at the PK name,
+  // that field IS the primary key — promote it with `.primaryKey()` rather
+  // than emitting a separate `serial` column that the property loop below
+  // would silently overwrite, leaving the table with no PK at all.
+  const pkIsUserDeclared = pkName !== null && pkName in obj.properties
+  if (pkName !== null && !pkIsUserDeclared) {
     // `serial` in mysql-core is an unsigned bigint autoincrement alias —
     // the canonical implicit PK choice. Fallback `int().autoincrement().primaryKey()`
     // is unnecessary in drizzle-orm ^0.45.2 (serial is present).
@@ -137,7 +148,8 @@ export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
   }
 
   for (const [key, child] of Object.entries(obj.properties)) {
-    cols[key] = mysqlColumn(key, child, ctx)
+    const col = mysqlColumn(key, child, ctx)
+    cols[key] = key === pkName ? col.primaryKey() : col
   }
 
   // Composite indexes/uniques declared on the schema (`objectField.index(keys, opts)`)
@@ -160,12 +172,6 @@ export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
           return [...composite, ...perField]
         })
       : mysqlTable(ctx.tableName, cols)
-  const emittedPkName =
-    ctx.options.primaryKey === false
-      ? null
-      : typeof ctx.options.primaryKey === 'string'
-        ? ctx.options.primaryKey
-        : 'id'
-  ctx.tables.set(obj.name ?? ctx.tableName, table, emittedPkName)
+  ctx.tables.set(obj.name ?? ctx.tableName, table, pkName)
   return table
 }
