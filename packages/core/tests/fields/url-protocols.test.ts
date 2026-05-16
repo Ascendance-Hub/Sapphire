@@ -40,7 +40,10 @@ describe('S5 — .url() protocol scoping', () => {
     expect(def.format).toBe('url')
     expect(def.urlProtocols).toEqual(['http', 'https'])
 
-    const custom = a.string().url({ protocols: ['ftp'] }).toSchema() as StringNode
+    const custom = a
+      .string()
+      .url({ protocols: ['ftp'] })
+      .toSchema() as StringNode
     expect(custom.urlProtocols).toEqual(['ftp'])
   })
 
