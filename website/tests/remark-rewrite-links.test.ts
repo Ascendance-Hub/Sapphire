@@ -57,3 +57,31 @@ describe('rewriteDocLink', () => {
     )
   })
 })
+
+describe('rewriteDocLink — pt-br locale', () => {
+  const base = '/Sapphire'
+
+  it('rewrites a link inside a pt-br doc to a /pt-br/docs route', () => {
+    expect(rewriteDocLink('./validation.md', 'pt-br/concepts/overview', base)).toBe(
+      '/Sapphire/pt-br/docs/concepts/validation',
+    )
+  })
+
+  it('rewrites a pt-br doc link that climbs a directory', () => {
+    expect(rewriteDocLink('../adapters/bson.md', 'pt-br/concepts/overview', base)).toBe(
+      '/Sapphire/pt-br/docs/adapters/bson',
+    )
+  })
+
+  it('rewrites a pt-br README link to the pt-br docs index', () => {
+    expect(rewriteDocLink('../README.md', 'pt-br/concepts/overview', base)).toBe(
+      '/Sapphire/pt-br/docs',
+    )
+  })
+
+  it('still rewrites English doc links unchanged', () => {
+    expect(rewriteDocLink('./validation.md', 'concepts/overview', base)).toBe(
+      '/Sapphire/docs/concepts/validation',
+    )
+  })
+})

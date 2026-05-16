@@ -7,6 +7,11 @@ const BASE = '/Sapphire'
 export default defineConfig({
   site: 'https://ascendance-hub.github.io',
   base: BASE,
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'pt-br'],
+    routing: { prefixDefaultLocale: false },
+  },
   markdown: {
     remarkPlugins: [[remarkRewriteLinks, { base: BASE }]],
   },

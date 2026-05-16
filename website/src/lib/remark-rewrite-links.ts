@@ -33,8 +33,18 @@ export function rewriteDocLink(url: string, fromSlug: string, base: string): str
   // README.md is the docs index
   slug = slug.replace(/(^|\/)README$/i, '')
 
+  // A pt-br doc's resolved slug starts with `pt-br/`; that becomes a
+  // `/pt-br/docs/...` route rather than `/docs/pt-br/...`.
   const cleanBase = base.replace(/\/$/, '')
-  const route = slug ? `${cleanBase}/docs/${slug}` : `${cleanBase}/docs`
+  let localePrefix = ''
+  if (slug === 'pt-br' || slug.startsWith('pt-br/')) {
+    localePrefix = '/pt-br'
+    slug = slug.slice('pt-br'.length).replace(/^\//, '')
+  }
+
+  const route = slug
+    ? `${cleanBase}${localePrefix}/docs/${slug}`
+    : `${cleanBase}${localePrefix}/docs`
   return anchor ? `${route}#${anchor}` : route
 }
 
