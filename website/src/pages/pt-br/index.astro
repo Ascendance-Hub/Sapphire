@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Hero from '../../components/Hero.astro'
+import FeatureRow from '../../components/FeatureRow.astro'
+import Playground from '../../components/Playground.astro'
+import { useTranslations } from '../../i18n/ui'
+const t = useTranslations('pt-br')
+---
+
+<BaseLayout title={t('title.home')}>
+  <Hero />
+  <section class="pg-embed">
+    <Playground />
+  </section>
+  <FeatureRow />
+  <style>
+    .pg-embed {
+      max-width: var(--maxw);
+      margin: -34px auto 0;
+      padding: 0 22px;
+      position: relative;
+    }
+  </style>
+</BaseLayout>

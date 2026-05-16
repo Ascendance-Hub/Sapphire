@@ -4,7 +4,7 @@ const DEFAULT_SCHEMA = `a.object({
   age: a.number().int().min(0),
   email: a.string().email(),
 })`
-const DEFAULT_SAMPLE = `{ "name": "Ana", "age": 30, "email": "ana@example.com" }`
+const DEFAULT_SAMPLE = `{ "name": "Ale", "age": 22, "email": "ale@example.com" }`
 ---
 <div class="pg">
   <div class="pg-head">
@@ -38,34 +38,45 @@ const DEFAULT_SAMPLE = `{ "name": "Ana", "age": 30, "email": "ana@example.com" }
     padding: 8px 13px; background: var(--bg-soft); border-bottom: 1px solid var(--border);
     font-size: 12px; color: var(--ink-600);
   }
-  .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
   .dot.r { background: #e6685b; } .dot.y { background: #e8b13f; } .dot.g { background: #5fb86f; }
-  .pg-title { margin-left: 4px; }
+  .pg-title { margin-left: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pg-live {
     margin-left: auto; color: var(--green-600); font-size: 11px;
-    display: inline-flex; align-items: center; gap: 5px;
+    display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto;
   }
   .pg-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green-600); }
   .pg-body { display: flex; flex-wrap: wrap; }
-  .pg-editor { flex: 1 1 320px; border-right: 1px solid var(--border); }
-  .pg-output { flex: 1 1 320px; }
+  .pg-editor { flex: 1 1 320px; min-width: 0; border-right: 1px solid var(--border); }
+  .pg-output { flex: 1 1 320px; min-width: 0; }
   .pane-label {
     font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em;
     color: var(--ink-400); padding: 7px 12px 3px;
   }
-  .pg-tabs { display: flex; border-bottom: 1px solid var(--border); }
+  /* Tabs scroll horizontally instead of overflowing on a narrow screen. */
+  .pg-tabs { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+  .pg-tabs::-webkit-scrollbar { display: none; }
   .pg-tab {
     border: none; background: none; font-family: var(--font-sans); cursor: pointer;
     padding: 9px 13px; font-size: 12px; color: var(--ink-400);
+    white-space: nowrap; flex: 0 0 auto;
   }
   .pg-tab.active { color: var(--sapphire-600); border-bottom: 2px solid var(--sapphire-600); font-weight: 600; }
   .pg-out {
     margin: 0; border: none; border-radius: 0; background: #fff;
-    min-height: 200px; font-size: 12.5px; white-space: pre-wrap;
+    min-height: 200px; font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere;
   }
   .pg-out.error { color: var(--red-600); }
   :global(.cm-editor) { font-size: 12.5px; }
   :global(.cm-editor.cm-focused) { outline: none; }
+
+  /* Stacked layout on phones: panels are full-width, no horizontal scrolling. */
+  @media (max-width: 640px) {
+    .pg-editor { border-right: none; border-bottom: 1px solid var(--border); }
+    .pg-title { display: none; }
+    .pg-tab { padding: 9px 11px; }
+    .pg-out { min-height: 140px; }
+  }
 </style>
 
 <script>
@@ -81,6 +92,9 @@ const DEFAULT_SAMPLE = `{ "name": "Ana", "age": 30, "email": "ana@example.com" }
       extensions: [
         basicSetup,
         javascript(),
+        // Wrap long lines so the editor never needs horizontal scrolling —
+        // essential on touch screens.
+        EditorView.lineWrapping,
         EditorView.updateListener.of((v) => {
           if (v.docChanged) onChange()
         }),

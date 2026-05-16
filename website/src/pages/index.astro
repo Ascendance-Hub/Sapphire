@@ -3,8 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 import Hero from '../components/Hero.astro'
 import FeatureRow from '../components/FeatureRow.astro'
 import Playground from '../components/Playground.astro'
+import { useTranslations } from '../i18n/ui'
+const t = useTranslations('en')
 ---
-<BaseLayout title="Sapphire — one schema, every ORM">
+<BaseLayout title={t('title.home')}>
   <Hero />
   <section class="pg-embed">
     <Playground />

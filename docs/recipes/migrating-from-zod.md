@@ -117,15 +117,15 @@ z.string().refine((s) => s.startsWith('A'), { message: 'must start with A' })
 // Sapphire — no general .refine() in v1; for ORM-specific escape hatches:
 a.string()
   .startsWith('A', { message: 'must start with A' })
-  .adapter('mongo', { validate: { validator: (v: string) => v.startsWith('A') } })
+  .adapter('mongoose', { validate: { validator: (v: string) => v.startsWith('A') } })
 ```
 
-Sapphire v1 has **no general-purpose `.refine()` / `.superRefine()`** equivalent. Built-in rules (`min`, `max`, `regex`, `startsWith`, `endsWith`, `email`, `url`, `uuid`, `int`, `multipleOf`, `finite`, `safe`, etc.) cover most cases, and `.adapter('mongo', { validate: ... })` pipes a custom validator to Mongoose for DB-level enforcement. A general custom-validator API is on the V1_FUTURE roadmap.
+Sapphire v1 has **no general-purpose `.refine()` / `.superRefine()`** equivalent. Built-in rules (`min`, `max`, `regex`, `startsWith`, `endsWith`, `email`, `url`, `uuid`, `int`, `multipleOf`, `finite`, `safe`, etc.) cover most cases, and `.adapter('mongoose', { validate: ... })` pipes a custom validator to Mongoose for DB-level enforcement. A general custom-validator API is on the V1_FUTURE roadmap.
 
 ## What Sapphire does that Zod doesn't
 
 - **Multi-output emission.** The same schema produces a `mongoose.Schema`, a Drizzle table (`pgTable` / `mysqlTable` / `sqliteTable`), and a JSON Schema 2020-12 document. Zod is validation-only; converters exist as third-party packages but aren't part of the design centre.
-- **Schema-level options on objects.** `.timestamps()`, `.index([...], { unique: true })`, `.adapter('mongo', { collection: 'people' })` — first-class for persistence concerns. Zod has no equivalent because it doesn't model "this schema becomes a table".
+- **Schema-level options on objects.** `.timestamps()`, `.index([...], { unique: true })`, `.adapter('mongoose', { collection: 'people' })` — first-class for persistence concerns. Zod has no equivalent because it doesn't model "this schema becomes a table".
 - **Refs.** `a.ref('User')` and `a.ref(SchemaObj)` model relations between named schemas. Mongoose populates them at query time; JSON Schema turns them into `$ref`; Drizzle into `references(() => ...)`. Zod has no native ref concept.
 - **A documented IR.** `SapphireSchemaNode` is a discriminated union you can walk yourself — handy for building your own adapter (see [Recipes → Custom adapter](./custom-adapter.md)).
 

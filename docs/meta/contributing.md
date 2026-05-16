@@ -31,7 +31,7 @@ Examples and docs live alongside under `examples/` and `docs/`.
 
 - **Branches.** Cut feature branches off `main` named `feat/<topic>` (or `fix/<topic>`, `docs/<topic>`, `chore/<topic>` to match the commit prefixes).
 - **Commits.** Follow the existing prefixes: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`. Keep the subject line under ~72 chars.
-- **Changesets.** Every behavior-affecting PR needs a changeset: `npx changeset`. Pick the affected packages and the bump level. Docs-only and internal-tooling PRs may skip this, but bump-patch on all four packages is the convention when changes ship as part of a release.
+- **Changesets.** Every behavior-affecting PR needs a changeset: `npx changeset`. Pick the affected packages and the bump level. Docs-only and internal-tooling PRs may skip this, but bump-patch on all five packages is the convention when changes ship as part of a release.
 - **Tests.** Required for new behavior. Vitest is the runner (`npm test`). Type-level expectations use `expectTypeOf` from vitest.
 
 ## Running CI locally
@@ -146,7 +146,7 @@ First-party adapters do **not** auto-register. Yours shouldn't either — explic
 
 ### Step 6 — testing
 
-Feed real Sapphire schemas through your adapter and assert the output shape. The pattern from `packages/mongo/tests/`, `packages/json-schema/tests/`, and `packages/drizzle/tests/` is a good reference: construct a small `a.object({ ... })`, call your adapter on `field.toSchema()`, and check the result against the target ORM's runtime APIs. Type tests via `expectTypeOf` are helpful for the `Infer<>` round-trip.
+Feed real Sapphire schemas through your adapter and assert the output shape. The pattern from `packages/bson/tests/`, `packages/mongoose/tests/`, `packages/json-schema/tests/`, and `packages/drizzle/tests/` is a good reference: construct a small `a.object({ ... })`, call your adapter on `field.toSchema()`, and check the result against the target ORM's runtime APIs. Type tests via `expectTypeOf` are helpful for the `Infer<>` round-trip.
 
 ### Step 7 — publish
 
@@ -161,13 +161,16 @@ When you change behavior:
 1. Update the test in `packages/core/tests/docs-examples/`.
 2. Run `npm test` to make sure it still passes.
 3. Update the matching snippet in `docs/concepts/*.md`.
+4. Mirror the prose change in the Portuguese page at `docs/pt-br/concepts/*.md`.
 
 Use GitHub's alert syntax for callouts:
 
 - `> [!WARNING]` — pitfalls and "don't do this".
 - `> [!NOTE]` — asides and clarifications.
 
-All user-facing docs are in English. Internal artifacts (changesets, handoffs in `specs/`) may be in Portuguese.
+## Bilingual docs
+
+User-facing docs are bilingual: English under `docs/**` and a Brazilian Portuguese mirror under `docs/pt-br/**`. Every documentation page must exist in **both** trees — any page you add, rename, or remove under `docs/` must be mirrored under `docs/pt-br/`, and vice versa. When you change the prose of an English page, update its `docs/pt-br/` counterpart in the same PR; code blocks, identifiers, and relative `.md` links stay verbatim across both languages. CI fails the build if the two file sets diverge. Internal artifacts (changesets, handoffs in `specs/`) may stay in Portuguese only.
 
 ## Pull request checklist
 
@@ -177,6 +180,7 @@ Before opening a PR:
 - [ ] New behavior covered by tests (vitest; `expectTypeOf` for type-level).
 - [ ] Changeset added if behavior or public API changed.
 - [ ] Docs updated if the change is visible to users (`docs/concepts/`, `docs/adapters/`, or a `README.md`).
+- [ ] pt-br mirror updated if an English doc page changed — `docs/pt-br/` stays in parity with `docs/`.
 - [ ] PR title and description match the existing style. Open PRs against `main`.
 
 ## See also

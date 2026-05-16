@@ -101,4 +101,4 @@ The adapter packages are **unofficial, community-maintained** integrations — n
 
 ## License
 
-BSD-3-Clause. © Alexandre Damas Murata.
+MIT. © Alexandre Damas Murata.

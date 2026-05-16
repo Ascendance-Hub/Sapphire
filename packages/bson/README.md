@@ -102,4 +102,4 @@ const users: Collection<BsonDoc<typeof User>> = db.collection('users')
 
 ## License
 
-BSD-3-Clause
+MIT

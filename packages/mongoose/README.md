@@ -119,4 +119,4 @@ declares its own `_id`).
 
 ## License
 
-BSD-3-Clause
+MIT

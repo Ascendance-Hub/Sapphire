@@ -2,7 +2,7 @@
 
 # Getting Started
 
-Sapphire lets you define a schema once and emit TypeScript types plus ORM-specific outputs (MongoDB via Mongoose, Drizzle tables, JSON Schema 2020-12) from the same source.
+Sapphire lets you define a schema once and emit TypeScript types plus ORM-specific outputs (MongoDB via Mongoose or the native driver, Drizzle tables, JSON Schema 2020-12) from the same source.
 
 This guide walks you through installation, your first schema, parsing/validation, and plugging in an adapter.
 
@@ -32,6 +32,12 @@ Core plus the JSON Schema 2020-12 adapter (no extra peer deps — bring your own
 
 ```bash
 npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-json-schema
+```
+
+Core plus the native MongoDB driver adapter (no extra peer deps — emits a `$jsonSchema` collection validator for `db.createCollection`):
+
+```bash
+npm install @ascendance-hub/sapphire-core @ascendance-hub/sapphire-bson
 ```
 
 ## Your first schema

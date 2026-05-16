@@ -1,0 +1,27 @@
+name: Docs i18n parity
+
+# The main CI workflow ignores `docs/**`, so this dedicated workflow guards
+# that the English docs and their Brazilian Portuguese mirror never diverge.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: docs i18n parity
+        run: |
+          en=$(cd docs && find . -name '*.md' -not -path './superpowers/*' -not -path './pt-br/*' | sort)
+          pt=$(cd docs/pt-br && find . -name '*.md' | sort)
+          diff <(echo "$en") <(echo "$pt") || {
+            echo "::error::docs/ and docs/pt-br/ have diverged — every doc must exist in both"
+            exit 1
+          }

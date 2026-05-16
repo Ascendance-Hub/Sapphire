@@ -69,7 +69,7 @@ const email = a
   .adapter('json-schema', { examples: ['ada@example.com'], 'x-internal-pii': true })
 ```
 
-The mongo adapter reads `meta.mongo`, JSON Schema reads `meta['json-schema']`. Neither sees the other's slot.
+The Mongoose adapter reads `meta.mongoose`, JSON Schema reads `meta['json-schema']`. Neither sees the other's slot.
 
 See [Concepts → Escape hatch](../concepts/escape-hatch.md) for the full per-adapter blacklist tables.
 

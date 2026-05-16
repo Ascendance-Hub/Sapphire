@@ -1,0 +1,31 @@
+---
+import { getCollection, render } from 'astro:content'
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+
+export async function getStaticPaths() {
+  const entries = await getCollection('docs')
+  return entries
+    .filter((entry) => entry.id.startsWith('pt-br/'))
+    .map((entry) => {
+      // strip the `pt-br/` prefix — the page already lives under /pt-br/
+      const localeless = entry.id.slice('pt-br/'.length)
+      const isIndex = /^readme$/i.test(localeless)
+      return {
+        params: { slug: isIndex ? undefined : localeless },
+        props: { entry },
+      }
+    })
+}
+
+const { entry } = Astro.props
+const { Content } = await render(entry)
+const localeless = entry.id.slice('pt-br/'.length)
+const docName = localeless.split('/').pop()!.replace(/-/g, ' ')
+const title = /^readme$/i.test(localeless)
+  ? 'Sapphire — documentação'
+  : `${docName.charAt(0).toUpperCase()}${docName.slice(1)} — documentação Sapphire`
+---
+
+<DocsLayout title={title}>
+  <Content />
+</DocsLayout>
