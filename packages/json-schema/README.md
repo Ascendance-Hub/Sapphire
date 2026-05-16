@@ -114,4 +114,4 @@ toJsonSchema(node, {
 
 ## License
 
-BSD-3-Clause
+MIT

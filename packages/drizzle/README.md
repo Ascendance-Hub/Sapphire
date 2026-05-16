@@ -162,4 +162,4 @@ Argument handling:
 
 ## License
 
-BSD-3-Clause
+MIT
