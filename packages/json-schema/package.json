@@ -1,6 +1,6 @@
 {
   "name": "@ascendance-hub/sapphire-json-schema",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "JSON Schema 2020-12 adapter for Sapphire.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -8,9 +8,14 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -24,7 +29,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@ascendance-hub/sapphire-core": "*"
+    "@ascendance-hub/sapphire-core": ">=1.0.0"
   },
   "devDependencies": {
     "@ascendance-hub/sapphire-core": "*",
@@ -47,6 +52,12 @@
     "email": "alexandre_murata@hotmail.com"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "bugs": {
     "url": "https://github.com/Ascendance-Hub/Sapphire/issues"
   },

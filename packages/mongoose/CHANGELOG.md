@@ -1,0 +1,304 @@
+# @ascendance-hub/sapphire-mongoose
+
+## 1.0.0
+
+### Major Changes
+
+- 3fe52c9: Fase 12 — Mongo adapter deep rewrite.
+
+  **Breaking (mongo):**
+  - `toMongoSchema(objectNode)` agora retorna `mongoose.Schema` (não plain
+    definition) para top-level object. Subnodes continuam retornando
+    `SchemaTypeDefinition`.
+  - Subdocs nested usam `_id: false` por default (deviation de Mongoose, que
+    default é `true`). Use `toMongoSchema(node, { subdocId: true })` para
+    reabilitar.
+  - Auto-registration removida — chame
+    `registerAdapter('mongo', toMongoSchema)` explicitamente no entry point da
+    app. Em tests, registrar via vitest setupFile (ver
+    `packages/mongo/tests/_setup.ts` como referência).
+
+  **Novo (mongo):**
+  - Schema-level: `ObjectField.timestamps()` materializa
+    `new Schema(def, { timestamps: true })`. `ObjectField.index(keys, opts)`
+    materializa via `schema.index({ ...keys: 1 }, opts)`.
+  - String: `format` (email/url/uuid via `formatValidators`),
+    `startsWith`/`endsWith` via custom validate, `transforms`
+    (trim/lowercase/uppercase) via flags nativas Mongoose.
+  - Number: `exclusiveMin`/`exclusiveMax`/`int`/`multipleOf`/`finite`/`safe`
+    via `validate: [...]`.
+  - Tuple: `[Mixed]` com validate de length (per-position type-checking
+    permanece no core via `safeParse`).
+  - Record: `Map` com `of` quando keyField é string/enum/literal; fallback
+    `Mixed` para keyField numérico ou outros.
+  - Universais: `description` preservada em `SchemaType.options`. `meta.mongo`
+    escape hatch lido em todo node, com merge último-vence e blacklist em
+    `type`/`required`. `meta.mongo.collection` (top-level) → `Schema.options.collection`.
+  - `MongoAdapterOptions` exportado: `{ subdocId?: boolean }`.
+
+  **Core:**
+  - `formatValidators` exportado em `@ascendance-hub/sapphire-core`
+    (email/url/uuid). `StringField` consome o helper; mongo adapter também
+    consome (sem duplicação de regex).
+  - `EMAIL_RE`, `UUID_RE`, e tipo `StringFormat` também re-exportados.
+
+  **Docs:**
+  - `packages/mongo/README.md` cobre install + registerAdapter pattern +
+    mapping table por IR kind + `meta.mongo` keys + limitações conhecidas.
+
+  **Tests:**
+  - Cinco arquivos novos no mongo (schema-level, string-format,
+    number-validators, tuple-record, escape-hatch). `mongo.test.ts` e
+    `mongoose.integration.test.ts` atualizados pra nova assinatura. Tests de
+    bugs do core (`object-optional`, `schema-idempotent`) migrados de
+    `getSchema()` para `toSchema()` (IR), pois a saída do adapter agora é
+    uma instância circular.
+
+### Minor Changes
+
+- 34a794d: Fase 10 — novos field types + ArrayField homogêneo + named-schema registry.
+
+  **Breaking changes** (lib não publicada — sem migração):
+  - `ArrayField` agora é homogêneo (single-item): `a.array(item)` no lugar de `a.array([item])`. Para semântica antiga use `a.array(a.type().union([...]))` ou `a.tuple([...])`.
+  - `TypeField.pick` removido — volta em F11 como `ObjectField.pick(...)`.
+
+  **Novos field types:**
+  - `TupleField` — `a.tuple([a.string(), a.number()])` infere `[string, number]`. Issue code novo: `tuple_length`.
+  - `LiteralField` — `a.type().literal('admin')` infere literal `'admin'`.
+  - `EnumField` — `a.type().enum(['a','b'] as const)` ou `a.type().enum(TSEnum)`. Numeric TS enums: filtro de reverse mapping.
+  - `RecordField` — `a.type().record(keyField, valueField)` infere `Record<KeyOut, ValueOut>`.
+  - `RefField` — `a.ref(SchemaObjOrName)`. Resolução lazy no `toAdapter`. Em V1 só checa presença; tipo concreto é responsabilidade do adapter.
+
+  **Named-schema registry (Sapphire instance):**
+  - `ObjectField.name(string)` registra o schema na instância pai e emite `name` no IR.
+  - Duplicates throw imediatamente.
+  - Registries são isolados entre instâncias `Sapphire`.
+  - `Sapphire.listNamedSchemas()` lista os nomes registrados.
+
+  **IR:**
+  - `SapphireSchemaNode` ganha kinds `tuple`, `literal`, `enum`, `record`, `ref`.
+  - `array.items` colapsou para `SapphireSchemaNode` único (sem mais união com `[]`).
+  - `object` ganha `name?: string`.
+
+  **Mongo adapter:**
+  - Mapping conservador para os novos kinds (Mixed/ObjectId/Map). Reescrita profunda fica em F12.
+
+- 42106b3: Fase 11 — composição estilo Zod em `ObjectField` + opções schema-level.
+
+  **ObjectField composition:**
+  - `pick(keys)` / `omit(keys)` — subset/exclusão tipados via `as const`.
+    Retornam config virgem (sem `name`/`timestamps`/`indexes`/`meta`/`description`);
+    apenas `required` é preservado. Subsets são novos schemas conceitualmente.
+  - `partial()` — aplica `.optional()` em cada child. Preserva config.
+  - `required()` (recursivo) — aplica `.required()` em cada child + flip
+    `config.required = true`. Preserva config. **Substitui o `required()` universal
+    introduzido em B+C** — ver "Mudança no contrato `Field`" abaixo.
+  - `extend(shape)` / `merge(other)` — adiciona keys com **last wins** em
+    conflito. Preservam config de `this`; `merge` não copia config de `other`.
+
+  **Schema-level options:**
+  - `timestamps()` — flag no IR object (`{ timestamps: true }`). Adapters
+    materializam (Mongo: schema option; Drizzle: colunas; JSON Schema: noop).
+  - `index(keys, opts?)` — composite indexes per collection. Múltiplas chamadas
+    acumulam em `indexes: []`. Diferente do field-level `.index()` (single column).
+
+  **Universal `Field.required()`:**
+  - Implementado em todos os 12 fields (string, number, boolean, date, object,
+    array, union, tuple, literal, enum, record, ref).
+  - Padrão: `field.optional().required()` round-trip volta ao tipo original.
+
+  **Mudança no contrato `Field`:**
+  - `required()` foi **removido do interface `Field`** (estava em B+C). Motivo:
+    `ObjectField.required()` precisa retornar tipo baseado em `T` transformado
+    (`{ [K]: T[K]['required']() }`), incompatível com
+    `Field<Exclude<TOut, undefined>, ...>`. Cada field continua expondo
+    `required()` por convenção; via referência genérica `Field`, narrow primeiro.
+
+  **IR:**
+  - `SapphireSchemaNode` `object` ganha `timestamps?: boolean` e
+    `indexes?: { keys: string[]; unique?: boolean }[]`.
+  - `array.items` colapsado para `SapphireSchemaNode` único (legacy multi-item
+    já não usado pelo runtime desde F10 — só limpando o tipo).
+
+  **Mongo adapter:** continua compilando — materialização de
+  `timestamps`/`indexes` fica em F12.
+
+- bf9d99b: Reestruturação para monorepo (Fase 6). Pacotes publicáveis em `@ascendance-hub/sapphire-core` e `@ascendance-hub/sapphire-mongo`, build dual ESM+CJS via tsup, versionamento via changesets em fixed group. Sem mudança de API observável.
+- 4c48719: Fase 7 — refatoração de `Field` para brand-types.
+
+  Cada field passa a carregar `_output` e `_input` (phantom types). `Infer<F>` e
+  `InferInput<F>` viram one-liners — sem cascata de tipos condicionais.
+
+  **Breaking changes** (lib não publicada — sem migração):
+  - `getType()` removido de `ObjectField` e `ArrayField`. Use `Infer<typeof x>`.
+  - `InferSchema` removido. Use `Infer` / `InferInput`.
+  - Genérico `IsOptional extends boolean` removido de todos os fields. A
+    opcionalidade agora é expressa estruturalmente via `undefined extends F['_output']`.
+
+  `parse` / `safeParse` foram declarados na interface `Field` mas seguem como
+  placeholder (`throw new Error('parse: implemented in PHASE_8')`) — implementação
+  real chega na Fase 8.
+
+- f74b02b: Fase 8 — API de validação reescrita.
+
+  `parse(value, opts?)` lança `SapphireValidationError`; `safeParse(value, opts?)`
+  retorna `{ success: true; data } | { success: false; error }`. O erro carrega
+  um array `issues[]` estruturado com `path`, `code`, `message` e `context`.
+
+  **Breaking changes** (lib não publicada — sem migração):
+  - `validate()` removido de todos os fields. Use `safeParse` ou `parse`.
+  - `ValidationResult` removido. Use `SafeParseResult<T>`.
+  - `SapphireValidationError.details` removido. Use `.issues[]`.
+
+  **Novidades:**
+  - `IssueCode` união de códigos built-in (forward-compat, vocabulário cheio para F9).
+  - `ValidationIssue { path, code, message, context }`.
+  - Hierarquia de mensagens em 5 níveis: built-in → instance → field → per-rule → per-call (mais específico vence).
+  - `.message(string | FieldMessages)` modifier em todos os fields.
+  - Per-rule message: `string.min(3, { message })`.
+  - `SapphireOptions { messages, abortEarly, stripUnknown }` propagados aos fields.
+  - `ParseOptions` por chamada sobrescreve a instância.
+  - `stripUnknown` em ObjectField (default `false` → emite `unknown_key`).
+  - `abortEarly` corta na primeira issue (default `false`).
+  - Mensagens podem ser `string | object | (ctx: MessageContext) => string | object`.
+
+- ff3af0c: Fase 9 — vocabulário completo de modifiers + registry string-keyed.
+
+  **Breaking changes** (lib não publicada — sem migração):
+  - `ORM` enum removido. Registry agora é string-keyed: `registerAdapter('mongo', ...)` / `defaultAdapter: 'mongo'`.
+  - `defaultOrm` em `SapphireOptions` renomeado para `defaultAdapter`.
+  - `getSchema(orm?)` agora `getSchema(name?: string)`.
+  - `SapphireSchemaNode` migrado para v2 com `NodeBase` compartilhado e campos `nullable`, `default`, `description`, `unique`, `index`, `enum`, `meta`, `message`.
+
+  **Modifiers universais** (em todos os 7 fields aplicáveis):
+  - `nullable()`, `default(v)`, `describe(text)`, `adapter(name, opts)`.
+  - `unique()` em String/Number/Date.
+  - `index(opts?)` em String/Number/Date/Boolean.
+
+  **Vocabulário por field:**
+  - String: `max`, `length`, `regex`, `email`, `url`, `uuid`, `startsWith`, `endsWith`, `trim`, `toLowerCase`, `toUpperCase`, `coerce`.
+  - Number: `max`, `gt`, `gte`, `lt`, `lte`, `int`, `positive`, `negative`, `nonnegative`, `nonpositive`, `multipleOf`, `finite`, `safe`, `coerce`.
+  - Date: `min`, `max`, `coerce`.
+  - Boolean: `coerce`.
+  - Array: `min`, `max`, `length`, `nonempty`.
+
+  **Outros:**
+  - `_parse` acumula múltiplas issues por field (`invalid_type` continua exclusivo).
+  - Default messages para todos os IssueCodes emitidos.
+  - Adapter mongo expandido: `unique`, `index`, `default`, `enum`, string `length`/`maxlength`/`regex`, number/date `min`/`max` (mapping mínimo — vocabulário restante deferido a F12).
+  - `listAdapters()` exposto pelo registry.
+
+- 51e6d32: season-five — pre-1.0 API decisions (S1, S2, S5, I4).
+
+  These lock public-API behaviour ahead of a stable 1.0. See
+  `docs/superpowers/specs/2026-05-16-pre-1.0-api-decisions-design.md`.
+
+  **S2 — absent optional keys are omitted from parse output.** Previously an
+  optional key absent from the input still appeared in the output as
+  `undefined`. It is now omitted, matching Zod and the `Infer` type. A key
+  passed explicitly as `undefined`, or one filled by a `default`, is kept.
+
+  **S5 — `.url()` defaults to http/https, with a configurable protocol list.**
+  `.url()` validated with `new URL()`, accepting any scheme (`javascript:`,
+  `file:`, `mailto:`…). It now accepts only `http`/`https` by default;
+  `.url({ protocols: [...] })` widens or narrows the set. The IR string node
+  carries the resolved `urlProtocols`; the Mongoose adapter honours it. Core
+  exports `isUrl` and `DEFAULT_URL_PROTOCOLS`.
+
+  **I4 — removed the dead `SapphireSchemaNode.message` field.** It was declared
+  on the public IR type but never emitted by `toSchema()`.
+
+  **S1 — the adapter registry stays process-global** (documented, no code
+  change): adapters are registered once at application startup.
+
+- be74f85: Split the Mongo adapter into two packages: `@ascendance-hub/sapphire-mongoose`
+  (the Mongoose adapter, formerly the workspace-local `sapphire-mongo`) and a new
+  `@ascendance-hub/sapphire-bson` for the native MongoDB driver, which emits
+  `$jsonSchema` collection validators via `toBsonSchema`.
+
+### Patch Changes
+
+- 56b03ae: Fase 15 — Documentação completa.
+
+  Adiciona `/docs` com a estrutura completa de V1_DESIGN §11.2:
+  - **Getting Started** — install, primeiro schema, parse/safeParse, primeiro adapter.
+  - **Concepts (11 arquivos)** — overview, fields-and-modifiers, inferring-types,
+    composition, unions-literals-enums, tuples-vs-arrays, refs-and-relations,
+    nullable-vs-optional, validation, config, escape-hatch. Cada um cumpre o
+    quality bar §11.3 (paragraph summary + runnable example + full API ref +
+    ≥1 pitfall callout + recipe links).
+  - **Adapters (3 arquivos)** — long-form docs expandindo READMEs dos pacotes,
+    com mapping tables completas (12 IR kinds → output, com caveats), escape
+    hatch keys, e known limitations.
+  - **Recipes (6 arquivos)** — form-validation, share-types-with-frontend,
+    one-schema-many-adapters, custom-adapter, custom-error-messages,
+    migrating-from-zod. Estrutura uniforme: use case → end-to-end example →
+    step-by-step → variations → see also.
+  - **Meta (3 arquivos)** — architecture (com mermaid diagram), design-decisions
+    (versão user-facing de V1_DESIGN), contributing (7-step third-party adapter
+    guide + repo setup + PR checklist).
+
+  Root `README.md` reescrito em inglês como entry point — pitch, install,
+  30-line quickstart, links pra `/docs`, packages table.
+
+  **Snippet drift guard**: 11 novos arquivos em
+  `packages/core/tests/docs-examples/` pinam todos os code blocks dos
+  concepts. Vitest verifica que compilam e batem com a API real — qualquer
+  drift quebra CI.
+
+  Sem mudanças de runtime nos pacotes — bump patch só pra propagar o release
+  de docs no grupo fixed.
+
+- b13eb00: npm publish readiness.
+  - Precise `exports` maps — per-condition `types` so CJS consumers on
+    `moduleResolution: nodenext` resolve `index.d.cts` instead of the ESM
+    `index.d.ts`.
+  - `publishConfig.access: public` and `engines: { node: ">=20" }` on every
+    package.
+  - Sourcemaps are no longer generated or shipped (smaller tarballs).
+  - The adapters' `peerDependencies` on `@ascendance-hub/sapphire-core` is a real
+    range (`>=0.5.0`) instead of `*`.
+  - A README for `@ascendance-hub/sapphire-core` and a `LICENSE` file in every
+    published package.
+
+- ad51f39: season-five — code review fixes (B1–B4).
+
+  **B1 — `multipleOf` precision.** The float tolerance was scaled by the divisor,
+  so a genuine multiple of a large operand was wrongly rejected (`100.2` failed
+  `multipleOf(0.1)`). The check now tests whether `n / m` is an integer with a
+  tolerance that scales with the quotient's magnitude. Fixed in core's
+  `NumberField._parse` and mirrored in the Mongoose adapter's `multipleOf`
+  validator.
+
+  **B2 — Drizzle primary-key collision.** When a schema declared its own field at
+  the implicit PK name (`id`), the adapter emitted `serial('id').primaryKey()`
+  and then let the property loop silently overwrite it, leaving the table with no
+  primary key. The user-declared field is now promoted with `.primaryKey()`
+  across all three dialects (pg/mysql/sqlite).
+
+  **B3 — Mongoose adapter dropped metadata on containers.** `buildField` skipped
+  `applyCommon` for the `array` and nested-`object` cases, silently dropping
+  `default` / `description` / the `meta.mongoose` escape hatch on those kinds.
+  Both branches now run `applyCommon`.
+
+  **B4 — duplicate `$defs` name detection (JSON Schema).** Shape-changing object
+  ops (`extend`/`merge`/`partial`/`required`) keep the schema `name` by design;
+  when a named schema and a same-named derived schema both appeared in one tree,
+  `collectNamed` kept the first and silently emitted a wrong `$ref` for the rest.
+  It now throws a clear error on a genuine collision (the `options.defs` escape
+  hatch keeps its documented "tree wins" behaviour).
+
+- Updated dependencies [34a794d]
+- Updated dependencies [42106b3]
+- Updated dependencies [3fe52c9]
+- Updated dependencies [4caea16]
+- Updated dependencies [3324207]
+- Updated dependencies [56b03ae]
+- Updated dependencies [bf9d99b]
+- Updated dependencies [4c48719]
+- Updated dependencies [f74b02b]
+- Updated dependencies [ff3af0c]
+- Updated dependencies [b13eb00]
+- Updated dependencies [51e6d32]
+- Updated dependencies [ad51f39]
+  - @ascendance-hub/sapphire-core@1.0.0
