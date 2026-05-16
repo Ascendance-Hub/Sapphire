@@ -1,6 +1,6 @@
 ---
 '@ascendance-hub/sapphire-core': minor
-'@ascendance-hub/sapphire-mongo': major
+'@ascendance-hub/sapphire-mongoose': major
 ---
 
 Fase 12 — Mongo adapter deep rewrite.

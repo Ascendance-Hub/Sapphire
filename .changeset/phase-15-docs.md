@@ -1,6 +1,6 @@
 ---
 '@ascendance-hub/sapphire-core': patch
-'@ascendance-hub/sapphire-mongo': patch
+'@ascendance-hub/sapphire-mongoose': patch
 '@ascendance-hub/sapphire-json-schema': patch
 '@ascendance-hub/sapphire-drizzle': patch
 ---

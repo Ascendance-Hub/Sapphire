@@ -1,6 +1,6 @@
 ---
 '@ascendance-hub/sapphire-core': minor
-'@ascendance-hub/sapphire-mongo': minor
+'@ascendance-hub/sapphire-mongoose': minor
 ---
 
 Fase 8 — API de validação reescrita.

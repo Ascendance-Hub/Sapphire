@@ -1,0 +1,32 @@
+name: Release Preview
+
+# Publishes a snapshot of every push to `preview` under the npm `preview`
+# dist-tag (e.g. 0.6.0-preview-<datetime>). Install with `@preview`.
+# The `preview` branch is created in a later PR — until then this never runs.
+
+on:
+  push:
+    branches: [preview]
+  workflow_dispatch:
+
+concurrency: release-preview
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+      - name: Publish preview snapshot
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npx changeset version --snapshot preview
+          npx changeset publish --tag preview --no-git-tag

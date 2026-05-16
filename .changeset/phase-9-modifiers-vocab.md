@@ -1,6 +1,6 @@
 ---
 '@ascendance-hub/sapphire-core': minor
-'@ascendance-hub/sapphire-mongo': minor
+'@ascendance-hub/sapphire-mongoose': minor
 ---
 
 Fase 9 — vocabulário completo de modifiers + registry string-keyed.

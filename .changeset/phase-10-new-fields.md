@@ -1,6 +1,6 @@
 ---
 '@ascendance-hub/sapphire-core': minor
-'@ascendance-hub/sapphire-mongo': minor
+'@ascendance-hub/sapphire-mongoose': minor
 ---
 
 Fase 10 — novos field types + ArrayField homogêneo + named-schema registry.
