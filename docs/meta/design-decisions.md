@@ -12,13 +12,13 @@ Brand types invert the relationship. The signal "is this optional" lives in `_ou
 
 The result: `Infer<F>` never changes, regardless of how many fields or modifiers we add. New fields just declare their own `_output` and `_input`.
 
-## Why fixed versioning across the four packages
+## Why fixed versioning across the five packages
 
-`@ascendance-hub/sapphire-core`, `-mongo`, `-json-schema`, and `-drizzle` always share `major.minor`. A bug fix in the Mongo adapter still bumps all four. Changesets is configured for "fixed" versioning across them.
+`@ascendance-hub/sapphire-core`, `-bson`, `-mongoose`, `-json-schema`, and `-drizzle` always share `major.minor`. A bug fix in one adapter still bumps all five. Changesets is configured for "fixed" versioning across them.
 
-This is heavier on release cadence but lighter on mental model. Users never have to ask "is core@1.4 compatible with mongo@1.2?" — the answer is always "if the majors match, yes". With linked-but-not-fixed versioning, the answer involves a compatibility matrix that grows linearly per release.
+This is heavier on release cadence but lighter on mental model. Users never have to ask "is core@1.4 compatible with mongoose@1.2?" — the answer is always "if the majors match, yes". With linked-but-not-fixed versioning, the answer involves a compatibility matrix that grows linearly per release.
 
-The four packages are coupled in practice: the IR shape is defined in core, and every adapter switches on every `kind`. A breaking IR change is a breaking change to every adapter. Fixed versioning makes that coupling visible.
+The five packages are coupled in practice: the IR shape is defined in core, and every adapter switches on every `kind`. A breaking IR change is a breaking change to every adapter. Fixed versioning makes that coupling visible.
 
 ## Why JSON Schema 2020-12 (not draft-07)
 
