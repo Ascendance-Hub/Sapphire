@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Timeline from '../../components/Timeline.astro'
+import { useTranslations } from '../../i18n/ui'
+const t = useTranslations('pt-br')
+---
+
+<BaseLayout title={t('title.timeline')}>
+  <section class="tl-page">
+    <h1>{t('timeline.title')}</h1>
+    <p>{t('timeline.intro')}</p>
+    <Timeline />
+  </section>
+  <style>
+    .tl-page {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 36px 22px;
+    }
+    .tl-page h1 {
+      margin: 0 0 4px;
+    }
+    .tl-page p {
+      color: var(--ink-600);
+      margin: 0 0 26px;
+    }
+  </style>
+</BaseLayout>
