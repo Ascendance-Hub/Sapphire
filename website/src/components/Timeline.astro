@@ -1,0 +1,301 @@
+---
+import { timeline } from '../data/timeline'
+import { useTranslations, asLocale } from '../i18n/ui'
+
+const locale = asLocale(Astro.currentLocale)
+const t = useTranslations(locale)
+---
+
+<script is:inline>
+  // Runs during parse, before the timeline paints — JS users never see a
+  // flash of the no-JS fallback (everything expanded).
+  document.documentElement.classList.add('tl-js')
+</script>
+
+<div class="tl">
+  <p class="tl-hint">
+    <kbd>{t('timeline.hintSeason')}</kbd>
+    <span class="tl-hint-sep"> · </span>
+    <kbd>{t('timeline.hintPhase')}</kbd>
+  </p>
+
+  {
+    timeline.map((season, si) => (
+      <section
+        class:list={['tl-season', { open: si === 0, sketch: Boolean(season.sketch) }]}
+        data-era={season.era}
+      >
+        <button
+          type="button"
+          class="tl-season-head"
+          data-season-toggle
+          aria-expanded={si === 0 ? 'true' : 'false'}
+        >
+          <span class="tl-chev" aria-hidden="true">▸</span>
+          <span class="tl-season-name">{season.title[locale]}</span>
+          <span class="tl-season-sub">{season.subtitle[locale]}</span>
+          <span class="tl-season-tag">{season.tag[locale]}</span>
+        </button>
+
+        <div class="tl-phases">
+          {season.phases.map((phase, pi) => (
+            <div class:list={['tl-row', pi % 2 === 0 ? 'right' : 'left']}>
+              <div class="tl-spine">
+                <span class="tl-dot" />
+              </div>
+              <button type="button" class="tl-card" data-phase-toggle aria-expanded="false">
+                <span class="tl-card-date">{phase.date[locale]}</span>
+                <span class="tl-card-title">{phase.title[locale]}</span>
+                <span class="tl-card-summary">{phase.summary[locale]}</span>
+                <span class="tl-detail">{phase.detail[locale]}</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+</div>
+
+<script>
+  // Season headers open/close their phase list; phase cards open/close their
+  // detail. Native <button> elements give Enter/Space keyboard support free.
+  document.querySelectorAll('[data-season-toggle]').forEach((head) => {
+    head.addEventListener('click', () => {
+      const season = head.closest('.tl-season')
+      if (!season) return
+      const open = season.classList.toggle('open')
+      head.setAttribute('aria-expanded', String(open))
+    })
+  })
+  document.querySelectorAll('[data-phase-toggle]').forEach((card) => {
+    card.addEventListener('click', () => {
+      const open = card.getAttribute('aria-expanded') !== 'true'
+      card.setAttribute('aria-expanded', String(open))
+    })
+  })
+</script>
+
+<style>
+  .tl {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .tl-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-400);
+    margin: 0 0 22px;
+  }
+  .tl-hint kbd {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--sapphire-600);
+  }
+
+  /* ---- season header ---- */
+  .tl-season {
+    position: relative;
+  }
+  .tl-season-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 14px auto;
+    padding: 9px 18px;
+    background: var(--sapphire-600);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(47, 127, 214, 0.26);
+  }
+  .tl-season-sub {
+    font-weight: 500;
+    opacity: 0.92;
+  }
+  .tl-season-tag {
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .tl-chev {
+    font-size: 11px;
+  }
+
+  /* v2 seasons read as "future": outlined + dashed instead of solid */
+  .tl-season[data-era='v2'] .tl-season-head {
+    background: #fff;
+    color: var(--sapphire-900);
+    border: 2px dashed var(--sapphire-600);
+    box-shadow: none;
+  }
+  .tl-season[data-era='v2'] .tl-season-tag {
+    background: #e9f1fb;
+    color: var(--sapphire-600);
+  }
+  .tl-season.sketch .tl-season-head {
+    opacity: 0.7;
+  }
+
+  /* ---- phases / spine ---- */
+  .tl-phases {
+    padding: 2px 0 8px;
+  }
+  .tl-row {
+    display: grid;
+    grid-template-columns: 1fr 50px 1fr;
+  }
+  .tl-spine {
+    grid-column: 2;
+    position: relative;
+  }
+  .tl-spine::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    transform: translateX(-50%);
+    background: #cdd9e6;
+  }
+  .tl-dot {
+    position: absolute;
+    left: 50%;
+    top: 22px;
+    width: 14px;
+    height: 14px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--sapphire-600);
+  }
+  .tl-season[data-era='v2'] .tl-dot {
+    border-color: #9bbfe3;
+  }
+
+  .tl-card {
+    display: block;
+    align-self: start;
+    width: 100%;
+    margin: 12px 0;
+    padding: 10px 13px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    text-align: left;
+  }
+  .tl-row.right .tl-card {
+    grid-column: 3;
+  }
+  .tl-row.left .tl-card {
+    grid-column: 1;
+    text-align: right;
+  }
+  .tl-card:hover {
+    border-color: var(--sapphire-600);
+  }
+  .tl-card[aria-expanded='true'] {
+    border-color: var(--sapphire-600);
+    box-shadow: 0 4px 14px rgba(47, 127, 214, 0.16);
+  }
+  .tl-card-date {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-400);
+  }
+  .tl-card-title {
+    display: block;
+    margin-top: 2px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ink-900);
+  }
+  .tl-card-summary {
+    display: block;
+    margin-top: 3px;
+    font-size: 12.5px;
+    color: var(--ink-600);
+  }
+  .tl-detail {
+    display: block;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink-600);
+    text-align: left;
+  }
+
+  /* ---- collapse behaviour: applies only when JS is on ---- */
+  .tl-js .tl-season:not(.open) .tl-phases {
+    display: none;
+  }
+  .tl-js .tl-card[aria-expanded='false'] .tl-detail {
+    display: none;
+  }
+
+  /* the chevron's rotated state is a status indicator, so it applies even
+     with reduced motion — only the transition itself is motion-gated */
+  .tl-season.open .tl-chev {
+    transform: rotate(90deg);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .tl-chev {
+      transition: transform 0.2s ease;
+    }
+    .tl-js .tl-season.open .tl-phases {
+      animation: tl-fade 0.25s ease;
+    }
+    .tl-js .tl-card[aria-expanded='true'] .tl-detail {
+      animation: tl-fade 0.2s ease;
+    }
+  }
+  @keyframes tl-fade {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ---- mobile: single column, spine on the left ---- */
+  @media (max-width: 560px) {
+    .tl-row {
+      grid-template-columns: 32px 1fr;
+    }
+    .tl-spine {
+      grid-column: 1;
+    }
+    .tl-row.right .tl-card,
+    .tl-row.left .tl-card {
+      grid-column: 2;
+      text-align: left;
+    }
+    .tl-season-head {
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+  }
+</style>
