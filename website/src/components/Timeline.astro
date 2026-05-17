@@ -15,7 +15,7 @@ const t = useTranslations(locale)
 <div class="tl">
   <p class="tl-hint">
     <kbd>{t('timeline.hintSeason')}</kbd>
-    <span class="tl-hint-sep"> · </span>
+    <span> · </span>
     <kbd>{t('timeline.hintPhase')}</kbd>
   </p>
 
@@ -43,12 +43,22 @@ const t = useTranslations(locale)
               <div class="tl-spine">
                 <span class="tl-dot" />
               </div>
-              <button type="button" class="tl-card" data-phase-toggle aria-expanded="false">
-                <span class="tl-card-date">{phase.date[locale]}</span>
-                <span class="tl-card-title">{phase.title[locale]}</span>
-                <span class="tl-card-summary">{phase.summary[locale]}</span>
-                <span class="tl-detail">{phase.detail[locale]}</span>
-              </button>
+              <div class="tl-card">
+                <button
+                  type="button"
+                  class="tl-card-head"
+                  data-phase-toggle
+                  aria-expanded="false"
+                  aria-controls={`${phase.id}-detail`}
+                >
+                  <span class="tl-card-date">{phase.date[locale]}</span>
+                  <span class="tl-card-title">{phase.title[locale]}</span>
+                  <span class="tl-card-summary">{phase.summary[locale]}</span>
+                </button>
+                <div class="tl-detail" id={`${phase.id}-detail`}>
+                  {phase.detail[locale]}
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -58,8 +68,8 @@ const t = useTranslations(locale)
 </div>
 
 <script>
-  // Season headers open/close their phase list; phase cards open/close their
-  // detail. Native <button> elements give Enter/Space keyboard support free.
+  // Season headers open/close their phase list; phase headers open/close
+  // their detail. Native <button> elements give Enter/Space support free.
   document.querySelectorAll('[data-season-toggle]').forEach((head) => {
     head.addEventListener('click', () => {
       const season = head.closest('.tl-season')
@@ -68,10 +78,10 @@ const t = useTranslations(locale)
       head.setAttribute('aria-expanded', String(open))
     })
   })
-  document.querySelectorAll('[data-phase-toggle]').forEach((card) => {
-    card.addEventListener('click', () => {
-      const open = card.getAttribute('aria-expanded') !== 'true'
-      card.setAttribute('aria-expanded', String(open))
+  document.querySelectorAll('[data-phase-toggle]').forEach((head) => {
+    head.addEventListener('click', () => {
+      const open = head.getAttribute('aria-expanded') !== 'true'
+      head.setAttribute('aria-expanded', String(open))
     })
   })
 </script>
@@ -119,6 +129,10 @@ const t = useTranslations(locale)
     font-weight: 700;
     box-shadow: 0 4px 12px rgba(47, 127, 214, 0.26);
   }
+  .tl-season-head:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+  }
   .tl-season-sub {
     font-weight: 500;
     opacity: 0.92;
@@ -141,6 +155,10 @@ const t = useTranslations(locale)
     color: var(--sapphire-900);
     border: 2px dashed var(--sapphire-600);
     box-shadow: none;
+  }
+  .tl-season[data-era='v2'] .tl-season-head:focus-visible {
+    outline: 3px solid var(--sapphire-600);
+    outline-offset: 2px;
   }
   .tl-season[data-era='v2'] .tl-season-tag {
     background: #e9f1fb;
@@ -187,32 +205,44 @@ const t = useTranslations(locale)
     border-color: #9bbfe3;
   }
 
+  /* ---- phase card ---- */
   .tl-card {
-    display: block;
     align-self: start;
-    width: 100%;
     margin: 12px 0;
-    padding: 10px 13px;
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 9px;
-    cursor: pointer;
-    font-family: var(--font-sans);
-    text-align: left;
   }
   .tl-row.right .tl-card {
     grid-column: 3;
   }
   .tl-row.left .tl-card {
     grid-column: 1;
-    text-align: right;
   }
   .tl-card:hover {
     border-color: var(--sapphire-600);
   }
-  .tl-card[aria-expanded='true'] {
+  .tl-card:has(.tl-card-head[aria-expanded='true']) {
     border-color: var(--sapphire-600);
     box-shadow: 0 4px 14px rgba(47, 127, 214, 0.16);
+  }
+
+  .tl-card-head {
+    display: block;
+    width: 100%;
+    padding: 10px 13px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    text-align: left;
+  }
+  .tl-card-head:focus-visible {
+    outline: 2px solid var(--sapphire-600);
+    outline-offset: 2px;
+  }
+  .tl-row.left .tl-card-head {
+    text-align: right;
   }
   .tl-card-date {
     display: block;
@@ -236,8 +266,8 @@ const t = useTranslations(locale)
   }
   .tl-detail {
     display: block;
-    margin-top: 8px;
-    padding-top: 8px;
+    margin: 0 13px;
+    padding: 8px 0 11px;
     border-top: 1px dashed var(--border);
     font-size: 12px;
     line-height: 1.55;
@@ -249,7 +279,7 @@ const t = useTranslations(locale)
   .tl-js .tl-season:not(.open) .tl-phases {
     display: none;
   }
-  .tl-js .tl-card[aria-expanded='false'] .tl-detail {
+  .tl-js .tl-card-head[aria-expanded='false'] + .tl-detail {
     display: none;
   }
 
@@ -265,7 +295,7 @@ const t = useTranslations(locale)
     .tl-js .tl-season.open .tl-phases {
       animation: tl-fade 0.25s ease;
     }
-    .tl-js .tl-card[aria-expanded='true'] .tl-detail {
+    .tl-js .tl-card-head[aria-expanded='true'] + .tl-detail {
       animation: tl-fade 0.2s ease;
     }
   }
@@ -291,6 +321,8 @@ const t = useTranslations(locale)
     .tl-row.right .tl-card,
     .tl-row.left .tl-card {
       grid-column: 2;
+    }
+    .tl-row.left .tl-card-head {
       text-align: left;
     }
     .tl-season-head {
