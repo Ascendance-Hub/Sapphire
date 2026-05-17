@@ -30,6 +30,7 @@ const t = useTranslations(locale)
           class="tl-season-head"
           data-season-toggle
           aria-expanded={si === 0 ? 'true' : 'false'}
+          aria-controls={`${season.id}-phases`}
         >
           <span class="tl-chev" aria-hidden="true">▸</span>
           <span class="tl-season-name">{season.title[locale]}</span>
@@ -37,7 +38,7 @@ const t = useTranslations(locale)
           <span class="tl-season-tag">{season.tag[locale]}</span>
         </button>
 
-        <div class="tl-phases">
+        <div class="tl-phases" id={`${season.id}-phases`} role="region" aria-label={season.title[locale]}>
           {season.phases.map((phase, pi) => (
             <div class:list={['tl-row', pi % 2 === 0 ? 'right' : 'left']}>
               <div class="tl-spine">
