@@ -179,6 +179,7 @@ const t = useTranslations(locale)
   }
   .tl-spine {
     grid-column: 2;
+    grid-row: 1;
     position: relative;
   }
   .tl-spine::before {
@@ -194,10 +195,10 @@ const t = useTranslations(locale)
   .tl-dot {
     position: absolute;
     left: 50%;
-    top: 22px;
+    top: 50%;
     width: 14px;
     height: 14px;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     border-radius: 50%;
     background: #fff;
     border: 3px solid var(--sapphire-600);
@@ -208,6 +209,7 @@ const t = useTranslations(locale)
 
   /* ---- phase card ---- */
   .tl-card {
+    grid-row: 1;
     align-self: start;
     margin: 12px 0;
     background: #fff;
@@ -276,11 +278,14 @@ const t = useTranslations(locale)
     text-align: left;
   }
 
-  /* ---- collapse behaviour: applies only when JS is on ---- */
-  .tl-js .tl-season:not(.open) .tl-phases {
+  /* ---- collapse behaviour: applies only when JS is on ----
+     :global() keeps `.tl-js` (set on <html>, outside this component)
+     unscoped — otherwise Astro scopes it to an attribute <html> never has,
+     and the collapse rules silently never match. */
+  :global(.tl-js) .tl-season:not(.open) .tl-phases {
     display: none;
   }
-  .tl-js .tl-card-head[aria-expanded='false'] + .tl-detail {
+  :global(.tl-js) .tl-card-head[aria-expanded='false'] + .tl-detail {
     display: none;
   }
 
@@ -293,10 +298,10 @@ const t = useTranslations(locale)
     .tl-chev {
       transition: transform 0.2s ease;
     }
-    .tl-js .tl-season.open .tl-phases {
+    :global(.tl-js) .tl-season.open .tl-phases {
       animation: tl-fade 0.25s ease;
     }
-    .tl-js .tl-card-head[aria-expanded='true'] + .tl-detail {
+    :global(.tl-js) .tl-card-head[aria-expanded='true'] + .tl-detail {
       animation: tl-fade 0.2s ease;
     }
   }
