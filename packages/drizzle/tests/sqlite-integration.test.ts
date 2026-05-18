@@ -113,4 +113,28 @@ describe('sqlite integration — round-trip against a real database', () => {
 
     expect(post!.author).toBe(user!.id)
   })
+
+  it('a composite primary key rejects a duplicate (articleId, version) pair', async () => {
+    const a = new Sapphire()
+    const node = a.object({
+      articleId: a.number().int(),
+      version: a.number().int(),
+      summary: a.string(),
+    })
+    const revisions = toDrizzleSchema(node.toSchema(), {
+      dialect: 'sqlite',
+      tableName: 'revisions',
+      primaryKey: ['articleId', 'version'],
+    } as never)
+    const db = await sqliteWith({ revisions })
+
+    db.insert(revisions).values({ articleId: 10, version: 1, summary: 'draft' }).run()
+    // same articleId, different version → allowed by the composite PK
+    db.insert(revisions).values({ articleId: 10, version: 2, summary: 'edit' }).run()
+    // exact (articleId, version) duplicate → rejected
+    expect(() =>
+      db.insert(revisions).values({ articleId: 10, version: 1, summary: 'dup' }).run(),
+    ).toThrow()
+    expect(db.select().from(revisions).all()).toHaveLength(2)
+  })
 })

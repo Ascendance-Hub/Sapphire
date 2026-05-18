@@ -102,8 +102,12 @@ Toda tabela emitida adiciona automaticamente uma coluna `id` no início, a menos
 | Dialeto | Coluna `id` implícita                               |
 | ------- | --------------------------------------------------- |
 | pg      | `serial('id').primaryKey()`                         |
-| mysql   | `serial('id').primaryKey()`                         |
+| mysql   | `int('id').autoincrement().primaryKey()`            |
 | sqlite  | `integer('id').primaryKey({ autoIncrement: true })` |
+
+O MySQL usa `int` — não `serial`, que é `bigint unsigned`. O `int` mantém a PK
+implícita com tipo compatível com as colunas `int` emitidas para chaves
+estrangeiras de `ref`; uma PK `serial` rejeitaria essas FKs (MySQL errno 150).
 
 Controlado por `options.primaryKey`:
 
@@ -111,7 +115,43 @@ Controlado por `options.primaryKey`:
 toDrizzleSchema(node, { dialect: 'pg' }) // → id (default)
 toDrizzleSchema(node, { dialect: 'pg', primaryKey: 'pk' }) // → pk
 toDrizzleSchema(node, { dialect: 'pg', primaryKey: false }) // → no implicit PK; you declare your own via meta
+toDrizzleSchema(node, { dialect: 'pg', primaryKey: ['orgId', 'slug'] }) // → PK composta
 ```
+
+### Chave primária composta
+
+Passe um **array** de nomes de campos como `primaryKey` para emitir uma chave
+primária composta no nível da tabela — `PRIMARY KEY(col_a, col_b)` — sem coluna
+`id` implícita:
+
+```ts
+const ArticleRevision = a.object({
+  articleId: a.ref('Article'),
+  version: a.number().int(),
+  body: a.string(),
+})
+
+const revisions = toDrizzleSchema(ArticleRevision.toSchema(), {
+  dialect: 'pg',
+  tableName: 'article_revisions',
+  primaryKey: ['articleId', 'version'],
+})
+```
+
+Cada nome precisa ser um campo declarado, e no mínimo dois são exigidos — use a
+forma de string simples para uma PK de coluna única. A PK composta é emitida
+pelo mesmo callback de terceiro argumento de `pgTable` / `mysqlTable` /
+`sqliteTable` que carrega os índices compostos.
+
+Uma tabela com PK composta não pode ser alvo de um `ref`: uma chave estrangeira
+de coluna única não tem para onde apontar. O callback `references(...)` lança um
+erro claro se um ref apontar para uma tabela assim.
+
+> [!NOTE]
+> **PK estendida (identificante).** Para a chave primária de uma tabela filha
+> _ser_ uma chave estrangeira para o pai — uma relação identificante 1:1 —
+> declare o campo de ref e nomeie-o como a PK: `primaryKey: 'parentId'` com um
+> campo `parentId: a.ref('Parent')` emite `integer('parentId').references(...).primaryKey()`.
 
 ## Refs + `DrizzleTableRegistry`
 
@@ -176,7 +216,7 @@ O segundo argumento de `toDrizzleSchema(node, options)`:
 | ------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `dialect`    | _(obrigatório)_               | `'pg'` / `'mysql'` / `'sqlite'`. Seleciona o conjunto de construtores de coluna e o shape da tabela.          |
 | `tableName`  | `node.name`                   | Argumento passado a `pgTable(name, ...)` / `mysqlTable(...)` / `sqliteTable(...)`.                            |
-| `primaryKey` | `'id'`                        | Nome da coluna de PK implícita. `false` desabilita a PK implícita.                                            |
+| `primaryKey` | `'id'`                        | Nome da coluna de PK. Um `string[]` emite uma PK composta; `false` desabilita a PK implícita.                 |
 | `tables`     | _(novo registro por chamada)_ | `DrizzleTableRegistry` compartilhado. Passe a mesma instância entre chamadas relacionadas para resolver refs. |
 
 ## Escape hatch `.adapter('drizzle', opts)`

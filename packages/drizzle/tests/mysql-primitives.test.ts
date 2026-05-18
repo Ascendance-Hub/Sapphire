@@ -129,11 +129,16 @@ describe('mysql primitives', () => {
   })
 
   describe('primary key handling', () => {
-    it('default → adds id serial primary key', () => {
+    // The implicit PK is `int autoincrement`, NOT `serial`. `serial` in
+    // mysql-core is `bigint unsigned`, which does not match the `int` type of
+    // `ref` columns — a FK into an implicit-PK table then fails (MySQL errno
+    // 150). `int` keeps the PK and the FK column type-compatible.
+    it('default → adds an int autoincrement primary key', () => {
       const t = emit(a.object({ name: a.string() }))
       expect(t.id).toBeDefined()
-      expect(t.id.columnType).toBe('MySqlSerial')
+      expect(t.id.columnType).toBe('MySqlInt')
       expect(t.id.primary).toBe(true)
+      expect(t.id.autoIncrement).toBe(true)
     })
 
     it('primaryKey: false → no id column', () => {
@@ -153,7 +158,7 @@ describe('mysql primitives', () => {
       })
       expect(t.id).toBeUndefined()
       expect(t.uid).toBeDefined()
-      expect(t.uid.columnType).toBe('MySqlSerial')
+      expect(t.uid.columnType).toBe('MySqlInt')
       expect(t.uid.primary).toBe(true)
     })
   })

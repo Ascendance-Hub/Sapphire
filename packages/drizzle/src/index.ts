@@ -14,10 +14,13 @@ export interface DrizzleAdapterOptions<D extends DrizzleDialect = DrizzleDialect
   /** Table name. Defaults to `node.name` when present; otherwise throws. */
   tableName?: string
   /**
-   * Name of the implicit primary key column. Defaults to `'id'`. Pass `false`
-   * to disable the implicit PK (you manage it yourself via meta).
+   * Primary key for the emitted table. Defaults to an implicit `'id'` column.
+   *  - `string`   — rename the implicit single-column PK.
+   *  - `string[]` — a composite primary key over the named fields (no implicit
+   *    column; each name must be a declared field).
+   *  - `false`    — disable the implicit PK (you manage it yourself via meta).
    */
-  primaryKey?: string | false
+  primaryKey?: string | string[] | false
   /**
    * Registry of already-built tables, used to resolve refs across multiple
    * `toDrizzleSchema` calls. Pass the same instance when emitting related

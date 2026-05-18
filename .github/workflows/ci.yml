@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, preview]
     paths-ignore:
       - 'website/**'
       - 'docs/**'
   pull_request:
-    branches: [main]
+    branches: [main, preview]
     paths-ignore:
       - 'website/**'
       - 'docs/**'
