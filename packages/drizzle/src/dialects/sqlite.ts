@@ -1,6 +1,14 @@
 import type { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
-import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core'
-import { applyCommon, collectFieldIndexes } from '../shared/common'
+import {
+  sqliteTable,
+  text,
+  integer,
+  real,
+  index,
+  uniqueIndex,
+  primaryKey,
+} from 'drizzle-orm/sqlite-core'
+import { applyCommon, collectFieldIndexes, resolvePrimaryKey } from '../shared/common'
 import type { DrizzleAdapterOptions } from '../index'
 import type { DrizzleTableRegistry } from '../registry'
 
@@ -83,6 +91,11 @@ function sqliteColumn(name: string, node: SapphireSchemaNode, ctx: Ctx): any {
           )
         }
         if (entry.pkName === null) {
+          if (entry.compositePk) {
+            throw new Error(
+              `drizzle adapter: ref target "${targetName}" has a composite primary key (${entry.compositePk.join(', ')}) — a single-column ref cannot point at it.`,
+            )
+          }
           throw new Error(
             `drizzle adapter: ref target "${targetName}" was emitted with primaryKey: false — refs require a target PK column. Re-emit "${targetName}" with primaryKey: '<colName>' or use the default implicit PK.`,
           )
@@ -110,13 +123,8 @@ export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
   const obj = node as ObjectNode
   const cols: Record<string, any> = {}
 
-  // Resolve the implicit primary-key column name (null when disabled).
-  const pkName =
-    ctx.options.primaryKey === false
-      ? null
-      : typeof ctx.options.primaryKey === 'string'
-        ? ctx.options.primaryKey
-        : 'id'
+  // Resolve the primary key: single implicit/named column, or composite.
+  const { pkName, compositePk } = resolvePrimaryKey(ctx.options.primaryKey, obj.properties)
   // season-five B2: when the schema declares its own field at the PK name,
   // that field IS the primary key — promote it with `.primaryKey()` rather
   // than emitting a separate `integer` column that the property loop below
@@ -139,7 +147,7 @@ export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
   const idxList = obj.indexes ?? []
   const fieldIdx = collectFieldIndexes(obj)
   const table =
-    idxList.length > 0 || fieldIdx.length > 0
+    idxList.length > 0 || fieldIdx.length > 0 || compositePk !== null
       ? sqliteTable(ctx.tableName, cols, (t: any) => {
           const composite = idxList.map((idx, i) => {
             const idxName = `${ctx.tableName}_idx_${i}`
@@ -150,9 +158,12 @@ export function buildTable(node: SapphireSchemaNode, ctx: Ctx): any {
             const idxName = `${ctx.tableName}_${key}_idx`
             return unique ? uniqueIndex(idxName).on(t[key]) : index(idxName).on(t[key])
           })
-          return [...composite, ...perField]
+          const pk = compositePk
+            ? [primaryKey({ columns: compositePk.map((k) => t[k]) as [any, ...any[]] })]
+            : []
+          return [...pk, ...composite, ...perField]
         })
       : sqliteTable(ctx.tableName, cols)
-  ctx.tables.set(obj.name ?? ctx.tableName, table, pkName)
+  ctx.tables.set(obj.name ?? ctx.tableName, table, pkName, compositePk ?? undefined)
   return table
 }

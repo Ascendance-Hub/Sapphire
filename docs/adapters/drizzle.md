@@ -102,8 +102,12 @@ Every emitted table auto-prepends an `id` column unless you opt out:
 | Dialect | Implicit `id` column                                |
 | ------- | --------------------------------------------------- |
 | pg      | `serial('id').primaryKey()`                         |
-| mysql   | `serial('id').primaryKey()`                         |
+| mysql   | `int('id').autoincrement().primaryKey()`            |
 | sqlite  | `integer('id').primaryKey({ autoIncrement: true })` |
+
+MySQL uses `int` — not `serial`, which is `bigint unsigned`. `int` keeps the
+implicit PK type-compatible with the `int` columns emitted for `ref` foreign
+keys; a `serial` PK would reject those FKs (MySQL errno 150).
 
 Controlled by `options.primaryKey`:
 
@@ -111,7 +115,42 @@ Controlled by `options.primaryKey`:
 toDrizzleSchema(node, { dialect: 'pg' }) // → id (default)
 toDrizzleSchema(node, { dialect: 'pg', primaryKey: 'pk' }) // → pk
 toDrizzleSchema(node, { dialect: 'pg', primaryKey: false }) // → no implicit PK; you declare your own via meta
+toDrizzleSchema(node, { dialect: 'pg', primaryKey: ['orgId', 'slug'] }) // → composite PK
 ```
+
+### Composite primary key
+
+Pass an **array** of field names as `primaryKey` to emit a table-level
+composite primary key — `PRIMARY KEY(col_a, col_b)` — with no implicit `id`:
+
+```ts
+const ArticleRevision = a.object({
+  articleId: a.ref('Article'),
+  version: a.number().int(),
+  body: a.string(),
+})
+
+const revisions = toDrizzleSchema(ArticleRevision.toSchema(), {
+  dialect: 'pg',
+  tableName: 'article_revisions',
+  primaryKey: ['articleId', 'version'],
+})
+```
+
+Every name must be a declared field, and at least two are required — use the
+plain string form for a single-column PK. The composite PK is emitted through
+the same third-argument callback of `pgTable` / `mysqlTable` / `sqliteTable`
+that carries composite indexes.
+
+A table with a composite PK cannot be the target of a `ref`: a single-column
+foreign key has nothing to point at. The `references(...)` callback throws a
+clear error if a ref targets such a table.
+
+> [!NOTE]
+> **Extended (identifying) primary key.** To make a child table's primary key
+> _be_ a foreign key into its parent — a 1:1 identifying relationship — declare
+> the ref field and name it as the PK: `primaryKey: 'parentId'` with a
+> `parentId: a.ref('Parent')` field emits `integer('parentId').references(...).primaryKey()`.
 
 ## Refs + `DrizzleTableRegistry`
 
@@ -176,7 +215,7 @@ The second argument to `toDrizzleSchema(node, options)`:
 | ------------ | ------------------------- | ------------------------------------------------------------------------------------------- |
 | `dialect`    | _(required)_              | `'pg'` / `'mysql'` / `'sqlite'`. Selects the column-builder set and table shape.            |
 | `tableName`  | `node.name`               | Argument passed to `pgTable(name, ...)` / `mysqlTable(...)` / `sqliteTable(...)`.           |
-| `primaryKey` | `'id'`                    | Implicit PK column name. `false` disables the implicit PK.                                  |
+| `primaryKey` | `'id'`                    | PK column name. A `string[]` emits a composite PK; `false` disables the implicit PK.        |
 | `tables`     | _(new registry per call)_ | Shared `DrizzleTableRegistry`. Pass the same instance across related calls to resolve refs. |
 
 ## `.adapter('drizzle', opts)` escape hatch
