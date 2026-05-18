@@ -19,6 +19,7 @@
 A typed, bilingual data module holding every season and phase, plus a Vitest test asserting its integrity.
 
 **Files:**
+
 - Create: `website/src/data/timeline.ts`
 - Test: `website/tests/timeline-data.test.ts`
 
@@ -34,7 +35,9 @@ import { locales } from '../src/i18n/ui'
 /** True when `v` is an object with a non-empty string for every locale. */
 const isText = (v: unknown): boolean =>
   locales.every(
-    (l) => typeof (v as Record<string, unknown>)?.[l] === 'string' && (v as Record<string, string>)[l].trim().length > 0,
+    (l) =>
+      typeof (v as Record<string, unknown>)?.[l] === 'string' &&
+      (v as Record<string, string>)[l].trim().length > 0,
   )
 
 describe('timeline data', () => {
@@ -152,7 +155,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'Sapphire starts as an idea: define a data shape once and emit a schema for every ORM. No code yet — just the problem and the goal.',
-          'pt-br': 'O Sapphire começa como uma ideia: definir o formato dos dados uma vez e gerar um schema para cada ORM. Ainda sem código — só o problema e o objetivo.',
+          'pt-br':
+            'O Sapphire começa como uma ideia: definir o formato dos dados uma vez e gerar um schema para cada ORM. Ainda sem código — só o problema e o objetivo.',
         },
       },
       {
@@ -165,7 +169,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'The concept gets a first hand-written implementation — no real structure, just enough to show the one-schema idea could work.',
-          'pt-br': 'O conceito ganha uma primeira implementação feita à mão — sem estrutura de verdade, só o suficiente para mostrar que a ideia de um schema só podia funcionar.',
+          'pt-br':
+            'O conceito ganha uma primeira implementação feita à mão — sem estrutura de verdade, só o suficiente para mostrar que a ideia de um schema só podia funcionar.',
         },
       },
       {
@@ -178,7 +183,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'An architectural refactor: fields no longer know about any ORM, and adapters are resolved by name through a registry. The project was still called "Ruby" at this point.',
-          'pt-br': 'Uma refatoração arquitetural: os fields deixam de conhecer qualquer ORM, e os adapters passam a ser resolvidos por nome através de um registry. O projeto ainda se chamava "Ruby" nesta fase.',
+          'pt-br':
+            'Uma refatoração arquitetural: os fields deixam de conhecer qualquer ORM, e os adapters passam a ser resolvidos por nome através de um registry. O projeto ainda se chamava "Ruby" nesta fase.',
         },
       },
       {
@@ -191,7 +197,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'The builder API becomes immutable and TypeField is pulled out of type inference, making the inferred types tighter and more predictable.',
-          'pt-br': 'A API do builder fica imutável e o TypeField sai da inferência de tipos, deixando os tipos inferidos mais precisos e previsíveis.',
+          'pt-br':
+            'A API do builder fica imutável e o TypeField sai da inferência de tipos, deixando os tipos inferidos mais precisos e previsíveis.',
         },
       },
       {
@@ -204,7 +211,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'Release plumbing: continuous integration, lint and formatting rules, the package exports map, and a prepublishOnly guard.',
-          'pt-br': 'Encanamento de release: integração contínua, regras de lint e formatação, o mapa de exports do pacote e uma proteção prepublishOnly.',
+          'pt-br':
+            'Encanamento de release: integração contínua, regras de lint e formatação, o mapa de exports do pacote e uma proteção prepublishOnly.',
         },
       },
       {
@@ -217,7 +225,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'The codebase moves into a monorepo — packages/core and packages/mongo — with a dual ESM + CJS build.',
-          'pt-br': 'O código migra para um monorepo — packages/core e packages/mongo — com build dual ESM + CJS.',
+          'pt-br':
+            'O código migra para um monorepo — packages/core e packages/mongo — com build dual ESM + CJS.',
         },
       },
       {
@@ -230,7 +239,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'Field is reworked into a brand-type, and Infer derives a precise TypeScript type straight from the schema definition.',
-          'pt-br': 'O Field é reescrito como um brand-type, e o Infer deriva um tipo TypeScript preciso direto da definição do schema.',
+          'pt-br':
+            'O Field é reescrito como um brand-type, e o Infer deriva um tipo TypeScript preciso direto da definição do schema.',
         },
       },
       {
@@ -243,20 +253,25 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'A real validation API lands: parse and safeParse, returning structured issues, with a message hierarchy for custom error text.',
-          'pt-br': 'Chega uma API de validação de verdade: parse e safeParse, devolvendo issues estruturadas, com uma hierarquia de mensagens para textos de erro customizados.',
+          'pt-br':
+            'Chega uma API de validação de verdade: parse e safeParse, devolvendo issues estruturadas, com uma hierarquia de mensagens para textos de erro customizados.',
         },
       },
       {
         id: 's1-p9',
         date: { en: 'Apr 2026', 'pt-br': 'abr 2026' },
-        title: { en: 'Phase 9 · Modifier vocabulary', 'pt-br': 'Fase 9 · Vocabulário de modifiers' },
+        title: {
+          en: 'Phase 9 · Modifier vocabulary',
+          'pt-br': 'Fase 9 · Vocabulário de modifiers',
+        },
         summary: {
           en: 'The full modifier set; the registry moves to string keys.',
           'pt-br': 'O conjunto completo de modifiers; o registry passa a usar texto.',
         },
         detail: {
           en: 'The full modifier vocabulary is completed, and the adapter registry moves from an ORM enum to string keys — opening the door to third-party adapters.',
-          'pt-br': 'O vocabulário completo de modifiers é finalizado, e o registry de adapters deixa de usar um enum de ORM para usar chaves de texto — abrindo caminho para adapters de terceiros.',
+          'pt-br':
+            'O vocabulário completo de modifiers é finalizado, e o registry de adapters deixa de usar um enum de ORM para usar chaves de texto — abrindo caminho para adapters de terceiros.',
         },
       },
       {
@@ -269,7 +284,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'New field types — tuple, literal, enum, record and ref — plus a homogeneous ArrayField and a named-schema registry, built on a new intermediate representation.',
-          'pt-br': 'Novos field types — tuple, literal, enum, record e ref — além de um ArrayField homogêneo e um registry de schemas nomeados, construídos sobre uma nova representação intermediária.',
+          'pt-br':
+            'Novos field types — tuple, literal, enum, record e ref — além de um ArrayField homogêneo e um registry de schemas nomeados, construídos sobre uma nova representação intermediária.',
         },
       },
       {
@@ -282,7 +298,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'ObjectField gains composition operators — pick, omit, partial, required, extend, merge — plus schema-level options like timestamps and indexes.',
-          'pt-br': 'O ObjectField ganha operadores de composição — pick, omit, partial, required, extend, merge — além de opções no nível do schema, como timestamps e índices.',
+          'pt-br':
+            'O ObjectField ganha operadores de composição — pick, omit, partial, required, extend, merge — além de opções no nível do schema, como timestamps e índices.',
         },
       },
       {
@@ -295,7 +312,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'The Mongo adapter is rewritten from the ground up so it honors every part of the intermediate representation.',
-          'pt-br': 'O adapter Mongo é reescrito do zero para honrar cada parte da representação intermediária.',
+          'pt-br':
+            'O adapter Mongo é reescrito do zero para honrar cada parte da representação intermediária.',
         },
       },
       {
@@ -321,7 +339,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'A new package emits Drizzle table definitions — pgTable, mysqlTable and sqliteTable — from the IR.',
-          'pt-br': 'Um novo pacote gera definições de tabela do Drizzle — pgTable, mysqlTable e sqliteTable — a partir da IR.',
+          'pt-br':
+            'Um novo pacote gera definições de tabela do Drizzle — pgTable, mysqlTable e sqliteTable — a partir da IR.',
         },
       },
       {
@@ -334,7 +353,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'No new runtime code — this phase produces /docs, runnable examples, a rewritten root README, and a docs check wired into CI.',
-          'pt-br': 'Sem código novo de runtime — esta fase produz /docs, exemplos executáveis, um README raiz reescrito e uma verificação de docs no CI.',
+          'pt-br':
+            'Sem código novo de runtime — esta fase produz /docs, exemplos executáveis, um README raiz reescrito e uma verificação de docs no CI.',
         },
       },
     ],
@@ -356,7 +376,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'A pass comparing the V1 design and plan against the real code, plus a triple QA audit of test coverage, benchmarks, and type-level tests.',
-          'pt-br': 'Uma varredura comparando o design e o plano da V1 com o código real, além de uma auditoria tripla de QA: cobertura de testes, benchmarks e testes no nível de tipos.',
+          'pt-br':
+            'Uma varredura comparando o design e o plano da V1 com o código real, além de uma auditoria tripla de QA: cobertura de testes, benchmarks e testes no nível de tipos.',
         },
       },
       {
@@ -369,7 +390,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'Acting on a large code review: 6 correctness bugs, 5 API/IR inconsistencies, 10 code smells, and 4 documentation drifts.',
-          'pt-br': 'Agindo sobre um code review extenso: 6 bugs de correctness, 5 inconsistências de API/IR, 10 smells de código e 4 drifts de documentação.',
+          'pt-br':
+            'Agindo sobre um code review extenso: 6 bugs de correctness, 5 inconsistências de API/IR, 10 smells de código e 4 drifts de documentação.',
         },
       },
     ],
@@ -391,7 +413,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'A second round of bugs, inconsistencies and smells — the items the earlier passes left behind, cleaned up on main after PR #16.',
-          'pt-br': 'Uma segunda rodada de bugs, inconsistências e smells — os itens que as passagens anteriores deixaram para trás, resolvidos na main após o PR #16.',
+          'pt-br':
+            'Uma segunda rodada de bugs, inconsistências e smells — os itens que as passagens anteriores deixaram para trás, resolvidos na main após o PR #16.',
         },
       },
     ],
@@ -413,7 +436,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'Planning the split of sapphire-mongo into a Mongo-native package and a separate sapphire-mongoose package.',
-          'pt-br': 'Planejamento da divisão do sapphire-mongo em um pacote nativo do Mongo e um pacote sapphire-mongoose separado.',
+          'pt-br':
+            'Planejamento da divisão do sapphire-mongo em um pacote nativo do Mongo e um pacote sapphire-mongoose separado.',
         },
       },
     ],
@@ -435,7 +459,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'A heavy review of the whole library, hunting for bugs, inconsistencies and smells before going public.',
-          'pt-br': 'Uma revisão pesada de toda a biblioteca, caçando bugs, inconsistências e smells antes de ir a público.',
+          'pt-br':
+            'Uma revisão pesada de toda a biblioteca, caçando bugs, inconsistências e smells antes de ir a público.',
         },
       },
       {
@@ -448,7 +473,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'npm-publish readiness — changesets, packaging and release workflows — culminating in the 1.0.0 release.',
-          'pt-br': 'Prontidão para publicar no npm — changesets, packaging e workflows de release — culminando no lançamento 1.0.0.',
+          'pt-br':
+            'Prontidão para publicar no npm — changesets, packaging e workflows de release — culminando no lançamento 1.0.0.',
         },
       },
     ],
@@ -471,7 +497,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'refine adds custom synchronous validation — arbitrary single-field predicates and cross-field rules — expressed inside the one schema.',
-          'pt-br': 'O refine adiciona validação custom síncrona — predicados arbitrários por campo e regras cross-field — expressos dentro do mesmo schema.',
+          'pt-br':
+            'O refine adiciona validação custom síncrona — predicados arbitrários por campo e regras cross-field — expressos dentro do mesmo schema.',
         },
       },
       {
@@ -484,7 +511,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'Async refine plus parseAsync / safeParseAsync, for rules that need to hit a database — uniqueness, existence.',
-          'pt-br': 'refine assíncrono mais parseAsync / safeParseAsync, para regras que precisam consultar o banco — unicidade, existência.',
+          'pt-br':
+            'refine assíncrono mais parseAsync / safeParseAsync, para regras que precisam consultar o banco — unicidade, existência.',
         },
       },
       {
@@ -497,7 +525,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'llms.txt and llms-full.txt, plus a Context7 listing, so AI coding assistants generate correct Sapphire code instead of guessing the API.',
-          'pt-br': 'llms.txt e llms-full.txt, além de uma listagem no Context7, para que assistentes de IA gerem código Sapphire correto em vez de adivinhar a API.',
+          'pt-br':
+            'llms.txt e llms-full.txt, além de uma listagem no Context7, para que assistentes de IA gerem código Sapphire correto em vez de adivinhar a API.',
         },
       },
       {
@@ -510,7 +539,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'Clearing the leftover code-review backlog and adding a real-MySQL integration test to CI.',
-          'pt-br': 'Limpar o backlog restante do code-review e adicionar um teste de integração com MySQL real no CI.',
+          'pt-br':
+            'Limpar o backlog restante do code-review e adicionar um teste de integração com MySQL real no CI.',
         },
       },
     ],
@@ -534,7 +564,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'A typed .adapter() via module augmentation, and mock-data generation from a schema. A sketch — not yet planned in detail.',
-          'pt-br': 'Um .adapter() tipado via module augmentation, e geração de mock data a partir de um schema. Um esboço — ainda não planejado em detalhe.',
+          'pt-br':
+            'Um .adapter() tipado via module augmentation, e geração de mock data a partir de um schema. Um esboço — ainda não planejado em detalhe.',
         },
       },
     ],
@@ -558,7 +589,8 @@ export const timeline: TimelineSeason[] = [
         },
         detail: {
           en: 'A fifth adapter, sapphire-prisma, emitting a .prisma schema — a text DSL, unlike the runtime-object output of the other four. A sketch.',
-          'pt-br': 'Um quinto adapter, sapphire-prisma, gerando um schema .prisma — uma DSL de texto, diferente da saída em objeto de runtime dos outros quatro. Um esboço.',
+          'pt-br':
+            'Um quinto adapter, sapphire-prisma, gerando um schema .prisma — uma DSL de texto, diferente da saída em objeto de runtime dos outros quatro. Um esboço.',
         },
       },
     ],
@@ -585,6 +617,7 @@ git commit -m "feat(website): add timeline data module"
 Add the navigation/page strings the timeline UI needs. Content text already lives in `timeline.ts`; only chrome goes here.
 
 **Files:**
+
 - Modify: `website/src/i18n/ui.ts`
 
 - [ ] **Step 1: Add the keys to the `en` block**
@@ -652,6 +685,7 @@ git commit -m "feat(website): add timeline i18n strings"
 The component that renders the vertical zig-zag spine, with collapse/expand JS.
 
 **Files:**
+
 - Create: `website/src/components/Timeline.astro`
 
 - [ ] **Step 1: Create the component**
@@ -981,6 +1015,7 @@ git commit -m "feat(website): add Timeline component"
 Two pages embedding the component — mirrors the `playground.astro` page pattern exactly.
 
 **Files:**
+
 - Create: `website/src/pages/timeline.astro`
 - Create: `website/src/pages/pt-br/timeline.astro`
 
@@ -1073,6 +1108,7 @@ git commit -m "feat(website): add timeline pages"
 Add the "Timeline" link to the navigation, between Docs and Playground.
 
 **Files:**
+
 - Modify: `website/src/components/Nav.astro`
 
 - [ ] **Step 1: Add the link**
@@ -1123,6 +1159,7 @@ Expected: all tests pass, including `timeline-data.test.ts`.
 - [ ] **Step 3: Manual check in the dev server**
 
 Run: `cd website && npm run dev`, then in a browser verify:
+
 - `/Sapphire/timeline` and `/Sapphire/pt-br/timeline` render; the Nav "Timeline" link works in both locales.
 - Season One starts open; other seasons start closed.
 - Clicking a season header toggles its phases; clicking a phase card toggles its detail.
