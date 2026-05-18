@@ -5,7 +5,9 @@ import { locales } from '../src/i18n/ui'
 /** True when `v` is an object with a non-empty string for every locale. */
 const isText = (v: unknown): boolean =>
   locales.every(
-    (l) => typeof (v as Record<string, unknown>)?.[l] === 'string' && (v as Record<string, string>)[l].trim().length > 0,
+    (l) =>
+      typeof (v as Record<string, unknown>)?.[l] === 'string' &&
+      (v as Record<string, string>)[l].trim().length > 0,
   )
 
 describe('timeline data', () => {

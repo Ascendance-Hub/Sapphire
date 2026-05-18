@@ -36,9 +36,7 @@ describe('composite primary key', () => {
     })
 
     it(`${dialect}: a composite PK adds no implicit id column`, () => {
-      const node = a
-        .object({ articleId: a.number().int(), version: a.number().int() })
-        .toSchema()
+      const node = a.object({ articleId: a.number().int(), version: a.number().int() }).toSchema()
       const t = toDrizzleSchema(node, {
         dialect,
         tableName: 'r',

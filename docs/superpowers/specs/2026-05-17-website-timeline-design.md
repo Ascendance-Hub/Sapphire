@@ -20,7 +20,7 @@ inconsistências entram condensados).
   estrutura de `playground.astro`: `BaseLayout` → `<section>` com `<h1>`,
   parágrafo de intro e o componente `<Timeline />`.
 - `website/src/components/Nav.astro` ganha um link **"Timeline"** entre
-  *Docs* e *Playground*.
+  _Docs_ e _Playground_.
 - Novas chaves em `website/src/i18n/ui.ts` (chrome, não conteúdo):
   `nav.timeline`, `title.timeline`, `timeline.title`, `timeline.intro`,
   `timeline.hintSeason`, `timeline.hintPhase`.
@@ -37,21 +37,21 @@ import type { Locale } from '../i18n/ui'
 type TLText = Record<Locale, string>
 
 interface TimelinePhase {
-  id: string          // estável, ex. 's1-p3'
-  date: TLText         // ex. { en: 'Apr 2026', 'pt-br': 'abr 2026' }
+  id: string // estável, ex. 's1-p3'
+  date: TLText // ex. { en: 'Apr 2026', 'pt-br': 'abr 2026' }
   title: TLText
-  summary: TLText      // linha exibida no card fechado
-  detail: TLText       // texto revelado ao expandir o card
+  summary: TLText // linha exibida no card fechado
+  detail: TLText // texto revelado ao expandir o card
 }
 
 interface TimelineSeason {
-  id: string           // ex. 's1', 'v2-s1'
+  id: string // ex. 's1', 'v2-s1'
   era: 'v1' | 'v2'
   title: TLText
-  subtitle: TLText     // a frase curta ao lado do título
-  tag: TLText          // o "chip" pequeno (ex. '15 fases · 2026')
-  future?: boolean     // true → estilo tracejado/esmaecido
-  sketch?: boolean     // true → esboço (V2 Seasons Two–Three)
+  subtitle: TLText // a frase curta ao lado do título
+  tag: TLText // o "chip" pequeno (ex. '15 fases · 2026')
+  future?: boolean // true → estilo tracejado/esmaecido
+  sketch?: boolean // true → esboço (V2 Seasons Two–Three)
   phases: TimelinePhase[]
 }
 
@@ -105,66 +105,66 @@ implementação a partir das `specs/` citadas.
 
 **Season One — "A biblioteca nasce"** · tag: `15 fases · 2025–2026`
 
-| id | data | título | summary |
-|----|------|--------|---------|
-| s1-p1 | mai 2025 | Concepção da ideia | O conceito "um schema, todos os ORMs" nasce. |
-| s1-p2 | mai 2025 | Protótipo bruto | Primeira versão escrita à mão, sem arquitetura. |
-| s1-p3 | abr 2026 | Refatoração multi-ORM | Fields agnósticos de ORM, adapters atrás de um registry. O projeto ainda se chamava **"Ruby"**. |
-| s1-p4 | abr 2026 | Builder imutável | Builder imutável; `TypeField` sai da inferência. |
-| s1-p5 | abr 2026 | Infra de release | CI, lint/format, exports map, `prepublishOnly`. |
-| s1-p6 | abr 2026 | Monorepo | Reestruturação em `packages/{core,mongo}`, build dual. |
-| s1-p7 | abr 2026 | Brand-types | `Field` vira brand-type; `Infer` derivado do schema. |
-| s1-p8 | abr 2026 | API de validação | `parse`/`safeParse`, issues estruturadas, hierarquia de mensagens. |
-| s1-p9 | abr 2026 | Vocabulário de modifiers | Modifiers completos; registry passa a string-keyed. |
-| s1-p10 | abr 2026 | Novos field types | `tuple`/`literal`/`enum`/`record`/`ref` + IR v2. |
-| s1-p11 | abr 2026 | Composição de objetos | `pick`/`omit`/`partial`/`extend`/`merge` + `timestamps`/`index`. |
-| s1-p12 | abr 2026 | Adapter Mongo | Reescrita do adapter Mongo para honrar todo o IR. |
-| s1-p13 | abr 2026 | Adapter JSON Schema | Novo pacote: IR → JSON Schema 2020-12. |
-| s1-p14 | abr 2026 | Adapter Drizzle | Novo pacote: IR → `pgTable`/`mysqlTable`/`sqliteTable`. |
-| s1-p15 | abr 2026 | Documentação | `/docs`, exemplos executáveis, README, verificação no CI. |
+| id     | data     | título                   | summary                                                                                         |
+| ------ | -------- | ------------------------ | ----------------------------------------------------------------------------------------------- |
+| s1-p1  | mai 2025 | Concepção da ideia       | O conceito "um schema, todos os ORMs" nasce.                                                    |
+| s1-p2  | mai 2025 | Protótipo bruto          | Primeira versão escrita à mão, sem arquitetura.                                                 |
+| s1-p3  | abr 2026 | Refatoração multi-ORM    | Fields agnósticos de ORM, adapters atrás de um registry. O projeto ainda se chamava **"Ruby"**. |
+| s1-p4  | abr 2026 | Builder imutável         | Builder imutável; `TypeField` sai da inferência.                                                |
+| s1-p5  | abr 2026 | Infra de release         | CI, lint/format, exports map, `prepublishOnly`.                                                 |
+| s1-p6  | abr 2026 | Monorepo                 | Reestruturação em `packages/{core,mongo}`, build dual.                                          |
+| s1-p7  | abr 2026 | Brand-types              | `Field` vira brand-type; `Infer` derivado do schema.                                            |
+| s1-p8  | abr 2026 | API de validação         | `parse`/`safeParse`, issues estruturadas, hierarquia de mensagens.                              |
+| s1-p9  | abr 2026 | Vocabulário de modifiers | Modifiers completos; registry passa a string-keyed.                                             |
+| s1-p10 | abr 2026 | Novos field types        | `tuple`/`literal`/`enum`/`record`/`ref` + IR v2.                                                |
+| s1-p11 | abr 2026 | Composição de objetos    | `pick`/`omit`/`partial`/`extend`/`merge` + `timestamps`/`index`.                                |
+| s1-p12 | abr 2026 | Adapter Mongo            | Reescrita do adapter Mongo para honrar todo o IR.                                               |
+| s1-p13 | abr 2026 | Adapter JSON Schema      | Novo pacote: IR → JSON Schema 2020-12.                                                          |
+| s1-p14 | abr 2026 | Adapter Drizzle          | Novo pacote: IR → `pgTable`/`mysqlTable`/`sqliteTable`.                                         |
+| s1-p15 | abr 2026 | Documentação             | `/docs`, exemplos executáveis, README, verificação no CI.                                       |
 
 **Season Two — "Endurecimento pré-1.0"** · tag: `auditoria + correções`
 
-| id | data | título | summary |
-|----|------|--------|---------|
+| id    | data     | título               | summary                                                          |
+| ----- | -------- | -------------------- | ---------------------------------------------------------------- |
 | s2-p1 | mai 2026 | Auditoria do projeto | Design vs. código real; cobertura de testes, benchmarks e tipos. |
-| s2-p2 | mai 2026 | Rodada de correções | 6 bugs, 5 inconsistências, 10 smells e 4 drifts de docs. |
+| s2-p2 | mai 2026 | Rodada de correções  | 6 bugs, 5 inconsistências, 10 smells e 4 drifts de docs.         |
 
 **Season Three — "Mais correções"** · tag: `bugs · smells`
 
-| id | data | título | summary |
-|----|------|--------|---------|
+| id    | data     | título              | summary                                                         |
+| ----- | -------- | ------------------- | --------------------------------------------------------------- |
 | s3-p1 | mai 2026 | Correções pós-merge | Segunda rodada de bugs, inconsistências e smells após o PR #16. |
 
 **Season Four — "Separação mongo / mongoose"** · tag: `1 spec`
 
-| id | data | título | summary |
-|----|------|--------|---------|
+| id    | data     | título                | summary                                                           |
+| ----- | -------- | --------------------- | ----------------------------------------------------------------- |
 | s4-p1 | mai 2026 | Separação de sub-libs | Planejamento da divisão `sapphire-mongo` vs. `sapphire-mongoose`. |
 
 **Season Five — "Code review & 1.0"** · tag: `npm`
 
-| id | data | título | summary |
-|----|------|--------|---------|
-| s5-p1 | mai 2026 | Code review pesado | Varredura da lib por bugs, inconsistências e smells. |
+| id    | data     | título              | summary                                                        |
+| ----- | -------- | ------------------- | -------------------------------------------------------------- |
+| s5-p1 | mai 2026 | Code review pesado  | Varredura da lib por bugs, inconsistências e smells.           |
 | s5-p2 | mai 2026 | Lançamento 1.0.0 🎉 | Prontidão para npm — changesets, packaging, release workflows. |
 
 ### V2 — futuro (`future: true`)
 
 **V2 · Season One — "Validação completa"** · tag: `planejado`
 
-| id | data | título | summary |
-|----|------|--------|---------|
-| v2s1-p1 | futuro | `refine` | Validação custom síncrona, por campo e cross-field. |
-| v2s1-p2 | futuro | Validação assíncrona | `refine` async + `parseAsync`/`safeParseAsync`. |
-| v2s1-p3 | futuro | `llms.txt` | `llms.txt`/`llms-full.txt` + listagem no Context7. |
-| v2s1-p4 | futuro | Polish | Backlog do code-review + teste MySQL real no CI. |
+| id      | data   | título               | summary                                             |
+| ------- | ------ | -------------------- | --------------------------------------------------- |
+| v2s1-p1 | futuro | `refine`             | Validação custom síncrona, por campo e cross-field. |
+| v2s1-p2 | futuro | Validação assíncrona | `refine` async + `parseAsync`/`safeParseAsync`.     |
+| v2s1-p3 | futuro | `llms.txt`           | `llms.txt`/`llms-full.txt` + listagem no Context7.  |
+| v2s1-p4 | futuro | Polish               | Backlog do code-review + teste MySQL real no CI.    |
 
 **V2 · Season Two — "Adapter DX"** · `future: true, sketch: true` — 1 card:
-*`.adapter()` tipado e geração de mock data (esboço — não planejado em detalhe).*
+_`.adapter()` tipado e geração de mock data (esboço — não planejado em detalhe)._
 
 **V2 · Season Three — "Adapter Prisma"** · `future: true, sketch: true` — 1 card:
-*Quinto adapter `sapphire-prisma`, emitindo schema `.prisma` (esboço).*
+_Quinto adapter `sapphire-prisma`, emitindo schema `.prisma` (esboço)._
 
 ## 6. Verificação
 

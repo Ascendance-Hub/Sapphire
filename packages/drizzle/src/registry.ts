@@ -27,12 +27,7 @@ export interface DrizzleTableEntry {
 export class DrizzleTableRegistry {
   private readonly map = new Map<string, DrizzleTableEntry>()
 
-  set(
-    name: string,
-    table: unknown,
-    pkName: string | null,
-    compositePk?: readonly string[],
-  ): void {
+  set(name: string, table: unknown, pkName: string | null, compositePk?: readonly string[]): void {
     this.map.set(name, { table, pkName, compositePk: compositePk ?? undefined })
   }
 
