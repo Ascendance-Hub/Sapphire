@@ -15,15 +15,20 @@
  */
 export interface DrizzleTableEntry {
   table: unknown
-  /** PK column name, or `null` if the target was emitted with `primaryKey: false`. */
+  /**
+   * PK column name, or `null` when the target has no single-column PK — either
+   * `primaryKey: false` or a composite PK (see `compositePk`).
+   */
   pkName: string | null
+  /** Column names of a composite PK, when emitted with `primaryKey: string[]`. */
+  compositePk?: readonly string[]
 }
 
 export class DrizzleTableRegistry {
   private readonly map = new Map<string, DrizzleTableEntry>()
 
-  set(name: string, table: unknown, pkName: string | null): void {
-    this.map.set(name, { table, pkName })
+  set(name: string, table: unknown, pkName: string | null, compositePk?: readonly string[]): void {
+    this.map.set(name, { table, pkName, compositePk: compositePk ?? undefined })
   }
 
   get(name: string): DrizzleTableEntry | undefined {

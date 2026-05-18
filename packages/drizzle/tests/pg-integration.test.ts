@@ -113,4 +113,29 @@ describe('pg integration — round-trip against a real database', () => {
 
     expect(post!.author).toBe(user!.id)
   })
+
+  it('a composite primary key rejects a duplicate (articleId, version) pair', async () => {
+    const a = new Sapphire()
+    const node = a.object({
+      articleId: a.number().int(),
+      version: a.number().int(),
+      summary: a.string(),
+    })
+    const revisions = toDrizzleSchema(node.toSchema(), {
+      dialect: 'pg',
+      tableName: 'revisions',
+      primaryKey: ['articleId', 'version'],
+    } as never)
+    const db = await pgWith({ revisions })
+
+    await db.insert(revisions).values({ articleId: 10, version: 1, summary: 'draft' })
+    // same articleId, different version → allowed by the composite PK
+    await db.insert(revisions).values({ articleId: 10, version: 2, summary: 'edit' })
+    // exact (articleId, version) duplicate → rejected
+    await expect(async () => {
+      await db.insert(revisions).values({ articleId: 10, version: 1, summary: 'dup' })
+    }).rejects.toThrow()
+    const rows = await db.select().from(revisions)
+    expect(rows).toHaveLength(2)
+  })
 })

@@ -8,11 +8,46 @@ import type { SapphireSchemaNode } from '@ascendance-hub/sapphire-core'
 export interface ApplyCtx {
   options: {
     dialect: 'pg' | 'mysql' | 'sqlite'
-    primaryKey?: string | false
+    primaryKey?: string | string[] | false
     /** S2: when true, missing methods invoked by meta keys throw instead of
      *  being silently skipped. Useful as a typo guard in dev / CI. */
     strict?: boolean
   }
+}
+
+/**
+ * Resolve the `primaryKey` adapter option into a normalized shape the dialect
+ * builders share:
+ *  - `string`   → single-column PK named `pkName` (implicit `'id'` when unset).
+ *  - `string[]` → composite PK over `compositePk`; no single implicit column.
+ *  - `false`    → no PK at all (`pkName: null`, `compositePk: null`).
+ *
+ * For a composite PK every named column must be a declared field, and at least
+ * two names are required — a single-column PK is the `string` form.
+ */
+export function resolvePrimaryKey(
+  primaryKey: string | string[] | false | undefined,
+  properties: Record<string, unknown>,
+): { pkName: string | null; compositePk: string[] | null } {
+  if (Array.isArray(primaryKey)) {
+    if (primaryKey.length < 2) {
+      throw new Error(
+        'drizzle adapter: a composite primaryKey needs at least 2 column names — ' +
+          'use a plain string for a single-column primary key.',
+      )
+    }
+    for (const key of primaryKey) {
+      if (!(key in properties)) {
+        throw new Error(
+          `drizzle adapter: composite primaryKey column "${key}" is not a field in the schema.`,
+        )
+      }
+    }
+    return { pkName: null, compositePk: [...primaryKey] }
+  }
+  if (primaryKey === false) return { pkName: null, compositePk: null }
+  if (typeof primaryKey === 'string') return { pkName: primaryKey, compositePk: null }
+  return { pkName: 'id', compositePk: null }
 }
 
 /**
@@ -101,7 +136,12 @@ export function collectFieldIndexes(
 export function applyCommon(col: any, node: SapphireSchemaNode, ctx: ApplyCtx): any {
   let out = col
   if (node.default !== undefined) {
-    out = callChain(out, 'default', node.default)
+    // NOT via `callChain`: its `args === true` branch means "call with no
+    // arguments" (the escape-hatch convention). A column default is always a
+    // real value — including the literal `true` — so it must be passed through.
+    if (typeof out.default === 'function') {
+      out = out.default(node.default)
+    }
   }
   if (node.required && !node.nullable) {
     out = callChain(out, 'notNull', true)
