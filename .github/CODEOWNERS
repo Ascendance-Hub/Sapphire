@@ -1,0 +1,4 @@
+# GitHub CODEOWNERS — quem precisa revisar PRs do repositório.
+# Sintaxe: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+* @alexandre-damas-murata
