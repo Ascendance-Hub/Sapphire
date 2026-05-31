@@ -298,6 +298,7 @@ export class StringField<TOut = string, TIn = string> implements Field<TOut, TIn
   /**
    * _parse order: coerce → default substitution → null/undefined handling →
    * invalid_type check (exclusive — short-circuits) → transforms → accumulated rule checks.
+   * @internal
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (this.config.coerce && typeof value !== 'string' && value !== null && value !== undefined) {

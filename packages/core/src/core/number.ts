@@ -316,6 +316,7 @@ export class NumberField<TOut = number, TIn = number> implements Field<TOut, TIn
   /**
    * _parse order: coerce → default substitution → null/undefined handling →
    * invalid_type check (NaN counts as invalid) → accumulated rule checks.
+   * @internal
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (this.config.coerce && typeof value !== 'number' && value !== null && value !== undefined) {

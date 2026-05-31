@@ -350,6 +350,7 @@ export class ObjectField<
   /**
    * _parse order: default substitution → null/undefined handling →
    * invalid_type check (exclusive) → accumulated per-key checks.
+   * @internal
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined && this.config.hasDefault) {
