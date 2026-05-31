@@ -25,10 +25,11 @@ export interface Field<TOutput = unknown, TInput = TOutput> {
 }
 
 /**
- * Internal contract — every field exposes _parse(value, ctx) returning
- * { value, issues }. Used by composite fields (Object/Array/Union) to
- * recurse without going through public safeParse (which would re-wrap).
+ * Marker interface for fields that support internal recursive parsing.
+ * Implementation details are intentionally excluded from the public type
+ * surface (the parse method is stripped from emitted declarations).
  */
 export interface InternalField {
+  /** @internal */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult
 }

@@ -140,6 +140,7 @@ export class RecordField<
     )
   }
 
+  /** @internal */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined && this.config.hasDefault) {
       value = this.config.default

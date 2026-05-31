@@ -199,6 +199,7 @@ export class ArrayField<F extends Field, TOut = F['_output'][], TIn = F['_input'
    * _parse order: default substitution → null/undefined handling →
    * invalid_type check (exclusive) → accumulated per-item checks
    * (each item validated against the single inner field).
+   * @internal
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined && this.config.hasDefault) {

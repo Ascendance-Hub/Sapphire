@@ -151,6 +151,7 @@ export class BooleanField<TOut = boolean, TIn = boolean>
   /**
    * _parse order: default substitution → null/undefined handling →
    * invalid_type check (exclusive) → accumulated rule checks.
+   * @internal
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (this.config.coerce && typeof value !== 'boolean' && value !== null && value !== undefined) {
