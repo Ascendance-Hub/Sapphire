@@ -113,9 +113,19 @@ Bump **minor** de `@ascendance-hub/sapphire-core` — amplia a superfície de ti
    mutado: consumidor com `declaration: true` compila com `EXIT=0` e emite `.d.ts` limpo,
    referenciando as classes exportadas via `import("…").ObjectField<…>`.
 
+## Teste de regressão (sem infra nova)
+
+`examples/consumer` é um workspace que já importa `@ascendance-hub/sapphire-core`
+(resolvido pro `dist` buildado) e já faz `export type User = Infer<typeof userOrm>` —
+exatamente o padrão que quebra. Hoje seu `tsconfig.json` usa `declaration: false`, então
+não pega o bug. Virar para **`declaration: true`** (mantendo `noEmit: true`) transforma o
+`npm run typecheck` desse workspace num guard de declaration-emit. Verificado:
+`tsc --noEmit` com `declaration: true` **reporta** TS4023/TS4094/TS7056 (sai com código 2).
+O CI já roda `build → typecheck → test`, então o guard fica coberto sem adicionar infra.
+
 ## Plano de verificação (na implementação — antes de afirmar "pronto")
 
-1. `pnpm --filter @ascendance-hub/sapphire-core build` e inspecionar `dist/index.d.ts` **e**
+1. `npm run build -w @ascendance-hub/sapphire-core` e inspecionar `dist/index.d.ts` **e**
    `dist/index.d.cts`:
    - `_parse` ausente;
    - `ParseContext`/`InternalParseResult` ausentes da superfície pública;
