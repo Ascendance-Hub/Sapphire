@@ -1,7 +1,7 @@
 # Design — Issue #33: emissão de `.d.ts` em libs consumidoras
 
 - **Data:** 2026-05-31
-- **Issue:** [#33](https://github.com/Ascendance-Hub/Sapphire/issues/33) — *Library consumers can't emit `.d.ts` when using inferred schema*
+- **Issue:** [#33](https://github.com/Ascendance-Hub/Sapphire/issues/33) — _Library consumers can't emit `.d.ts` when using inferred schema_
 - **Pacote afetado:** `@ascendance-hub/sapphire-core` (`packages/core`)
 - **Abordagem escolhida:** A — exportar as field classes (type-only) + esconder `_parse` via `@internal` + `stripInternal`
 
@@ -20,7 +20,7 @@ TS7056  The inferred type of this node exceeds the maximum length the compiler w
 ```
 
 O erro dispara mesmo quando só o **tipo** é exportado (sem exportar `personSchema`),
-porque `Infer<F> = F['_output']` é um *indexed access* sobre `F` (`src/types/infer.ts`),
+porque `Infer<F> = F['_output']` é um _indexed access_ sobre `F` (`src/types/infer.ts`),
 o que força o TS a serializar `typeof personSchema`.
 
 ### Causa raiz (duas independentes)
@@ -59,15 +59,25 @@ exportá-los (o que comprometeria a lib a mantê-los estáveis na API pública),
 
 ```ts
 export type {
-  ArrayField, BooleanField, DateField, EnumField, LiteralField,
-  NumberField, ObjectField, RecordField, RefField, StringField,
-  TupleField, TypeField, UnionField,
+  ArrayField,
+  BooleanField,
+  DateField,
+  EnumField,
+  LiteralField,
+  NumberField,
+  ObjectField,
+  RecordField,
+  RefField,
+  StringField,
+  TupleField,
+  TypeField,
+  UnionField,
 } from './core'
 ```
 
 - São 13 classes. Todas alcançáveis pela API pública e portanto podem aparecer num
   `typeof schema` do consumidor: 9 direto via `Sapphire` (`string/number/boolean/date/
-  array/tuple/object/type/ref`) e 4 via `s.type()` (`.union/.literal/.enum/.record` →
+array/tuple/object/type/ref`) e 4 via `s.type()` (`.union/.literal/.enum/.record` →
   `UnionField`/`LiteralField`/`EnumField`/`RecordField`).
 - **Type-only** (não export de valor): o usuário monta schema via `s.object()`, não via
   `new ObjectField()`. Não há razão para expor construtores no runtime. Mais enxuto que
@@ -145,7 +155,7 @@ O CI já roda `build → typecheck → test`, então o guard fica coberto sem ad
 
 - **B — exportar classes + exportar `ParseContext`/`InternalParseResult`** (o "#1+#2" da
   issue): mais barato e validado, mas polui a API pública com tipos internos e os
-  compromete como contrato estável. *Nota:* a afirmação da issue de que a "opção #1
+  compromete como contrato estável. _Nota:_ a afirmação da issue de que a "opção #1
   sozinha desbloqueia" é **falsa** — testado: exportar só os dois tipos mata os `TS4023`
   mas deixa os 5 `TS4094` + o `TS7056`.
 - **C — canal de parse por `Symbol` + exportar classes**: independente do build, porém

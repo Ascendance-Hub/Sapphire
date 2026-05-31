@@ -21,21 +21,22 @@
 
 ## File map
 
-| File | Change |
-|------|--------|
-| `examples/consumer/tsconfig.json` | Regression test: `declaration: false` → `true` |
-| `packages/core/src/index.ts` | Add type-only export of the 13 field classes |
-| `packages/core/src/interfaces/field.ts` | `@internal` on `InternalField._parse` |
+| File                                                                              | Change                                                                |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `examples/consumer/tsconfig.json`                                                 | Regression test: `declaration: false` → `true`                        |
+| `packages/core/src/index.ts`                                                      | Add type-only export of the 13 field classes                          |
+| `packages/core/src/interfaces/field.ts`                                           | `@internal` on `InternalField._parse`                                 |
 | `packages/core/src/core/{string,date,boolean,array,tuple,union,object,number}.ts` | `@internal` inside existing JSDoc above `_parse` (8 files, Pattern A) |
-| `packages/core/src/core/{enum,record,ref,literal}.ts` | New `/** @internal */` above `_parse` (4 files, Pattern B) |
-| `packages/core/tsconfig.json` | Add `"stripInternal": true` |
-| `.changeset/issue-33-dts-emission.md` | New changeset (minor) |
+| `packages/core/src/core/{enum,record,ref,literal}.ts`                             | New `/** @internal */` above `_parse` (4 files, Pattern B)            |
+| `packages/core/tsconfig.json`                                                     | Add `"stripInternal": true`                                           |
+| `.changeset/issue-33-dts-emission.md`                                             | New changeset (minor)                                                 |
 
 ---
 
 ## Task 1: Add the failing regression test (RED)
 
 **Files:**
+
 - Modify: `examples/consumer/tsconfig.json`
 
 - [ ] **Step 1: Flip the consumer to declaration emit**
@@ -64,12 +65,14 @@ Expected: build succeeds (the bug is in the emitted types, not the build).
 
 Run: `npm run typecheck -w sapphire-consumer-example`
 Expected: FAIL (exit code non-zero) with errors including:
+
 ```
 error TS4023: ... 'InternalParseResult' ... but cannot be named.
 error TS4023: ... 'ParseContext' ... but cannot be named.
 error TS4094: Property 'config' of exported anonymous class type may not be private or protected.
 error TS7056: The inferred type of this node exceeds the maximum length the compiler will serialize.
 ```
+
 This is the red state. **Do not commit yet** (a committed failing test would break CI). The fix in Tasks 2–4 turns it green; everything is committed together in Task 5.
 
 ---
@@ -77,6 +80,7 @@ This is the red state. **Do not commit yet** (a committed failing test would bre
 ## Task 2: Export the field class types (fixes TS4094 / TS7056)
 
 **Files:**
+
 - Modify: `packages/core/src/index.ts`
 
 - [ ] **Step 1: Add the type-only export block**
@@ -122,6 +126,7 @@ Expected: FAIL, but now **only** the two `TS4023` errors (`ParseContext`, `Inter
 ## Task 3: Hide `_parse` from the public surface (fixes TS4023)
 
 **Files:**
+
 - Modify: `packages/core/src/interfaces/field.ts`
 - Modify: `packages/core/src/core/string.ts`, `date.ts`, `boolean.ts`, `array.ts`, `tuple.ts`, `union.ts`, `object.ts`, `number.ts` (Pattern A)
 - Modify: `packages/core/src/core/enum.ts`, `record.ts`, `ref.ts`, `literal.ts` (Pattern B)
@@ -216,17 +221,21 @@ Expected: PASS (exit code 0, no errors).
 - [ ] **Step 1: Confirm the `_parse` signature and internal types are gone from BOTH declaration files**
 
 Run (PowerShell):
+
 ```powershell
 Select-String -Path packages/core/dist/index.d.ts, packages/core/dist/index.d.cts -Pattern '_parse\(value', ': ParseContext', ': InternalParseResult', 'InternalParseResult;'
 ```
-Expected: **no matches** in either file. (Match the method *signature* `_parse(value` and the *type usages* `: ParseContext` / `: InternalParseResult`, not the bare word `_parse` — a leading JSDoc comment on the now-empty `InternalField` interface may still contain the word "_parse" and is harmless. The authoritative guard is the consumer typecheck passing in Task 3 Step 6.)
+
+Expected: **no matches** in either file. (Match the method _signature_ `_parse(value` and the _type usages_ `: ParseContext` / `: InternalParseResult`, not the bare word `_parse` — a leading JSDoc comment on the now-empty `InternalField` interface may still contain the word "\_parse" and is harmless. The authoritative guard is the consumer typecheck passing in Task 3 Step 6.)
 
 - [ ] **Step 2: Confirm the field classes ARE exported as types**
 
 Run (PowerShell):
+
 ```powershell
 Select-String -Path packages/core/dist/index.d.ts -Pattern 'type ObjectField', 'type StringField', 'type NumberField'
 ```
+
 Expected: matches found in the final `export { ... }` statement.
 
 - [ ] **Step 3: Run the core unit tests (guards runtime `_parse` still works)**
@@ -249,6 +258,7 @@ Expected: PASS (JSDoc-only and tsconfig-only edits should not trip ESLint).
 ## Task 5: Changeset, commit, and push
 
 **Files:**
+
 - Create: `.changeset/issue-33-dts-emission.md`
 
 - [ ] **Step 1: Write the changeset (minor bump, core only)**
