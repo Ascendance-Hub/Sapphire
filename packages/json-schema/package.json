@@ -1,6 +1,6 @@
 {
   "name": "@ascendance-hub/sapphire-json-schema",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "JSON Schema 2020-12 adapter for Sapphire.",
   "type": "module",
   "main": "./dist/index.cjs",
