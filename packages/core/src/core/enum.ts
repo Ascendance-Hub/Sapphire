@@ -143,6 +143,7 @@ export class EnumField<V extends EnumValue, TOut = V, TIn = V>
     })
   }
 
+  /** @internal */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined && this.config.hasDefault) {
       value = this.config.default

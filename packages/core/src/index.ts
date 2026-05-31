@@ -4,6 +4,21 @@ export { SapphireValidationError } from './lib/validation-error'
 export type { FlattenedError, FormattedError } from './lib/validation-error'
 export type { Infer, InferInput, ObjectOutput, ObjectInput } from './types/infer'
 export type { Field, SafeParseResult } from './interfaces/field'
+export type {
+  ArrayField,
+  BooleanField,
+  DateField,
+  EnumField,
+  LiteralField,
+  NumberField,
+  ObjectField,
+  RecordField,
+  RefField,
+  StringField,
+  TupleField,
+  TypeField,
+  UnionField,
+} from './core'
 export type { IssueCode } from './lib/issue-codes'
 export type {
   ValidationIssue,
