@@ -138,6 +138,7 @@ export class TupleField<
   /**
    * _parse order: default substitution → null/undefined handling →
    * Array check → length check → element-wise validation.
+   * @internal
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined && this.config.hasDefault) {

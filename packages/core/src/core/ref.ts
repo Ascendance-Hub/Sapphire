@@ -143,6 +143,7 @@ export class RefField<TOut = unknown, TIn = unknown> implements Field<TOut, TIn>
     })
   }
 
+  /** @internal */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (value === undefined && this.config.hasDefault) {
       value = this.config.default

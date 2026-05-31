@@ -173,6 +173,7 @@ export class DateField<TOut = Date, TIn = Date> implements Field<TOut, TIn>, Int
    * or numbers (form payloads, URL params, JSON-deserialized timestamps), call
    * `.coerce()` explicitly. This keeps the IR honest: `coerce: false` ⇒ runtime
    * accepts only Date.
+   * @internal
    */
   _parse(value: unknown, ctx: ParseContext): InternalParseResult {
     if (this.config.coerce) {
